@@ -1,4 +1,4 @@
-&nbsp;
+<!-- GitHub repo About field: MCP ingress control plane for governed AI agents — mask, enforce, audit. Open core. -->
 
 <div align="center">
   <picture>
@@ -19,17 +19,15 @@
 </div>
 
 <h3 align="center">
-  AI ingress control plane to Run Secure AI Agents and Code
-  <br />
-  <sub>Mask, enforce, and audit every agent call - before it reaches your LLMs, tools, and Daytona sandboxes.</sub>
+  The AI ingress control plane. Mask, enforce, and audit every agent call — before it reaches your LLMs, tools, and Daytona sandboxes.
 </h3>
 
 <p align="center">
-  <a href="https://app.blekline.com/docs/">Documentation</a> ·
-  <a href="https://app.blekline.com/docs/introduction/ai-enablement-stack">AI Enablement Stack</a> ·
   <a href="https://app.blekline.com/docs/introduction/quick-start">Quick start</a> ·
-  <a href="https://github.com/Blekline/blekline-oss/issues/new?labels=bug&template=bug_report.yml">Report Bug</a> ·
-  <a href="https://github.com/Blekline/blekline-oss/issues/new?labels=enhancement&template=feature_request.yml">Request Feature</a> ·
+  <a href="https://app.blekline.com/docs/introduction/why-ingress">Why ingress</a> ·
+  <a href="https://app.blekline.com/docs/introduction/architecture">Architecture</a> ·
+  <a href="https://app.blekline.com/docs/mcp/server">MCP Server</a> ·
+  <a href="SECURITY.md">Security</a> ·
   <a href="https://app.blekline.com">Cloud</a>
 </p>
 
@@ -43,23 +41,43 @@
 
 ---
 
-> **Documentation:** [app.blekline.com/docs](https://app.blekline.com/docs) — this repo is **code and packages** only.  
-> Blekline is **Layer 4** (observability & governance) in the [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack).
+## The problem nobody wants to talk about
 
-**Blekline is an open-core MCP ingress control plane** — infrastructure that sits between your agents and everything they can touch.
+AI agents are eating the world. Cursor writes your code, Claude answers your support tickets, autonomous pipelines touch your databases, your APIs, your customers' data. The ecosystem is accelerating — MCP servers let agents pick up tools like apps pick up plugins — and that is genuinely exciting.
+
+But here's the thing: your agents have no idea what they're not allowed to do. They'll happily pass an AWS key to a model context window. They'll call a tool with a customer's email as an argument. They'll execute a shell command that wasn't in the plan. Not out of malice — out of the fundamental nature of language models: they optimize for task completion, not for the organizational policies you haven't written yet.
+
+This is the AI governance gap. And right now, there's nothing sitting between your agents and everything they can touch.
+
+## Why this is becoming urgent
+
+The EU AI Act isn't theoretical anymore. GPAI obligations have been enforceable since August 2025. Transparency and human oversight requirements land in August 2026. High-risk system conformity assessments follow. Fines reach up to €35 million or 7% of global turnover for the worst violations. And these rules aren't just about the models — they're about the systems you build with them: how you govern tool access, how you audit decisions, how you prove a human was in the loop.
+
+Meanwhile, enterprises running AI at scale — sandboxed, parallelized, thousands of agent calls — have no native answer for: what happened in that session? Who authorized that tool call? Did any PII leave the context window?
+
+The compliance question is catching up to the capability question. And most teams aren't ready.
+
+## What Blekline is
+
+Blekline is an open-core MCP ingress control plane — infrastructure that sits between your agents and everything they can touch.
+
 It does three things, in real time, before any LLM sees a prompt or any tool executes:
 
-**Mask** — strip PII, secrets, and sensitive context from prompts before they hit model APIs (MCP Server)
+**Mask** — strip PII, secrets, and sensitive context from prompts before they hit model APIs ([MCP Server docs](https://app.blekline.com/docs/mcp/server))
 
 **Enforce** — evaluate tool calls against policy; allow, flag, or block before execution
 
 **Audit** — emit a structured, tamper-evident event trail for every agent interaction
 
-You can run it locally in two minutes. You can deploy it as a sidecar inside a Daytona sandbox. You can plug it into Cursor, Claude Desktop, or Codex today, without changing your agent code.
+You can run it locally in two minutes. You can deploy it as a sidecar inside a Daytona sandbox. You can plug it into Cursor, Claude Desktop, or Codex today — without changing your agent code.
 
 This is the infrastructure that makes governed AI deployment real: not a checkbox, not a policy document, but a running system that enforces your intentions at the call level.
 
+---
+
 ## Try in 2 minutes
+
+No account required for local mode. Workspace token needed for cloud masking and fleet policy.
 
 ```bash
 export BLEKLINE_WORKSPACE_TOKEN="blw_..."   # Admin → API keys @ app.blekline.com
@@ -111,6 +129,16 @@ L5 Agents → L4 Blekline (mask · enforce · audit) → L1 Daytona / model APIs
 | Investigations / billing | — | Yes |
 
 **License:** AGPL for proxy/server (self-host or buy cloud). Apache for contracts/SDK (embed in your agent stack).
+
+## Who this is for
+
+**Developers** building with Cursor, Claude Desktop, or Codex who want their agents to stop leaking secrets and start respecting tool boundaries.
+
+**Platform teams** deploying AI workloads in Daytona sandboxes who need a governance layer that travels with the execution environment.
+
+**Enterprise architects** preparing for EU AI Act compliance — specifically human oversight, audit trails, and tool call transparency requirements that become enforceable in August 2026.
+
+**Open source contributors** who believe that the infrastructure for safe AI should be auditable, forkable, and owned by the community — not locked inside a vendor's cloud.
 
 ## Packages
 
@@ -200,8 +228,9 @@ All docs: **[app.blekline.com/docs](https://app.blekline.com/docs)**
 
 | Doc | Link |
 |-----|------|
-| AI Enablement Stack | [introduction/ai-enablement-stack](https://app.blekline.com/docs/introduction/ai-enablement-stack) |
 | Quick start | [introduction/quick-start](https://app.blekline.com/docs/introduction/quick-start) |
+| EU AI Act & compliance | [introduction/eu-ai-act](https://app.blekline.com/docs/introduction/eu-ai-act) |
+| AI Enablement Stack | [introduction/ai-enablement-stack](https://app.blekline.com/docs/introduction/ai-enablement-stack) |
 | MCP proxy | [mcp/proxy](https://app.blekline.com/docs/mcp/proxy) |
 | Cursor setup | [mcp/cursor](https://app.blekline.com/docs/mcp/cursor) |
 

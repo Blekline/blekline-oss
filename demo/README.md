@@ -42,3 +42,11 @@ pnpm --filter @blekline/mcp-proxy test
 **Pitch:** Blekline = **Layer 4** governance. Daytona = **Layer 1** infrastructure. [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
 
 **Docs:** [app.blekline.com/docs](https://app.blekline.com/docs) · [Quick start](https://app.blekline.com/docs/introduction/quick-start)
+
+## Daytona integration smoke test
+
+Creates a Daytona sandbox, runs a Blekline mask call from within it, asserts no raw PII in the result, tears down.
+
+```bash
+DAYTONA_API_KEY=... BLEKLINE_WORKSPACE_TOKEN=blw_... pnpm demo:daytona-smoke
+```

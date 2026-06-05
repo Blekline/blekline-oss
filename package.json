@@ -18,7 +18,12 @@
     "demo:mcp-smoke": "node scripts/mcp-smoke.mjs",
     "demo:sdk": "node scripts/demo-sdk.mjs",
     "demo:latency": "node scripts/demo-latency.mjs",
+    "demo:daytona-smoke": "tsx demo/daytona-smoke.ts",
     "docker:ingress": "docker build -t blekline-ingress -f packages/ingress-proxy/Dockerfile ."
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   },
   "packageManager": "pnpm@9.15.4",
   "engines": {

@@ -1,0 +1,38 @@
+name: Daytona integration
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly Monday 09:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  daytona-smoke:
+    name: Blekline + Daytona smoke test
+    runs-on: ubuntu-latest
+    # Opt-in via repo variable so forks skip this automatically
+    if: vars.DAYTONA_INTEGRATION_ENABLED == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install
+      - run: pnpm build:packages
+
+      - name: Run Daytona smoke test
+        env:
+          DAYTONA_API_KEY: ${{ secrets.DAYTONA_API_KEY }}
+          BLEKLINE_WORKSPACE_TOKEN: ${{ secrets.BLEKLINE_WORKSPACE_TOKEN }}
+          BLEKLINE_API_URL: https://app.blekline.com
+        run: pnpm demo:daytona-smoke
