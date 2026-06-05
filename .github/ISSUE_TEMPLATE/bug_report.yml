@@ -1,0 +1,68 @@
+name: Bug report
+description: Something broken in OSS packages or docs
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. For **security** issues see [SECURITY.md](../../SECURITY.md) — no public issues.
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package / area
+      options:
+        - "@blekline/mcp-server"
+        - "@blekline/mcp-proxy"
+        - "@blekline/client"
+        - "@blekline/contracts"
+        - ingress-proxy (Docker/Helm)
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: client
+    attributes:
+      label: Client tested
+      options:
+        - Cursor
+        - Claude Desktop
+        - Codex
+        - SDK / REST only
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. pnpm install && pnpm build:packages
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      placeholder: Node version, OS, npm package version
+    validations:
+      required: true

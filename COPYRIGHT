@@ -1,0 +1,12 @@
+Copyrights in the Blekline OSS software are retained by their contributors.
+No copyright assignment is required to contribute to Blekline OSS.
+
+When we refer to the "Blekline OSS authors", we mean anyone who has contributed
+to the https://github.com/Blekline/blekline-oss repository.
+
+Unless otherwise noted in a package LICENSE file or NOTICE:
+
+- packages/contracts, packages/client, packages/client-python — Apache-2.0 (LICENSE-APACHE)
+- packages/mcp-server, packages/mcp-proxy, packages/ingress-proxy — AGPL-3.0 (LICENSE)
+
+The managed SaaS control plane at https://app.blekline.com is a separate proprietary product.

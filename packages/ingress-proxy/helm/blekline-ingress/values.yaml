@@ -1,0 +1,37 @@
+replicaCount: 2
+
+image:
+  repository: blekline/ingress
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8787
+
+ingress:
+  enabled: false
+  className: ""
+  hosts:
+    - host: ingress.example.blekline.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+env:
+  BLEKLINE_INGRESS_TARGET: "https://app.blekline.com"
+  BLEKLINE_INGRESS_REGION: "eu-central-1"
+  BLEKLINE_EDGE_LOCAL_MASK: "true"
+  LISTEN_PORT: "8787"
+
+secrets:
+  workspaceToken: ""
+  workspaceId: ""
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi

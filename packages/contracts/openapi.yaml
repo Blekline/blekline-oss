@@ -1,0 +1,248 @@
+openapi: 3.1.0
+info:
+  title: Blekline Ingress Control Plane API
+  version: 1.0.0
+  description: |
+    Enterprise ingress governance for prompts, events, MCP tool calls, and universal LLM proxies.
+servers:
+  - url: https://app.blekline.com
+  - url: http://localhost:3000
+security:
+  - workspaceToken: []
+components:
+  securitySchemes:
+    workspaceToken:
+      type: apiKey
+      in: header
+      name: x-blekline-workspace-token
+  schemas:
+    MaskRequest:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+        platform:
+          type: string
+    MaskResponse:
+      type: object
+      properties:
+        maskedText:
+          type: string
+        entitiesMasked:
+          type: integer
+        decision:
+          type: string
+          enum: [mask_and_send, mask_and_confirm, block_and_review]
+        provider:
+          type: string
+        requestId:
+          type: string
+        latencyMs:
+          type: number
+          description: Total request latency in milliseconds
+        maskPath:
+          type: string
+          enum: [azure_first, local_first, local_only]
+        region:
+          type: string
+          description: Ingress region label (x-blekline-ingress-region)
+    EnforceToolCallRequest:
+      type: object
+      required: [toolName, arguments]
+      properties:
+        toolName:
+          type: string
+        arguments:
+          type: object
+        platform:
+          type: string
+        clientSurface:
+          type: string
+          enum: [cursor, claude-desktop, codex, sdk, extension, unknown]
+    EnforceToolCallResult:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [allow, mask, block]
+        maskedArguments:
+          type: object
+        entitiesMasked:
+          type: integer
+        riskTier:
+          type: string
+          enum: [low, medium, high]
+        requestId:
+          type: string
+    McpToolPolicy:
+      type: object
+      properties:
+        allowedTools:
+          type: array
+          items:
+            type: string
+        deniedTools:
+          type: array
+          items:
+            type: string
+        defaultAction:
+          type: string
+          enum: [allow, mask, block]
+paths:
+  /api/mask:
+    post:
+      summary: Mask prompt text
+      operationId: maskPrompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaskRequest"
+      responses:
+        "200":
+          description: Masked prompt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaskResponse"
+  /api/events:
+    post:
+      summary: Emit governance event (metadata-only)
+      operationId: emitEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, platform]
+              properties:
+                kind:
+                  type: string
+                platform:
+                  type: string
+                entitiesMasked:
+                  type: integer
+                riskTier:
+                  type: string
+                action:
+                  type: string
+                clientSurface:
+                  type: string
+                modelProvider:
+                  type: string
+                modelId:
+                  type: string
+      responses:
+        "200":
+          description: Event accepted
+  /api/mcp/enforce-tool-call:
+    post:
+      summary: Enforce MCP tool call policy
+      operationId: enforceToolCall
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnforceToolCallRequest"
+      responses:
+        "200":
+          description: Enforcement decision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnforceToolCallResult"
+  /api/policy/simulate:
+    post:
+      summary: Simulate redaction policy on a prompt
+      operationId: simulatePolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                platform:
+                  type: string
+                sourceHost:
+                  type: string
+      responses:
+        "200":
+          description: Simulation result
+  /api/workspace/mcp-policy:
+    get:
+      summary: Read workspace MCP tool policy
+      operationId: getMcpToolPolicy
+      responses:
+        "200":
+          description: Current policy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mcpToolPolicy:
+                    $ref: "#/components/schemas/McpToolPolicy"
+    post:
+      summary: Update workspace MCP tool policy
+      operationId: updateMcpToolPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/McpToolPolicy"
+      responses:
+        "200":
+          description: Updated policy
+  /api/ingress/v1/chat/completions:
+    post:
+      summary: OpenAI-compatible ingress proxy (masks user messages)
+      operationId: ingressOpenAiChatCompletions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                messages:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        "200":
+          description: Upstream completion response
+        "403":
+          description: Blocked by ingress policy
+  /api/ingress/v1/messages:
+    post:
+      summary: Anthropic Messages API ingress proxy
+      operationId: ingressAnthropicMessages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model:
+                  type: string
+                messages:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        "200":
+          description: Upstream message response
+        "403":
+          description: Blocked by ingress policy

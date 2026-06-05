@@ -1,0 +1,48 @@
+name: Design partner inquiry
+description: Funded team evaluating Blekline for agent ingress
+labels: ["design-partner"]
+body:
+  - type: input
+    id: company
+    attributes:
+      label: Company / product
+    validations:
+      required: true
+
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Stage
+      options:
+        - Pre-seed / seed
+        - Series A+
+        - Enterprise pilot
+        - Open source project
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: clients
+    attributes:
+      label: Agent clients in use
+      options:
+        - label: Cursor
+        - label: Claude Desktop
+        - label: Codex
+        - label: Custom agent (LangChain/LlamaIndex/Pydantic/etc.)
+        - label: Daytona or other sandbox
+
+  - type: textarea
+    id: usecase
+    attributes:
+      label: What do you need from ingress governance?
+      placeholder: e.g. block secrets in tool calls, fleet policy, EU hosting
+    validations:
+      required: true
+
+  - type: input
+    id: contact
+    attributes:
+      label: Best contact (email or LinkedIn)
+    validations:
+      required: true

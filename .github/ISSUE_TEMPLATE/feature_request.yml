@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest an improvement to OSS or docs
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What ingress/MCP gap are you hitting?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: dropdown
+    id: license
+    attributes:
+      label: Likely touched license
+      options:
+        - Apache (contracts/client)
+        - AGPL (mcp-server/proxy/ingress)
+        - Docs only
+        - Unsure
+    validations:
+      required: true

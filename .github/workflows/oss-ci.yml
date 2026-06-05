@@ -1,0 +1,32 @@
+name: OSS CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - run: test -f pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build:packages
+
+      - run: pnpm demo:mcp-smoke
+
+      - run: pnpm --filter @blekline/mcp-proxy test

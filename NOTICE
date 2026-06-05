@@ -1,0 +1,16 @@
+Blekline OSS — Copyright Blekline contributors
+
+Licensed components in this repository:
+
+| Path | License |
+|------|---------|
+| packages/contracts | Apache-2.0 — see LICENSE-APACHE |
+| packages/client | Apache-2.0 — see LICENSE-APACHE |
+| packages/client-python | Apache-2.0 — see LICENSE-APACHE |
+| packages/mcp-server | AGPL-3.0 — see LICENSE |
+| packages/mcp-proxy | AGPL-3.0 — see LICENSE |
+| packages/ingress-proxy | AGPL-3.0 — see LICENSE |
+
+Default license for files not listed in a package LICENSE: AGPL-3.0 (LICENSE).
+
+Managed control plane (https://app.blekline.com) is proprietary and not covered by this NOTICE.

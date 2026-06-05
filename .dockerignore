@@ -1,0 +1,15 @@
+.git
+**/node_modules
+**/.next
+**/dist
+!packages/contracts/dist
+webapp
+extension
+demo
+*.mp4
+*.pdf
+*.mp3
+*.png
+ios
+.cursor
+.codex

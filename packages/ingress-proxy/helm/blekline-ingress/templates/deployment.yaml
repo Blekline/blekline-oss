@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "blekline-ingress.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+    spec:
+      containers:
+        - name: ingress
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: BLEKLINE_INGRESS_TARGET
+              value: {{ .Values.env.BLEKLINE_INGRESS_TARGET | quote }}
+            - name: BLEKLINE_INGRESS_REGION
+              value: {{ .Values.env.BLEKLINE_INGRESS_REGION | quote }}
+            - name: BLEKLINE_EDGE_LOCAL_MASK
+              value: {{ .Values.env.BLEKLINE_EDGE_LOCAL_MASK | quote }}
+            - name: LISTEN_PORT
+              value: {{ .Values.env.LISTEN_PORT | quote }}
+            - name: BLEKLINE_WORKSPACE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "blekline-ingress.fullname" . }}-secret
+                  key: workspaceToken
+            - name: BLEKLINE_WORKSPACE_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "blekline-ingress.fullname" . }}-secret
+                  key: workspaceId
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "blekline-ingress.fullname" . }}-secret
+type: Opaque
+stringData:
+  workspaceToken: {{ .Values.secrets.workspaceToken | quote }}
+  workspaceId: {{ .Values.secrets.workspaceId | quote }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "blekline-ingress.fullname" . }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
