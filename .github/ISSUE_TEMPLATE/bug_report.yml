@@ -1,47 +1,32 @@
 name: Bug report
-description: Something broken in OSS packages or docs
+description: Report a bug in Blekline OSS packages, MCP setup, or docs
+title: "🐛 Bug Report: "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting. For **security** issues see [SECURITY.md](../../SECURITY.md) — no public issues.
+        Thanks for helping improve Blekline. For **security vulnerabilities**, see [SECURITY.md](../../SECURITY.md) — do not use this form.
 
-  - type: dropdown
-    id: package
+  - type: textarea
+    id: describe
     attributes:
-      label: Package / area
-      options:
-        - "@blekline/mcp-server"
-        - "@blekline/mcp-proxy"
-        - "@blekline/client"
-        - "@blekline/contracts"
-        - ingress-proxy (Docker/Helm)
-        - Documentation
-        - Other
-    validations:
-      required: true
-
-  - type: dropdown
-    id: client
-    attributes:
-      label: Client tested
-      options:
-        - Cursor
-        - Claude Desktop
-        - Codex
-        - SDK / REST only
-        - Not applicable
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: |
+        e.g. blekline_mask_prompt returns an error in Cursor after upgrading @blekline/mcp-server to 0.1.0.
     validations:
       required: true
 
   - type: textarea
-    id: repro
+    id: reproduce
     attributes:
-      label: Steps to reproduce
+      label: To Reproduce
+      description: Steps to reproduce the behavior.
       placeholder: |
-        1. pnpm install && pnpm build:packages
-        2. ...
+        1. Install `@blekline/mcp-server` and add to `.cursor/mcp.json` with `BLEKLINE_WORKSPACE_TOKEN`
+        2. In Cursor Agent, ask to use `blekline_mask_prompt` on sample text with an email address
+        3. See error / unexpected mask result / MCP disconnect
     validations:
       required: true
 
@@ -49,20 +34,37 @@ body:
     id: expected
     attributes:
       label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: |
+        e.g. Masked text returned in chat; MCP status stays green in Cursor Settings.
     validations:
       required: true
 
   - type: textarea
-    id: actual
+    id: screenshots
     attributes:
-      label: Actual behavior
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+      placeholder: Drag and drop images here, or paste Markdown image links.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (required)
+      description: Deployment, packages, and client details.
+      placeholder: |
+        - Deployment: [OSS npm / Self-hosted Docker-Helm / app.blekline.com cloud]
+        - Blekline package: [e.g. @blekline/mcp-server 0.1.0, @blekline/mcp-proxy 0.1.0]
+        - MCP client: [Cursor / Claude Desktop / Codex / SDK only]
+        - Node.js: [e.g. 22.x]
+        - OS: [e.g. macOS 14, Ubuntu 22.04]
     validations:
       required: true
 
   - type: textarea
-    id: env
+    id: context
     attributes:
-      label: Environment
-      placeholder: Node version, OS, npm package version
-    validations:
-      required: true
+      label: Additional context
+      description: Add any other context about the problem here.
+      placeholder: |
+        e.g. Works with REST `/api/mask` but fails via MCP; proxy downstream is Daytona MCP.

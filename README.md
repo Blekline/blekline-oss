@@ -27,8 +27,8 @@
 <p align="center">
   <a href="https://app.blekline.com/docs/">Documentation</a> ·
   <a href="https://app.blekline.com/docs/introduction/architecture">Architecture</a> ·
-  <a href="">Report Bug</a> ·
-  <a href="">Request Feature</a> ·
+  <a href="https://github.com/Blekline/blekline-oss/issues/new?labels=bug&template=bug_report.yml">Report Bug</a> ·
+  <a href="https://github.com/Blekline/blekline-oss/issues/new?labels=enhancement&template=feature_request.yml">Request Feature</a> ·
   <a href="https://app.blekline.com">Cloud</a>
 </p>
 
