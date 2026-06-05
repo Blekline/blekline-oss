@@ -19,3 +19,9 @@ Machine-readable API spec: [`openapi.yaml`](./openapi.yaml)
 ```bash
 pnpm --filter @blekline/contracts build
 ```
+
+## Docs
+
+- [OpenAPI](https://app.blekline.com/docs/api/openapi)
+- [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
+- [Quick start](https://app.blekline.com/docs/introduction/quick-start)

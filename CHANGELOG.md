@@ -9,7 +9,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - Layer 4 README, why-ingress docs, architecture mermaid, GitHub issue templates, demo script
-- Docs: [Why ingress](docs/introduction/why-ingress.md), architecture mermaid
+- Docs centralized on [app.blekline.com/docs](https://app.blekline.com/docs) — [Why ingress](https://app.blekline.com/docs/introduction/why-ingress), [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
 - README: 2-minute quick start, CI badge, Layer 4/5 narrative
 
 ## [0.1.0] - 2026-06-04

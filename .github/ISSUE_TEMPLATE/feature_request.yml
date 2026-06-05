@@ -8,6 +8,8 @@ body:
       value: |
         Share ideas for Blekline's open-source ingress layer (MCP server, proxy, SDK, Helm sidecar).
 
+        Docs: [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack) · [Quick start](https://app.blekline.com/docs/introduction/quick-start)
+
   - type: textarea
     id: problem
     attributes:

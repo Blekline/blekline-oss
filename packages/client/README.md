@@ -33,3 +33,9 @@ const tool = await client.enforceToolCall({
 - `emitEvent()` → `POST /api/events`
 - `simulatePolicy()` → `POST /api/policy/simulate`
 - `enforceToolCall()` → `POST /api/mcp/enforce-tool-call`
+
+## Docs
+
+- [TypeScript SDK](https://app.blekline.com/docs/sdk/typescript)
+- [OpenAPI](https://app.blekline.com/docs/api/openapi)
+- [Quick start](https://app.blekline.com/docs/introduction/quick-start)

@@ -26,7 +26,8 @@
 
 <p align="center">
   <a href="https://app.blekline.com/docs/">Documentation</a> ·
-  <a href="https://app.blekline.com/docs/introduction/architecture">Architecture</a> ·
+  <a href="https://app.blekline.com/docs/introduction/ai-enablement-stack">AI Enablement Stack</a> ·
+  <a href="https://app.blekline.com/docs/introduction/quick-start">Quick start</a> ·
   <a href="https://github.com/Blekline/blekline-oss/issues/new?labels=bug&template=bug_report.yml">Report Bug</a> ·
   <a href="https://github.com/Blekline/blekline-oss/issues/new?labels=enhancement&template=feature_request.yml">Request Feature</a> ·
   <a href="https://app.blekline.com">Cloud</a>
@@ -41,6 +42,9 @@
 </p>
 
 ---
+
+> **Documentation:** [app.blekline.com/docs](https://app.blekline.com/docs) — this repo is **code and packages** only.  
+> Blekline is **Layer 4** (observability & governance) in the [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack).
 
 **Blekline is an open-core MCP ingress control plane** — infrastructure that sits between your agents and everything they can touch.
 It does three things, in real time, before any LLM sees a prompt or any tool executes:
@@ -82,38 +86,19 @@ npx -y @blekline/mcp-server
 
 In the agent: *"Use blekline_mask_prompt on: Contact Jane at jane@acme.com — API key AKIAIOSFODNN7EXAMPLE"*
 
-**Proxy + Daytona** — point downstream MCP at your sandbox; see [Daytona stack](docs/integrations/daytona-stack.md).
+**Proxy + Daytona** — point downstream MCP at your sandbox; see [Daytona stack](https://app.blekline.com/docs/integrations/daytona-stack).
 
 **No cloud (local dev)** — `@blekline/contracts` secret scan + `enforceToolCallLocally` (see [Local-only](#local-only-no-api-token) below).
 
 ## Architecture
 
-```mermaid
-flowchart LR
-  subgraph L5["Layer 5 — Agents"]
-    A[Cursor / Claude / Codex]
-  end
-  subgraph L4["Layer 4 — Blekline"]
-    S[mcp-server]
-    P[mcp-proxy]
-    API[mask · enforce · audit]
-  end
-  subgraph L3["Layer 3 — Runtime"]
-    D[Daytona sandbox]
-  end
-  subgraph L2["Layer 2 — Models"]
-    M[LLM APIs]
-  end
-  A --> S
-  A --> P
-  P --> S
-  S --> API
-  P --> API
-  API --> M
-  P --> D
+Blekline sits at **Layer 4** — between L5 agents (Cursor, Claude, Codex) and L1 infrastructure (Daytona sandboxes, model APIs).
+
+```text
+L5 Agents → L4 Blekline (mask · enforce · audit) → L1 Daytona / model APIs
 ```
 
-[Full architecture](docs/introduction/architecture.md) · [Why ingress](docs/introduction/why-ingress.md) · [Trust boundaries](docs/security/trust-boundaries.md) · [Latency SLO](docs/reference/latency-slo.md)
+[AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack) · [Architecture](https://app.blekline.com/docs/introduction/architecture) · [Trust boundaries](https://app.blekline.com/docs/security/trust-boundaries) · [Latency SLO](https://app.blekline.com/docs/reference/latency-slo)
 
 ## Open core vs cloud
 
@@ -197,8 +182,8 @@ enforceToolCallLocally({
 | Mode | Command / link |
 |------|----------------|
 | MCP (global) | `npx -y @blekline/mcp-server` |
-| Edge sidecar | `pnpm docker:ingress` — [Helm](docs/api/ingress-proxy.md) |
-| Daytona | [Integration guide](docs/integrations/daytona-stack.md) |
+| Edge sidecar | `pnpm docker:ingress` — [Helm](https://app.blekline.com/docs/api/ingress-proxy) |
+| Daytona | [Integration guide](https://app.blekline.com/docs/integrations/daytona-stack) |
 
 ## Development
 
@@ -211,13 +196,14 @@ pnpm install && pnpm build:packages && pnpm demo:mcp-smoke
 
 ## Documentation
 
-| Doc | Topic |
-|-----|--------|
-| [Quick start](docs/introduction/quick-start.md) | Token, first mask |
-| [Why ingress](docs/introduction/why-ingress.md) | Layer 4 vs Layer 5 |
-| [MCP proxy](docs/mcp/proxy.md) | Downstream governance |
-| [MCP identity pinning](docs/security/mcp-identity-pinning.md) | Server attestation |
-| [Cursor / Claude / Codex](docs/mcp/cursor.md) | Client configs |
+All docs: **[app.blekline.com/docs](https://app.blekline.com/docs)**
+
+| Doc | Link |
+|-----|------|
+| AI Enablement Stack | [introduction/ai-enablement-stack](https://app.blekline.com/docs/introduction/ai-enablement-stack) |
+| Quick start | [introduction/quick-start](https://app.blekline.com/docs/introduction/quick-start) |
+| MCP proxy | [mcp/proxy](https://app.blekline.com/docs/mcp/proxy) |
+| Cursor setup | [mcp/cursor](https://app.blekline.com/docs/mcp/cursor) |
 
 ## Contributing
 

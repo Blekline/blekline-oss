@@ -24,3 +24,9 @@ pnpm --filter @blekline/mcp-proxy test
 ```
 
 Smoke test: `pnpm demo:mcp-smoke` from repo root.
+
+## Docs
+
+- [MCP proxy](https://app.blekline.com/docs/mcp/proxy)
+- [Daytona stack](https://app.blekline.com/docs/integrations/daytona-stack)
+- [Quick start](https://app.blekline.com/docs/introduction/quick-start)

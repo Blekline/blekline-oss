@@ -26,7 +26,7 @@
 | 6 | Codex + proxy | API key in tool call | Block |
 | 7 | Browser | `/operations/mcp` | Events from all clients |
 | 8 | Terminal | `pnpm demo:sdk` | REST SDK round-trip |
-| 9 | Browser | `/docs/integrations/daytona-stack` | Daytona + Blekline stack |
+| 9 | Browser | [Daytona stack](https://app.blekline.com/docs/integrations/daytona-stack) | L4 Blekline + L1 Daytona |
 
 Shared prompts: [`prompts.md`](./prompts.md)  
 Model QA: [`cursor/model-matrix.md`](./cursor/model-matrix.md)
@@ -39,4 +39,6 @@ pnpm demo:sdk          # REST mask round-trip (needs live API + token)
 pnpm --filter @blekline/mcp-proxy test
 ```
 
-**Pitch:** Daytona = runtime sandbox. Blekline = ingress governance. One MCP server — Cursor, Claude Desktop, Codex — before data reaches models or sandboxes.
+**Pitch:** Blekline = **Layer 4** governance. Daytona = **Layer 1** infrastructure. [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
+
+**Docs:** [app.blekline.com/docs](https://app.blekline.com/docs) · [Quick start](https://app.blekline.com/docs/introduction/quick-start)

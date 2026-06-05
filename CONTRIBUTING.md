@@ -33,6 +33,12 @@ By contributing, you agree your contributions are licensed under the same terms 
 
 See [COPYRIGHT](COPYRIGHT) and [NOTICE](NOTICE).
 
+## Documentation
+
+User-facing docs live at **[app.blekline.com/docs](https://app.blekline.com/docs)** only.
+
+Blekline team: edit `webapp/content/docs/` in the private monorepo, then deploy the webapp. Do **not** add doc pages under this OSS repo (only `docs/README.md` stub).
+
 ## Private monorepo
 
-Blekline team members develop in the private `blekline` monorepo and sync to this repository via `pnpm sync:oss`. External contributors work directly here.
+Blekline team members develop in the private `blekline` monorepo and sync to this repository via `pnpm sync:oss`. External contributors work directly on [blekline-oss](https://github.com/Blekline/blekline-oss).

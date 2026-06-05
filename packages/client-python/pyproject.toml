@@ -9,7 +9,7 @@ dependencies = ["httpx>=0.27.0"]
 
 [project.urls]
 Repository = "https://github.com/Blekline/blekline-oss"
-Documentation = "https://github.com/Blekline/blekline-oss/tree/main/docs"
+Documentation = "https://app.blekline.com/docs/sdk/python"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0.0"]

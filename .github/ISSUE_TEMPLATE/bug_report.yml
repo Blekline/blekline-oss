@@ -8,6 +8,8 @@ body:
       value: |
         Thanks for helping improve Blekline. For **security vulnerabilities**, see [SECURITY.md](../../SECURITY.md) — do not use this form.
 
+        Docs: [app.blekline.com/docs](https://app.blekline.com/docs) · [Quick start](https://app.blekline.com/docs/introduction/quick-start)
+
   - type: textarea
     id: describe
     attributes:

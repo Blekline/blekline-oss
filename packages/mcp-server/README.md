@@ -34,3 +34,9 @@ BLEKLINE_MCP_TRANSPORT=sse BLEKLINE_MCP_PORT=3200 node packages/mcp-server/dist/
 ```
 
 Generate configs: `pnpm generate:mcp-configs` from repo root.
+
+## Docs
+
+- [Quick start](https://app.blekline.com/docs/introduction/quick-start)
+- [MCP server reference](https://app.blekline.com/docs/mcp/server)
+- [Cursor setup](https://app.blekline.com/docs/mcp/cursor)

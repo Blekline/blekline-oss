@@ -40,6 +40,7 @@ helm upgrade --install ingress-eu ./helm/blekline-ingress \
 
 ## Docs
 
-- [Ingress proxy](../../webapp/content/docs/api/ingress-proxy.md)
-- [Multi-region](../../webapp/content/docs/enterprise/multi-region.md)
-- [Latency SLO](../../webapp/content/docs/reference/latency-slo.md)
+- [Ingress proxy](https://app.blekline.com/docs/api/ingress-proxy)
+- [Multi-region ingress](https://app.blekline.com/docs/enterprise/multi-region)
+- [Latency SLO](https://app.blekline.com/docs/reference/latency-slo)
+- [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
