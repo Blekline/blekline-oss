@@ -1,0 +1,37 @@
+title: Design partner interest
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For funded teams evaluating Blekline for production agent ingress — discounted cloud and direct eng support during pilot wiring (~15 minutes to first mask/enforce).
+        Prefer a structured intake? [Open a design partner issue](https://github.com/Blekline/blekline-oss/issues/new?template=design_partner.yml) instead.
+  - type: input
+    id: company
+    attributes:
+      label: Company / product
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Stage
+      options:
+        - Pre-seed / seed
+        - Series A+
+        - Enterprise pilot
+        - Open source project
+    validations:
+      required: true
+  - type: textarea
+    id: usecase
+    attributes:
+      label: What do you need from ingress governance?
+      placeholder: e.g. block secrets in tool args, fleet policy, EU hosting, proxy in front of sandbox MCP
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: Best contact (email or LinkedIn — we will not publish this)
+    validations:
+      required: true

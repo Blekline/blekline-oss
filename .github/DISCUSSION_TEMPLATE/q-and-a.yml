@@ -1,0 +1,27 @@
+title: Q&A
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask about MCP setup, proxy wiring, local enforce, or cloud workspace tokens.
+        Docs: [Quick start](https://app.blekline.com/docs/introduction/quick-start) · [MCP proxy](https://app.blekline.com/docs/mcp/proxy)
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Agent client (if applicable)
+      options:
+        - Cursor
+        - Claude Desktop
+        - Codex
+        - Continue
+        - GitHub Copilot
+        - OpenHands
+        - Custom / SDK
+        - Not sure
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      placeholder: What you tried, what happened, versions (npm package if relevant)
+    validations:
+      required: true

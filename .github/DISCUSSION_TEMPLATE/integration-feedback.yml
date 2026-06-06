@@ -1,0 +1,28 @@
+title: Integration feedback
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share how Blekline fits your stack — sandbox, model provider, or framework.
+        Integration hubs: [Sandboxes](https://app.blekline.com/docs/integrations/sandbox-providers) · [Agent clients](https://app.blekline.com/docs/integrations/agent-clients) · [Model providers](https://app.blekline.com/docs/integrations/model-providers)
+  - type: checkboxes
+    id: stack
+    attributes:
+      label: Stack in use
+      options:
+        - label: Daytona
+        - label: Modal
+        - label: E2B
+        - label: Vercel Sandbox
+        - label: Cloudflare
+        - label: LangChain / LlamaIndex / PydanticAI
+        - label: Azure OpenAI / Bedrock / Vertex
+        - label: LangSmith / Guardrails
+        - label: Other
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What worked / what blocked you?
+      placeholder: Wiring steps, error messages, doc gaps, latency observations
+    validations:
+      required: true

@@ -284,6 +284,15 @@ All docs: **[app.blekline.com/docs](https://app.blekline.com/docs)**
 | MCP proxy | [mcp/proxy](https://app.blekline.com/docs/mcp/proxy) |
 | Cursor setup | [mcp/cursor](https://app.blekline.com/docs/mcp/cursor) |
 
+## Community & design partners
+
+**Questions or integration feedback** — [GitHub Discussions](https://github.com/Blekline/blekline-oss/discussions) (Q&A, integration feedback).
+
+**Design partners** — shipping agents in production and want help wiring Blekline into your stack (proxy or MCP server)?
+
+- [Open a design partner issue](https://github.com/Blekline/blekline-oss/issues/new?template=design_partner.yml)
+- Or [start a discussion](https://github.com/Blekline/blekline-oss/discussions/new) — choose **Design partner interest**
+
 ## Contributing
 
 [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) · [CHANGELOG.md](CHANGELOG.md)
