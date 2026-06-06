@@ -1,6 +1,6 @@
 # @blekline/mcp-proxy
 
-MCP proxy router that intercepts downstream tool calls, runs Blekline enforcement (mask/block), then forwards approved calls to a downstream MCP server (e.g. Daytona sandbox).
+MCP proxy router that intercepts downstream tool calls, runs Blekline enforcement (mask/block), then forwards approved calls to a downstream MCP server (Daytona, Modal, E2B, Cloudflare, Vercel Sandbox, or mock).
 
 ## Flow
 
@@ -12,7 +12,8 @@ Model → @blekline/mcp-proxy → POST /api/mcp/enforce-tool-call → downstream
 
 ```bash
 BLEKLINE_WORKSPACE_TOKEN=ws_...
-BLEKLINE_DOWNSTREAM_MCP_COMMAND=...   # optional mock or real Daytona MCP
+BLEKLINE_DOWNSTREAM_MCP_COMMAND=...   # optional mock or real downstream MCP
+BLEKLINE_DOWNSTREAM_SERVER=daytona    # telemetry: daytona|modal|vercel|cloudflare|e2b|unknown
 BLEKLINE_CLIENT_SURFACE=cursor
 ```
 
@@ -23,10 +24,10 @@ pnpm --filter @blekline/mcp-proxy build
 pnpm --filter @blekline/mcp-proxy test
 ```
 
-Smoke test: `pnpm demo:mcp-smoke` from repo root.
+Smoke test: `pnpm demo:mcp-smoke` from repo root. Sandbox providers: `SANDBOX_PROVIDER=daytona pnpm demo:sandbox-smoke`.
 
 ## Docs
 
 - [MCP proxy](https://app.blekline.com/docs/mcp/proxy)
-- [Daytona stack](https://app.blekline.com/docs/integrations/daytona-stack)
+- [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers)
 - [Quick start](https://app.blekline.com/docs/introduction/quick-start)

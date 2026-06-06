@@ -19,7 +19,7 @@
 </div>
 
 <h3 align="center">
-  The AI ingress control plane. Mask, enforce, and audit every agent call — before it reaches your LLMs, tools, and Daytona sandboxes.
+  The AI ingress control plane. Mask, enforce, and audit every agent call — before it reaches your LLMs, tools, and L1 sandboxes.
 </h3>
 
 <p align="center">
@@ -69,7 +69,7 @@ It does three things, in real time, before any LLM sees a prompt or any tool exe
 
 **Audit** — emit a structured, tamper-evident event trail for every agent interaction
 
-You can run it locally in two minutes. You can deploy it as a sidecar inside a Daytona sandbox. You can plug it into Cursor, Claude Desktop, or Codex today — without changing your agent code.
+You can run it locally in two minutes. You can deploy it as a sidecar alongside any L1 sandbox (Daytona, Modal, E2B, Cloudflare, Vercel Sandbox). You can plug it into Cursor, Claude Desktop, or Codex today — without changing your agent code.
 
 This is the infrastructure that makes governed AI deployment real: not a checkbox, not a policy document, but a running system that enforces your intentions at the call level.
 
@@ -104,16 +104,16 @@ npx -y @blekline/mcp-server
 
 In the agent: *"Use blekline_mask_prompt on: Contact Jane at jane@acme.com — API key AKIAIOSFODNN7EXAMPLE"*
 
-**Proxy + Daytona** — point downstream MCP at your sandbox; see [Daytona stack](https://app.blekline.com/docs/integrations/daytona-stack).
+**Proxy + L1 sandbox** — point downstream MCP at your runtime; see [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers).
 
 **No cloud (local dev)** — `@blekline/contracts` secret scan + `enforceToolCallLocally` (see [Local-only](#local-only-no-api-token) below).
 
 ## Architecture
 
-Blekline sits at **Layer 4** — between L5 agents (Cursor, Claude, Codex) and L1 infrastructure (Daytona sandboxes, model APIs).
+Blekline sits at **Layer 4** — between L5 agents (Cursor, Claude, Codex) and L1 sandboxes (Daytona, Modal, Vercel Sandbox, Cloudflare, E2B) and model APIs.
 
 ```text
-L5 Agents → L4 Blekline (mask · enforce · audit) → L1 Daytona / model APIs
+L5 Agents → L4 Blekline (mask · enforce · audit) → L1 sandbox MCP / model APIs
 ```
 
 [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack) · [Architecture](https://app.blekline.com/docs/introduction/architecture) · [Trust boundaries](https://app.blekline.com/docs/security/trust-boundaries) · [Latency SLO](https://app.blekline.com/docs/reference/latency-slo)
@@ -134,7 +134,7 @@ L5 Agents → L4 Blekline (mask · enforce · audit) → L1 Daytona / model APIs
 
 **Developers** building with Cursor, Claude Desktop, or Codex who want their agents to stop leaking secrets and start respecting tool boundaries.
 
-**Platform teams** deploying AI workloads in Daytona sandboxes who need a governance layer that travels with the execution environment.
+**Platform teams** deploying AI workloads in L1 sandboxes who need a governance layer that travels with the execution environment.
 
 **Enterprise architects** preparing for EU AI Act compliance — specifically human oversight, audit trails, and tool call transparency requirements that become enforceable in August 2026.
 
@@ -161,7 +161,7 @@ OpenAPI: [`packages/contracts/openapi.yaml`](packages/contracts/openapi.yaml)
 | `blekline_evaluate_tool_call` | Policy on tool name + arguments |
 | `blekline_emit_event` | Metadata audit trail |
 
-Proxy path: agent → **Blekline** → allow/mask/block → downstream MCP (Daytona, custom).
+Proxy path: agent → **Blekline** → allow/mask/block → downstream MCP (Daytona, E2B, Modal, Cloudflare, Vercel Sandbox, custom).
 
 ## Client libraries
 
@@ -205,13 +205,24 @@ enforceToolCallLocally({
 });
 ```
 
+## Works with (L1 sandboxes)
+
+| Provider | Integration guide |
+|----------|-------------------|
+| All five | [Sandbox providers hub](https://app.blekline.com/docs/integrations/sandbox-providers) |
+| Daytona | [Daytona stack](https://app.blekline.com/docs/integrations/daytona-stack) |
+| Modal | [Modal stack](https://app.blekline.com/docs/integrations/modal-stack) |
+| Vercel Sandbox | [Vercel Sandbox stack](https://app.blekline.com/docs/integrations/vercel-sandbox-stack) |
+| Cloudflare | [Cloudflare stack](https://app.blekline.com/docs/integrations/cloudflare-stack) |
+| E2B | [E2B stack](https://app.blekline.com/docs/integrations/e2b-stack) |
+
 ## Deploy
 
 | Mode | Command / link |
 |------|----------------|
 | MCP (global) | `npx -y @blekline/mcp-server` |
 | Edge sidecar | `pnpm docker:ingress` — [Helm](https://app.blekline.com/docs/api/ingress-proxy) |
-| Daytona | [Integration guide](https://app.blekline.com/docs/integrations/daytona-stack) |
+| L1 sandboxes | [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers) |
 
 ## Development
 

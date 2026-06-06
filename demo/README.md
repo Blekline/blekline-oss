@@ -26,7 +26,7 @@
 | 6 | Codex + proxy | API key in tool call | Block |
 | 7 | Browser | `/operations/mcp` | Events from all clients |
 | 8 | Terminal | `pnpm demo:sdk` | REST SDK round-trip |
-| 9 | Browser | [Daytona stack](https://app.blekline.com/docs/integrations/daytona-stack) | L4 Blekline + L1 Daytona |
+| 9 | Browser | [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers) | L4 Blekline + L1 runtimes |
 
 Shared prompts: [`prompts.md`](./prompts.md)  
 Model QA: [`cursor/model-matrix.md`](./cursor/model-matrix.md)
@@ -34,19 +34,26 @@ Model QA: [`cursor/model-matrix.md`](./cursor/model-matrix.md)
 ## Smoke tests
 
 ```bash
-pnpm demo:mcp-smoke    # headless MCP tools/list
-pnpm demo:sdk          # REST mask round-trip (needs live API + token)
+pnpm demo:mcp-smoke       # headless MCP tools/list
+pnpm demo:sdk             # REST mask round-trip (needs live API + token)
+pnpm demo:sandbox-smoke   # L1 provider + Blekline mask (see table below)
 pnpm --filter @blekline/mcp-proxy test
 ```
 
-**Pitch:** Blekline = **Layer 4** governance. Daytona = **Layer 1** infrastructure. [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
+**Pitch:** Blekline = **Layer 4** governance. Pick an **Layer 1** sandbox — [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers). [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
 
 **Docs:** [app.blekline.com/docs](https://app.blekline.com/docs) · [Quick start](https://app.blekline.com/docs/introduction/quick-start)
 
-## Daytona integration smoke test
+## L1 sandbox integration smoke tests
 
-Creates a Daytona sandbox, runs a Blekline mask call from within it, asserts no raw PII in the result, tears down.
+Verifies provider credentials + sandbox lifecycle (where applicable) + Blekline mask with no raw PII in output.
 
-```bash
-DAYTONA_API_KEY=... BLEKLINE_WORKSPACE_TOKEN=blw_... pnpm demo:daytona-smoke
-```
+| Provider | Command | Required env |
+|----------|---------|--------------|
+| Daytona | `SANDBOX_PROVIDER=daytona pnpm demo:sandbox-smoke` | `DAYTONA_API_KEY`, `BLEKLINE_WORKSPACE_TOKEN` |
+| Modal | `SANDBOX_PROVIDER=modal pnpm demo:sandbox-smoke` | `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`, `BLEKLINE_WORKSPACE_TOKEN` |
+| Vercel Sandbox | `SANDBOX_PROVIDER=vercel pnpm demo:sandbox-smoke` | `VERCEL_OIDC_TOKEN` or `VERCEL_TOKEN`, `BLEKLINE_WORKSPACE_TOKEN` |
+| Cloudflare | `SANDBOX_PROVIDER=cloudflare pnpm demo:sandbox-smoke` | `CLOUDFLARE_API_TOKEN`, `BLEKLINE_WORKSPACE_TOKEN` |
+| E2B | `SANDBOX_PROVIDER=e2b pnpm demo:sandbox-smoke` | `E2B_API_KEY`, `BLEKLINE_WORKSPACE_TOKEN` |
+
+`pnpm demo:daytona-smoke` is an alias for `SANDBOX_PROVIDER=daytona`.

@@ -30,7 +30,12 @@ body:
         - label: Claude Desktop
         - label: Codex
         - label: Custom agent (LangChain/LlamaIndex/Pydantic/etc.)
-        - label: Daytona or other sandbox
+        - label: Daytona
+        - label: Modal
+        - label: Vercel Sandbox
+        - label: Cloudflare
+        - label: E2B
+        - label: Other sandbox
 
   - type: textarea
     id: usecase

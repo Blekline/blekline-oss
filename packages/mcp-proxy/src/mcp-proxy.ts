@@ -63,7 +63,10 @@ export async function interceptToolCall(
       riskTier: result.riskTier,
       action: result.action,
       mcpToolName: toolName,
-      downstreamServer: process.env.BLEKLINE_MCP_PROXY_MOCK === "1" ? "mock" : "daytona",
+      downstreamServer:
+        process.env.BLEKLINE_MCP_PROXY_MOCK === "1"
+          ? "mock"
+          : (process.env.BLEKLINE_DOWNSTREAM_SERVER?.trim() || "unknown"),
       clientSurface: ctx.clientSurface,
     })
     .catch(() => {});

@@ -1,0 +1,54 @@
+name: Sandbox integration
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Weekly Monday 09:00 UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  sandbox-smoke:
+    name: Blekline + ${{ matrix.provider }} smoke test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [daytona, modal, vercel, cloudflare, e2b]
+    # Opt-in per provider via repo variable (e.g. SANDBOX_INTEGRATION_DAYTONA_ENABLED)
+    if: >-
+      (matrix.provider == 'daytona' && vars.SANDBOX_INTEGRATION_DAYTONA_ENABLED == 'true') ||
+      (matrix.provider == 'modal' && vars.SANDBOX_INTEGRATION_MODAL_ENABLED == 'true') ||
+      (matrix.provider == 'vercel' && vars.SANDBOX_INTEGRATION_VERCEL_ENABLED == 'true') ||
+      (matrix.provider == 'cloudflare' && vars.SANDBOX_INTEGRATION_CLOUDFLARE_ENABLED == 'true') ||
+      (matrix.provider == 'e2b' && vars.SANDBOX_INTEGRATION_E2B_ENABLED == 'true')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install
+      - run: pnpm build:packages
+
+      - name: Run sandbox smoke test (${{ matrix.provider }})
+        env:
+          SANDBOX_PROVIDER: ${{ matrix.provider }}
+          BLEKLINE_WORKSPACE_TOKEN: ${{ secrets.BLEKLINE_WORKSPACE_TOKEN }}
+          BLEKLINE_API_URL: https://app.blekline.com
+          DAYTONA_API_KEY: ${{ secrets.DAYTONA_API_KEY }}
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+          VERCEL_OIDC_TOKEN: ${{ secrets.VERCEL_OIDC_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+        run: pnpm demo:sandbox-smoke

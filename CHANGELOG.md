@@ -6,11 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-05
+
 ### Added
 
-- Layer 4 README, why-ingress docs, architecture mermaid, GitHub issue templates, demo script
-- Docs centralized on [app.blekline.com/docs](https://app.blekline.com/docs) — [Why ingress](https://app.blekline.com/docs/introduction/why-ingress), [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
-- README: 2-minute quick start, CI badge, Layer 4/5 narrative
+- Multi-provider L1 ecosystem: Daytona, Modal, Vercel Sandbox, Cloudflare, E2B
+- `demo/sandbox-smoke` harness with per-provider modules
+- `BLEKLINE_DOWNSTREAM_SERVER` telemetry label for mcp-proxy
+- Sandbox integration CI matrix (opt-in per provider)
 
 ## [0.1.0] - 2026-06-04
 
@@ -23,5 +26,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ingress-proxy` — Docker image and Helm chart
 - Docs: Cursor, Claude Desktop, Codex, trust boundaries, latency SLO
 
-[Unreleased]: https://github.com/Blekline/blekline-oss/compare/v0.1.0...main
+[Unreleased]: https://github.com/Blekline/blekline-oss/compare/v0.2.0...main
+[0.2.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.1.0
