@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-06
+
+### Added
+
+- Ecosystem integration docs (hosted on app.blekline.com): 26 L5/L2/L3 partners
+- Extended `CLIENT_SURFACES`: continue, github-copilot, openhands, sourcegraph-cody
+- OSS README integration link tables for agent clients, models, frameworks, eval partners
+
 ## [0.2.0] - 2026-06-05
 
 ### Added
@@ -26,6 +34,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ingress-proxy` — Docker image and Helm chart
 - Docs: Cursor, Claude Desktop, Codex, trust boundaries, latency SLO
 
-[Unreleased]: https://github.com/Blekline/blekline-oss/compare/v0.2.0...main
+[Unreleased]: https://github.com/Blekline/blekline-oss/compare/v0.3.0...main
+[0.3.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.1.0

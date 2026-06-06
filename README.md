@@ -205,7 +205,46 @@ enforceToolCallLocally({
 });
 ```
 
-## Works with (L1 sandboxes)
+## Works with
+
+Full integration guides on [app.blekline.com/docs](https://app.blekline.com/docs) — not mirrored in this repo.
+
+### L5 agent clients
+
+| Client | Guide |
+|--------|-------|
+| Hub | [Agent clients](https://app.blekline.com/docs/integrations/agent-clients) |
+| Continue | [Continue MCP](https://app.blekline.com/docs/mcp/continue) |
+| GitHub Copilot | [Copilot MCP](https://app.blekline.com/docs/mcp/github-copilot) |
+| OpenHands | [OpenHands](https://app.blekline.com/docs/mcp/openhands) |
+| Sourcegraph Cody | [Cody](https://app.blekline.com/docs/mcp/sourcegraph-cody) |
+
+### L2 model providers
+
+| Provider | Guide |
+|----------|-------|
+| Hub | [Model providers](https://app.blekline.com/docs/integrations/model-providers) |
+| Azure OpenAI | [Azure stack](https://app.blekline.com/docs/integrations/azure-openai-stack) |
+| AWS Bedrock | [Bedrock stack](https://app.blekline.com/docs/integrations/aws-bedrock-stack) |
+| OpenRouter | [OpenRouter stack](https://app.blekline.com/docs/integrations/openrouter-stack) |
+
+### L2 frameworks & RAG
+
+| Integration | Guide |
+|-------------|-------|
+| Hub | [Frameworks & RAG](https://app.blekline.com/docs/integrations/frameworks-and-rag) |
+| LangChain | [LangChain stack](https://app.blekline.com/docs/integrations/langchain-stack) |
+| Pinecone | [Pinecone stack](https://app.blekline.com/docs/integrations/pinecone-stack) |
+
+### L3 eval & safety
+
+| Partner | Guide |
+|---------|-------|
+| Hub | [Eval & safety](https://app.blekline.com/docs/integrations/eval-and-safety) |
+| LangSmith | [LangSmith stack](https://app.blekline.com/docs/integrations/langsmith-stack) |
+| Guardrails | [Guardrails stack](https://app.blekline.com/docs/integrations/guardrails-stack) |
+
+### L1 sandboxes
 
 | Provider | Integration guide |
 |----------|-------------------|

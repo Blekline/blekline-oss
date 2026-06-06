@@ -16,6 +16,19 @@ export const BLEKLINE_HEADERS = {
   modelId: "x-blekline-model-id",
 } as const;
 
-export type ClientSurface = "cursor" | "claude-desktop" | "codex" | "sdk" | "extension" | "unknown";
+export const CLIENT_SURFACES = [
+  "cursor",
+  "claude-desktop",
+  "codex",
+  "continue",
+  "github-copilot",
+  "openhands",
+  "sourcegraph-cody",
+  "sdk",
+  "extension",
+  "unknown",
+] as const;
+
+export type ClientSurface = (typeof CLIENT_SURFACES)[number];
 
 export type ModelProvider = "anthropic" | "openai" | "google" | "xai" | "cursor" | "unknown";

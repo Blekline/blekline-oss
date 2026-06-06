@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CLIENT_SURFACES } from "./auth.js";
 
 export const eventIngestSchema = z.object({
   platform: z.string().max(40).optional(),
@@ -9,7 +10,7 @@ export const eventIngestSchema = z.object({
   action: z.string().max(48).optional(),
   maskProvider: z.enum(["azure", "fallback_local"]).optional(),
   maskPhase: z.string().max(48).optional(),
-  clientSurface: z.enum(["cursor", "claude-desktop", "codex", "sdk", "extension", "unknown"]).optional(),
+  clientSurface: z.enum(CLIENT_SURFACES).optional(),
   modelProvider: z.enum(["anthropic", "openai", "google", "xai", "cursor", "unknown"]).optional(),
   modelId: z.string().max(80).optional(),
   mcpToolName: z.string().max(120).optional(),
