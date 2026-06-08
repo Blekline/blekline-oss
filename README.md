@@ -53,13 +53,13 @@ This is the AI governance gap. And right now, there's nothing sitting between yo
 
 The EU AI Act isn't theoretical anymore. GPAI obligations have been enforceable since August 2025. Transparency and human oversight requirements land in August 2026. High-risk system conformity assessments follow. Fines reach up to €35 million or 7% of global turnover for the worst violations. And these rules aren't just about the model, they're about the systems you build with them: how you govern tool access, how you audit decisions, how you prove a human was in the loop.
 
-Meanwhile, enterprises running AI at scale — sandboxed, parallelized, thousands of agent calls — have no native answer for: what happened in that session? Who authorized that tool call? Did any PII leave the context window?
+Meanwhile, enterprises running AI at scale, sandboxed, parallelized, thousands of agent calls, have no native answer for: what happened in that session? Who authorized that tool call? Did any PII leave the context window?
 
 The compliance question is catching up to the capability question. And most teams aren't ready.
 
 ## What Blekline is
 
-Blekline is an open-core MCP ingress control plane - infrastructure that sits between your agents and everything they can touch. It does three things, in real time, before any LLM sees a prompt or any tool executes:
+Blekline is an open-core MCP ingress control plane, infrastructure that sits between your agents and everything they can touch. It does three things, in real time, before any LLM sees a prompt or any tool executes:
 
 **Mask** - strip PII, secrets, and sensitive context from prompts before they hit model APIs ([MCP Server docs](https://app.blekline.com/docs/mcp/server))
 
@@ -67,7 +67,7 @@ Blekline is an open-core MCP ingress control plane - infrastructure that sits be
 
 **Audit** — emit a structured, tamper-evident event trail for every agent interaction
 
-You can run it locally in two minutes. You can deploy it as a sidecar alongside any L1 sandbox (Daytona, Modal, E2B, Cloudflare, Vercel Sandbox). You can plug it into Cursor, Claude Desktop, or Codex today — without changing your agent code. This is the infrastructure that makes governed AI deployment real: not a checkbox, not a policy document, but a running system that enforces your intentions at the call level.
+You can run it locally in two minutes. You can deploy it as a sidecar alongside any L1 sandbox (Daytona, Modal, E2B, Cloudflare, Vercel Sandbox). You can plug it into Cursor, Claude Desktop, or Codex today, without changing your agent code. This is the infrastructure that makes governed AI deployment real: not a checkbox, not a policy document, but a running system that enforces your intentions at the call level.
 
 ---
 
