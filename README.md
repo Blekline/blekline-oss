@@ -43,7 +43,7 @@
 
 ## The problem nobody wants to talk about
 
-AI agents are eating the world. Cursor writes your code, Claude answers your support tickets, autonomous pipelines touch your databases, your APIs, your customers' data. The ecosystem is accelerating — MCP servers let agents pick up tools like apps pick up plugins — and that is genuinely exciting.
+Cursor writes your code, Claude answers your support tickets, autonomous pipelines touch your databases, your APIs, your customers' data. The ecosystem is accelerating — MCP servers let agents pick up tools like apps pick up plugins — and that is genuinely exciting.
 
 But here's the thing: your agents have no idea what they're not allowed to do. They'll happily pass an AWS key to a model context window. They'll call a tool with a customer's email as an argument. They'll execute a shell command that wasn't in the plan. Not out of malice — out of the fundamental nature of language models: they optimize for task completion, not for the organizational policies you haven't written yet.
 
