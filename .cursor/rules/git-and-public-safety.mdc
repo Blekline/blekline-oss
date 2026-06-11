@@ -1,0 +1,63 @@
+---
+description: Git commit/push safety — never leak sensitive data, business plans, or names to public repos
+alwaysApply: true
+---
+
+# Git, commit, and push safety
+
+Follow **before every commit or push**, especially anything touching `blekline-oss`, `oss/`, or `templates/oss/`.
+
+## Two repositories (never confuse them)
+
+| Repo | Remote | Visibility | What belongs here |
+|------|--------|------------|-------------------|
+| **blekline** | `Blekline/blekline` | **Private** | Webapp, extension, outreach, launch playbooks, business plans |
+| **blekline-oss** | `Blekline/blekline-oss` | **Public** | OSS packages, `docs/README.md` stub only, LICENSE, CI — **no GTM secrets** |
+
+Work on public artifacts in `templates/oss/` → `pnpm sync:oss` → commit in `oss/` only after audit passes.
+
+## Never commit or push (any repo unless explicitly private-only path)
+
+- **Real secrets**: API keys, workspace tokens (`blw_live_…`), Stripe (`sk_`, `whsec_`), `ghp_`, `npm_`, `.env`, credentials JSON
+- **Outreach & names**: investor lists, DM templates, named targets (angels, VCs, design partners, "Skupina", GROUP1–4 files)
+- **Business plans**: launch sequencing, blitz playbooks, Show HN drafts, pricing strategy, Apollo lists, customer names
+- **Private URLs**: links that expose the private monorepo as a product surface (treat `blekline` vs `blekline-oss` deliberately)
+- **Media not for OSS**: pitch PDFs/decks, root-level `.mp4`, generated marketing binaries, `UserInterfaceState.xcuserstate`
+- **Paths that must stay private**: `docs/outreach-private/`, `docs/OPEN_CORE_LAUNCH.md`, `BLITZ_DEMO.md`, `webapp/.env*`
+
+## Public OSS allowlist mindset
+
+Only ship to `blekline-oss` what a stranger should see: code, OpenAPI, MCP docs, architecture, **placeholder** examples (`blw_...`, `AKIAIOSFODNN7EXAMPLE`, `alice@corp.com`).
+
+If content could be read as **who you're emailing, your strategy, or unreleased positioning** → keep it in `docs/outreach-private/` or private `docs/`, not `templates/oss/`.
+
+## Required checks before `blekline-oss` push
+
+```bash
+cd /Users/tinemaher/coding/blekline
+pnpm audit:oss-public    # must exit 0
+pnpm sync:oss
+cd oss
+test ! -e outreach && test ! -f OPEN_CORE_LAUNCH.md && test ! -f SHOW_HN.md && test ! -f demo/BLITZ_DEMO.md
+test "$(find docs -type f 2>/dev/null | wc -l | tr -d ' ')" -eq 1   # docs/README.md stub only
+git status               # review every path in the commit
+```
+
+Sync auto-purges forbidden paths from `oss/`; audit scans `templates/oss/`, `packages/`, `demo/`, and selected webapp docs (sensitivity only). Full docs host on app.blekline.com — never sync doc pages to OSS.
+
+## Agent rules for commits and pushes
+
+1. **Do not commit or push unless the user explicitly asks** (see user git safety rules).
+2. Before proposing a public OSS push, run `pnpm audit:oss-public` and report the result.
+3. **Never** add `docs/outreach-private/`, `OPEN_CORE_LAUNCH.md`, `SHOW_HN.md`, or `BLITZ_DEMO.md` under `templates/oss/` or `oss/`.
+4. On `git diff` / `git status`, flag any file matching: `outreach`, `BLITZ`, `OPEN_CORE_LAUNCH`, `SHOW_HN`, `.env`, pitch/deck PDFs, real token patterns.
+5. If the user asks to push `oss/` and audit fails or forbidden paths appear → **stop** and fix; do not push.
+6. Prefer **private monorepo** commits for operator docs (`docs/OSS_PUBLIC_AUDIT.md`, `docs/OPEN_CORE_BLITZKRIEG.md`).
+7. After a mistaken public push: deletion in a new commit is **not** enough; history rewrite requires orphan branch + `git push --force` (destructive — confirm with user first).
+8. `blekline-oss` history was reset to a single root commit; never force-push without explicit user approval.
+
+## Quick reference
+
+- Audit script: `scripts/audit-oss-public.mjs`
+- Human checklist: `docs/OSS_PUBLIC_AUDIT.md`
+- Private outreach: `docs/outreach-private/README.md`

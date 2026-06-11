@@ -1,0 +1,2 @@
+# From repo root: pip install -r examples/python-sdk-agent/requirements.txt
+-e ../../packages/client-python

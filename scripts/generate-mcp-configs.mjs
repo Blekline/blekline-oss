@@ -1,70 +1,249 @@
 #!/usr/bin/env node
 /**
- * MCP configs for blekline-oss (npm/npx paths, not monorepo workspace paths).
+ * Generate MCP integration configs from integrations/manifest.json.
+ *
+ * Usage:
+ *   node scripts/generate-mcp-configs.mjs           # monorepo *.example paths
+ *   node scripts/generate-mcp-configs.mjs --local   # live gitignored configs
+ *   node scripts/generate-mcp-configs.mjs --oss     # npx @blekline/* paths (blekline-oss)
  */
-import { writeFileSync, mkdirSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const claudeCodePermissions = require("./lib/claude-code-permissions.json");
+import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const apiUrl = process.env.BLEKLINE_API_URL ?? "https://app.blekline.com";
-const token = process.env.BLEKLINE_WORKSPACE_TOKEN ?? "blw_replace_with_workspace_token";
+const envPath = resolve(root, ".env");
+const isLocal = process.argv.includes("--local");
+const isOss = process.argv.includes("--oss");
+const useExampleSuffix = !isLocal;
 
-mkdirSync(resolve(root, "config"), { recursive: true });
+function loadEnv() {
+  const out = { ...process.env };
+  if (!existsSync(envPath)) return out;
+  for (const line of readFileSync(envPath, "utf8").split("\n")) {
+    const t = line.trim();
+    if (!t || t.startsWith("#")) continue;
+    const i = t.indexOf("=");
+    if (i <= 0) continue;
+    out[t.slice(0, i).trim()] = t.slice(i + 1).trim();
+  }
+  return out;
+}
 
-const cursor = {
-  mcpServers: {
+const env = loadEnv();
+const apiUrl = env.BLEKLINE_API_URL ?? "https://app.blekline.com";
+const token = env.BLEKLINE_WORKSPACE_TOKEN ?? "blw_replace_with_workspace_token";
+const absRoot = root.replace(/\\/g, "/");
+
+function serverCommand() {
+  if (isOss) {
+    return { command: "npx", args: ["-y", "@blekline/mcp-server"] };
+  }
+  if (isLocal) {
+    return {
+      command: "node",
+      args: isOss ? [] : ["${workspaceFolder}/packages/mcp-server/dist/index.js"],
+    };
+  }
+  return {
+    command: "node",
+    args: ["${workspaceFolder}/packages/mcp-server/dist/index.js"],
+  };
+}
+
+function proxyCommand() {
+  if (isOss) {
+    return { command: "npx", args: ["-y", "@blekline/mcp-proxy"] };
+  }
+  return {
+    command: "node",
+    args: ["${workspaceFolder}/packages/mcp-proxy/dist/index.js"],
+  };
+}
+
+function envBlock(surface, useCursorVars = false) {
+  if (useCursorVars && isLocal) {
+    return {
+      BLEKLINE_API_URL: "${env:BLEKLINE_API_URL}",
+      BLEKLINE_WORKSPACE_TOKEN: "${env:BLEKLINE_WORKSPACE_TOKEN}",
+      BLEKLINE_CLIENT_SURFACE: surface,
+    };
+  }
+  return {
+    BLEKLINE_API_URL: apiUrl,
+    BLEKLINE_WORKSPACE_TOKEN: token,
+    BLEKLINE_CLIENT_SURFACE: surface,
+  };
+}
+
+function proxyEnvBlock(surface, useCursorVars = false) {
+  const base = envBlock(surface, useCursorVars);
+  return { ...base, BLEKLINE_MCP_PROXY_MOCK: "1" };
+}
+
+function absServerArgs() {
+  return [`${absRoot}/packages/mcp-server/dist/index.js`];
+}
+
+function absProxyArgs() {
+  return [`${absRoot}/packages/mcp-proxy/dist/index.js`];
+}
+
+function buildMcpJson(surface, { useCursorVars = false, includeProxy = true } = {}) {
+  const srv = serverCommand();
+  const servers = {
     blekline: {
-      command: "npx",
-      args: ["-y", "@blekline/mcp-server"],
-      env: {
-        BLEKLINE_API_URL: apiUrl,
-        BLEKLINE_WORKSPACE_TOKEN: token,
-        BLEKLINE_CLIENT_SURFACE: "cursor",
-      },
+      ...srv,
+      env: envBlock(surface, useCursorVars),
     },
-    "blekline-proxy": {
-      command: "npx",
-      args: ["-y", "@blekline/mcp-proxy"],
-      env: {
-        BLEKLINE_API_URL: apiUrl,
-        BLEKLINE_WORKSPACE_TOKEN: token,
-        BLEKLINE_MCP_PROXY_MOCK: "1",
-        BLEKLINE_CLIENT_SURFACE: "cursor",
-      },
-    },
-  },
-};
+  };
+  if (includeProxy) {
+    const prx = proxyCommand();
+    servers["blekline-proxy"] = {
+      ...prx,
+      env: proxyEnvBlock(surface, useCursorVars),
+    };
+  }
+  return { mcpServers: servers };
+}
 
-const claudeDesktop = {
-  mcpServers: {
-    blekline: {
-      command: "npx",
-      args: ["-y", "@blekline/mcp-server"],
-      env: {
-        BLEKLINE_API_URL: apiUrl,
-        BLEKLINE_WORKSPACE_TOKEN: token,
-        BLEKLINE_CLIENT_SURFACE: "claude-desktop",
+function buildClaudeDesktop(surface) {
+  if (isOss) {
+    return buildMcpJson(surface, { includeProxy: true });
+  }
+  return {
+    mcpServers: {
+      blekline: {
+        command: "node",
+        args: absServerArgs(),
+        env: envBlock(surface),
+      },
+      "blekline-proxy": {
+        command: "node",
+        args: absProxyArgs(),
+        env: proxyEnvBlock(surface),
       },
     },
-  },
-};
+  };
+}
 
-const codexToml = `# Generated — use published @blekline packages
+function buildClaudeCodeSettings(surface) {
+  const mcp = buildMcpJson(surface, { includeProxy: true });
+  return {
+    ...claudeCodePermissions,
+    ...mcp,
+  };
+}
+
+function buildContinueJson(surface) {
+  const mcp = buildMcpJson(surface, { includeProxy: true });
+  return {
+    models: [],
+    mcpServers: mcp.mcpServers,
+  };
+}
+
+function buildCodexToml(surface) {
+  const srvCmd = isOss ? 'command = "npx"\nargs = ["-y", "@blekline/mcp-server"]' : 'command = "node"\nargs = ["packages/mcp-server/dist/index.js"]';
+  const prxCmd = isOss
+    ? 'command = "npx"\nargs = ["-y", "@blekline/mcp-proxy"]'
+    : 'command = "node"\nargs = ["packages/mcp-proxy/dist/index.js"]';
+  return `# Generated by scripts/generate-mcp-configs.mjs — placeholder token only
 
 [mcp_servers.blekline]
-command = "npx"
-args = ["-y", "@blekline/mcp-server"]
+${srvCmd}
 enabled = true
+startup_timeout_sec = 30
 
 [mcp_servers.blekline.env]
 BLEKLINE_API_URL = "${apiUrl}"
 BLEKLINE_WORKSPACE_TOKEN = "${token}"
-BLEKLINE_CLIENT_SURFACE = "codex"
+BLEKLINE_CLIENT_SURFACE = "${surface}"
+
+[mcp_servers.blekline-proxy]
+${prxCmd}
+enabled = true
+
+[mcp_servers.blekline-proxy.env]
+BLEKLINE_API_URL = "${apiUrl}"
+BLEKLINE_WORKSPACE_TOKEN = "${token}"
+BLEKLINE_MCP_PROXY_MOCK = "1"
+BLEKLINE_CLIENT_SURFACE = "${surface}"
 `;
+}
 
-writeFileSync(resolve(root, "config/cursor.mcp.json.example"), `${JSON.stringify(cursor, null, 2)}\n`);
-writeFileSync(resolve(root, "config/claude-desktop.generated.json"), `${JSON.stringify(claudeDesktop, null, 2)}\n`);
-writeFileSync(resolve(root, "config/codex.config.toml.example"), codexToml);
+function outPath(repoPath) {
+  if (!useExampleSuffix) {
+    return repoPath.replace(/\.example$/, "");
+  }
+  return repoPath.endsWith(".example") ? repoPath : repoPath;
+}
 
-console.log("Generated OSS MCP config examples in config/");
+function writeConfig(repoPath, content, { json = true } = {}) {
+  const rel = outPath(repoPath);
+  const full = resolve(root, rel);
+  mkdirSync(dirname(full), { recursive: true });
+  const body = json ? `${JSON.stringify(content, null, 2)}\n` : content;
+  writeFileSync(full, body);
+  return rel;
+}
+
+function writeToml(repoPath, content) {
+  const rel = outPath(repoPath);
+  const full = resolve(root, rel);
+  mkdirSync(dirname(full), { recursive: true });
+  writeFileSync(full, content);
+  return rel;
+}
+
+const manifest = JSON.parse(readFileSync(join(root, "integrations/manifest.json"), "utf8"));
+const written = [];
+
+for (const entry of manifest.entries) {
+  if (!entry.configFormat) continue;
+  const surface = entry.BLEKLINE_CLIENT_SURFACE;
+  const useCursorVars = entry.id === "cursor" && isLocal;
+
+  switch (entry.configFormat) {
+    case "mcp-json": {
+      const cfg = buildMcpJson(surface, {
+        useCursorVars,
+        includeProxy: entry.includesProxy,
+      });
+      written.push(writeConfig(entry.repoPath, cfg));
+      break;
+    }
+    case "claude-desktop": {
+      const cfg = buildClaudeDesktop(surface);
+      const path =
+        isLocal && !useExampleSuffix
+          ? "config/claude_desktop_config.generated.json"
+          : entry.repoPath;
+      written.push(writeConfig(path, cfg));
+      break;
+    }
+    case "claude-code-settings": {
+      const cfg = buildClaudeCodeSettings(surface);
+      written.push(writeConfig(entry.repoPath, cfg));
+      break;
+    }
+    case "continue-json": {
+      const cfg = buildContinueJson(surface);
+      written.push(writeConfig(entry.repoPath, cfg));
+      break;
+    }
+    case "codex-toml": {
+      written.push(writeToml(entry.repoPath, buildCodexToml(surface)));
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+console.log(`Generated (${isLocal ? "local" : isOss ? "oss" : "example"}):`);
+for (const p of written) console.log(`  ${p}`);

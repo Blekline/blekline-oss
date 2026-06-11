@@ -19,6 +19,7 @@ export const BLEKLINE_HEADERS = {
 export const CLIENT_SURFACES = [
   "cursor",
   "claude-desktop",
+  "claude-code",
   "codex",
   "continue",
   "github-copilot",

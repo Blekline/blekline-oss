@@ -1,0 +1,23 @@
+{
+  "name": "Blekline OSS",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "postCreateCommand": "corepack enable && pnpm install && pnpm build:packages",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "github.copilot",
+        "ms-vscode.vscode-typescript-next"
+      ],
+      "settings": {
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  },
+  "remoteEnv": {
+    "BLEKLINE_CLIENT_SURFACE": "sdk"
+  }
+}

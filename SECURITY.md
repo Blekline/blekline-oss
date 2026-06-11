@@ -54,6 +54,12 @@ Published npm packages use a small, auditable dependency tree:
 
 We run CI on every push to `main` and review dependency updates before OSS releases.
 
+## Config hygiene
+
+- Commit only `*.example` integration configs — never `blw_live_*` tokens or `.env` files.
+- Live paths (gitignored): `.cursor/mcp.json`, `.claude/settings.json`, `.codex/config.toml`, `config/claude_desktop_config.generated.json`.
+- Run `pnpm verify:integrations` before opening a PR.
+
 ## Safe harbor
 
 We support good-faith security research. Do not access customer data, disrupt production services, or exceed what is necessary to demonstrate a vulnerability.

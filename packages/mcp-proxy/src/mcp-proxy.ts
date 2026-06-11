@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { BleklineClient } from "@blekline/client";
-import { enforceToolCallLocally, type ClientSurface } from "@blekline/contracts";
+import { enforceToolCallLocally, parseClientSurfaceFromEnv, type ClientSurface } from "@blekline/contracts";
 
 export type ProxyEnforcementContext = {
   client: BleklineClient;
@@ -14,9 +14,7 @@ export type InterceptResult =
   | { ok: false; action: "block"; message: string; findings: unknown[] };
 
 function envClientSurface(): ClientSurface {
-  const v = process.env.BLEKLINE_CLIENT_SURFACE?.trim();
-  if (v === "cursor" || v === "claude-desktop" || v === "codex") return v;
-  return "sdk";
+  return parseClientSurfaceFromEnv(process.env.BLEKLINE_CLIENT_SURFACE);
 }
 
 export function createProxyContext(): ProxyEnforcementContext {

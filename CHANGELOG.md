@@ -6,6 +6,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-10
+
+### Added
+
+- Repo layout: `cli/`, `ci/`, agent dotdirs (`.cursor`, `.claude`, `.vscode`, `.codex`), `config/`, `integrations/` manifest
+- `claude-code` client surface; centralized `parseClientSurfaceFromEnv` in `@blekline/contracts`
+- `pnpm verify:integrations`, `AGENTS.md`, install scripts, SDK examples
+- Headless `tools/list` verify per manifest surface; Python SDK pytest in CI
+- Sync purge for live MCP configs (ship `*.example` only)
+
+### Changed
+
+- README: CLI-first navigation; Connect table for all verified surfaces
+- `demo/qa/client-matrix.md` replaces `demo/cursor/model-matrix.md`
+- MCP server tools modularized under `packages/mcp-server/src/tools/`
+
 ## [0.3.0] - 2026-06-06
 
 ### Added
@@ -34,7 +50,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ingress-proxy` — Docker image and Helm chart
 - Docs: Cursor, Claude Desktop, Codex, trust boundaries, latency SLO
 
-[Unreleased]: https://github.com/Blekline/blekline-oss/compare/v0.3.0...main
+[Unreleased]: https://github.com/Blekline/blekline-oss/compare/v0.4.0...main
+[0.4.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.2.0
 [0.1.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.1.0
