@@ -12,8 +12,10 @@ Thank you for helping improve the Blekline ingress control plane.
 ```bash
 pnpm install
 pnpm build:packages
+pnpm verify:integrations
 pnpm demo:mcp-smoke
 pnpm --filter @blekline/mcp-proxy test
+pip install -e "./packages/client-python[dev]" && pnpm test:python
 ```
 
 ## Pull requests
@@ -21,8 +23,9 @@ pnpm --filter @blekline/mcp-proxy test
 1. Fork [blekline-oss](https://github.com/Blekline/blekline-oss)
 2. Create a branch from `main`
 3. Keep changes focused (one package or docs area per PR when possible)
-4. Ensure CI passes: build + smoke + proxy tests
-5. Describe behavior change and which client (Cursor / Claude / Codex) you tested
+4. Ensure CI passes: build + `verify:integrations` + smoke + proxy tests
+5. Update [`integrations/manifest.json`](integrations/manifest.json) when adding a client surface; run `pnpm generate:mcp-configs`
+6. Describe which client surface you tested (see [`integrations/README.md`](integrations/README.md))
 
 ## Licensing
 

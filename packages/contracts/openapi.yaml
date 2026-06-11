@@ -59,7 +59,7 @@ components:
           type: string
         clientSurface:
           type: string
-          enum: [cursor, claude-desktop, codex, continue, github-copilot, openhands, sourcegraph-cody, sdk, extension, unknown]
+          enum: [cursor, claude-desktop, claude-code, codex, continue, github-copilot, openhands, sourcegraph-cody, sdk, extension, unknown]
     EnforceToolCallResult:
       type: object
       properties:

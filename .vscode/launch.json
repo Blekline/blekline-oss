@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Blekline MCP server",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/mcp-server/dist/index.js",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "BLEKLINE_CLIENT_SURFACE": "sdk"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Blekline MCP proxy (mock)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/mcp-proxy/dist/index.js",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "BLEKLINE_CLIENT_SURFACE": "sdk",
+        "BLEKLINE_MCP_PROXY_MOCK": "1"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Demo MCP smoke",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/mcp-smoke.mjs",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    }
+  ]
+}

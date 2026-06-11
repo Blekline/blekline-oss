@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "github.copilot",
+    "continue.continue",
+    "ms-vscode.vscode-typescript-next"
+  ]
+}

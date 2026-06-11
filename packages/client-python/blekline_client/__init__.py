@@ -6,7 +6,19 @@ from typing import Any, Literal, Optional
 
 import httpx
 
-ClientSurface = Literal["cursor", "claude-desktop", "codex", "sdk", "extension", "unknown"]
+ClientSurface = Literal[
+    "cursor",
+    "claude-desktop",
+    "claude-code",
+    "codex",
+    "continue",
+    "github-copilot",
+    "openhands",
+    "sourcegraph-cody",
+    "sdk",
+    "extension",
+    "unknown",
+]
 EnforcementAction = Literal["allow", "mask", "block"]
 
 

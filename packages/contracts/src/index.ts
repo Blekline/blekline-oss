@@ -1,5 +1,6 @@
 export * from "./mcp-policy.js";
 export * from "./auth.js";
+export * from "./client-surface.js";
 export * from "./mask.js";
 export * from "./events.js";
 export * from "./policy.js";

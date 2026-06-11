@@ -1,0 +1,39 @@
+# Example — copy to .github/workflows/blekline-gate.yml
+name: Blekline ingress gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  blekline-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build:packages
+
+      - name: Verify integration configs
+        run: node scripts/verify-integration-configs.mjs
+
+      - name: MCP smoke (optional — requires secrets)
+        if: ${{ secrets.BLEKLINE_WORKSPACE_TOKEN != '' }}
+        env:
+          BLEKLINE_WORKSPACE_TOKEN: ${{ secrets.BLEKLINE_WORKSPACE_TOKEN }}
+          BLEKLINE_API_URL: ${{ secrets.BLEKLINE_API_URL || 'https://app.blekline.com' }}
+          BLEKLINE_CLIENT_SURFACE: sdk
+        run: node scripts/mcp-smoke.mjs

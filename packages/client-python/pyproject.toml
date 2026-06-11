@@ -1,6 +1,6 @@
 [project]
 name = "blekline-client"
-version = "0.3.0"
+version = "0.4.0"
 description = "Python SDK for Blekline ingress control plane"
 readme = "README.md"
 license = "Apache-2.0"
@@ -12,7 +12,11 @@ Repository = "https://github.com/Blekline/blekline-oss"
 Documentation = "https://app.blekline.com/docs/sdk/python"
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0.0"]
+dev = ["pytest>=8.0.0", "httpx>=0.27.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
 
 [build-system]
 requires = ["hatchling"]

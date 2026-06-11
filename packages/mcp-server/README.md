@@ -1,6 +1,6 @@
 # @blekline/mcp-server
 
-Stdio MCP server exposing Blekline governance tools for **Cursor (P0)**, **Claude Desktop (P1)**, and **Codex (P2)**.
+Stdio MCP server exposing Blekline governance tools for all [verified client surfaces](https://github.com/Blekline/blekline-oss/tree/main/integrations).
 
 ## Tools
 
@@ -16,7 +16,7 @@ Stdio MCP server exposing Blekline governance tools for **Cursor (P0)**, **Claud
 ```bash
 BLEKLINE_WORKSPACE_TOKEN=ws_...
 BLEKLINE_API_URL=https://app.blekline.com  # optional
-BLEKLINE_CLIENT_SURFACE=cursor             # cursor | claude-desktop | codex
+BLEKLINE_CLIENT_SURFACE=cursor             # see integrations/manifest.json
 ```
 
 ## Run
@@ -33,7 +33,7 @@ BLEKLINE_MCP_TRANSPORT=sse BLEKLINE_MCP_PORT=3200 node packages/mcp-server/dist/
 # GET http://127.0.0.1:3200/sse
 ```
 
-Generate configs: `pnpm generate:mcp-configs` from repo root.
+Generate configs: `pnpm generate:mcp-configs` — examples in `.cursor/`, `.claude/`, `.vscode/`, `.codex/`, `config/`.
 
 ## Docs
 

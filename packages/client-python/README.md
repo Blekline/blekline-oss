@@ -30,3 +30,15 @@ print(decision["action"])
 ```
 
 See OpenAPI spec: `packages/contracts/openapi.yaml`.
+
+## Tests
+
+Requires **Python 3.10+**.
+
+```bash
+python -m pip install --upgrade pip
+pip install -e ".[dev]"
+pytest tests -q
+```
+
+From repo root: `pnpm test:python`

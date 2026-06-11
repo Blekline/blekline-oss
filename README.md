@@ -71,38 +71,39 @@ You can run it locally in two minutes. You can deploy it as a sidecar alongside 
 
 ---
 
-## Try in 2 minutes
-
-No account required for local mode. Workspace token needed for cloud masking and fleet policy.
+## Start here
 
 ```bash
-export BLEKLINE_WORKSPACE_TOKEN="blw_..."   # Admin → API keys @ app.blekline.com
+pnpm install && pnpm build:packages
+export BLEKLINE_WORKSPACE_TOKEN="blw_..."
 export BLEKLINE_API_URL="https://app.blekline.com"
-npx -y @blekline/mcp-server
+export BLEKLINE_CLIENT_SURFACE="sdk"
+pnpm demo:mcp-smoke
 ```
 
-**Cursor** — `.cursor/mcp.json`:
+Headless guide: [`cli/README.md`](cli/README.md) · CI template: [`ci/`](ci/)
 
-```json
-{
-  "mcpServers": {
-    "blekline": {
-      "command": "npx",
-      "args": ["-y", "@blekline/mcp-server"],
-      "env": {
-        "BLEKLINE_WORKSPACE_TOKEN": "blw_...",
-        "BLEKLINE_CLIENT_SURFACE": "cursor"
-      }
-    }
-  }
-}
+## Connect Blekline
+
+| Surface | Path | `BLEKLINE_CLIENT_SURFACE` |
+|---------|------|---------------------------|
+| CLI / SDK | [`cli/`](cli/) | `sdk` |
+| CI / CD | [`ci/`](ci/) | `sdk` |
+| Claude Code | [`.claude/settings.json.example`](.claude/settings.json.example) | `claude-code` |
+| Cursor | [`.cursor/mcp.json.example`](.cursor/mcp.json.example) | `cursor` |
+| GitHub Copilot | [`.vscode/mcp.json.example`](.vscode/mcp.json.example) | `github-copilot` |
+| Continue | [`.vscode/continue.config.json.example`](.vscode/continue.config.json.example) | `continue` |
+| Claude Desktop | [`config/claude_desktop_config.json.example`](config/claude_desktop_config.json.example) | `claude-desktop` |
+| Codex | [`.codex/config.toml.example`](.codex/config.toml.example) | `codex` |
+
+Full index: [`integrations/README.md`](integrations/README.md) · Docs: [app.blekline.com/docs](https://app.blekline.com/docs)
+
+```bash
+pnpm generate:mcp-configs          # *.example configs
+pnpm verify:integrations           # manifest + schema checks
 ```
 
-In the agent: *"Use blekline_mask_prompt on: Contact Jane at jane@acme.com — API key AKIAIOSFODNN7EXAMPLE"*
-
-**Proxy + L1 sandbox** — point downstream MCP at your runtime; see [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers).
-
-**No cloud (local dev)** — `@blekline/contracts` secret scan + `enforceToolCallLocally` (see [Local-only](#local-only-no-api-token) below).
+In any client: *"Use blekline_mask_prompt on: Contact Jane at jane@acme.com — API key AKIAIOSFODNN7EXAMPLE"*
 
 ## Architecture
 

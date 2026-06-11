@@ -41,6 +41,19 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Publish Python SDK to PyPI
+        run: |
+          pip install build twine
+          python -m build packages/client-python
+          twine upload packages/client-python/dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+
       - name: GitHub Release
         uses: softprops/action-gh-release@v2
         with:

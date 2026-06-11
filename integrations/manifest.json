@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "id": "cli",
+      "tier": "verified",
+      "repoPath": "cli/",
+      "configPathHuman": null,
+      "BLEKLINE_CLIENT_SURFACE": "sdk",
+      "headless": true,
+      "docSlug": "introduction/quick-start",
+      "verify": ["demo:mcp-smoke"],
+      "includesProxy": false,
+      "configFormat": null
+    },
+    {
+      "id": "ci",
+      "tier": "verified",
+      "repoPath": "ci/",
+      "configPathHuman": null,
+      "BLEKLINE_CLIENT_SURFACE": "sdk",
+      "headless": true,
+      "docSlug": "sdk/ci-cd",
+      "verify": ["verify:integration-configs"],
+      "includesProxy": false,
+      "configFormat": null
+    },
+    {
+      "id": "claude-code",
+      "tier": "verified",
+      "repoPath": ".claude/settings.json.example",
+      "configPathHuman": ".claude/settings.json",
+      "BLEKLINE_CLIENT_SURFACE": "claude-code",
+      "headless": true,
+      "docSlug": "mcp/claude-code",
+      "verify": ["tools/list"],
+      "includesProxy": true,
+      "configFormat": "claude-code-settings"
+    },
+    {
+      "id": "cursor",
+      "tier": "verified",
+      "repoPath": ".cursor/mcp.json.example",
+      "configPathHuman": ".cursor/mcp.json",
+      "BLEKLINE_CLIENT_SURFACE": "cursor",
+      "headless": true,
+      "docSlug": "mcp/cursor",
+      "verify": ["tools/list"],
+      "includesProxy": true,
+      "configFormat": "mcp-json"
+    },
+    {
+      "id": "github-copilot",
+      "tier": "verified",
+      "repoPath": ".vscode/mcp.json.example",
+      "configPathHuman": ".vscode/mcp.json",
+      "BLEKLINE_CLIENT_SURFACE": "github-copilot",
+      "headless": true,
+      "docSlug": "mcp/github-copilot",
+      "verify": ["tools/list"],
+      "includesProxy": true,
+      "configFormat": "mcp-json"
+    },
+    {
+      "id": "continue",
+      "tier": "verified",
+      "repoPath": ".vscode/continue.config.json.example",
+      "configPathHuman": "~/.continue/config.json",
+      "BLEKLINE_CLIENT_SURFACE": "continue",
+      "headless": true,
+      "docSlug": "mcp/continue",
+      "verify": ["tools/list"],
+      "includesProxy": true,
+      "configFormat": "continue-json"
+    },
+    {
+      "id": "claude-desktop",
+      "tier": "verified",
+      "repoPath": "config/claude_desktop_config.json.example",
+      "configPathHuman": "Claude Desktop config (OS-specific)",
+      "BLEKLINE_CLIENT_SURFACE": "claude-desktop",
+      "headless": true,
+      "docSlug": "mcp/claude-desktop",
+      "verify": ["tools/list"],
+      "includesProxy": true,
+      "configFormat": "claude-desktop"
+    },
+    {
+      "id": "codex",
+      "tier": "verified",
+      "repoPath": ".codex/config.toml.example",
+      "configPathHuman": ".codex/config.toml",
+      "BLEKLINE_CLIENT_SURFACE": "codex",
+      "headless": true,
+      "docSlug": "mcp/codex",
+      "verify": ["tools/list"],
+      "includesProxy": true,
+      "configFormat": "codex-toml"
+    }
+  ]
+}

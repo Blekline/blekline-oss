@@ -4,3 +4,8 @@ dist/
 .DS_Store
 .env
 .env.local
+.cursor/mcp.json
+.claude/settings.json
+.codex/config.toml
+.vscode/mcp.json
+config/claude_desktop_config.generated.json

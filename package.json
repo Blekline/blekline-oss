@@ -14,7 +14,9 @@
   "scripts": {
     "build": "pnpm -r --filter './packages/*' build",
     "build:packages": "pnpm --filter @blekline/contracts build && pnpm --filter @blekline/client build && pnpm --filter @blekline/mcp-server build && pnpm --filter @blekline/mcp-proxy build",
-    "generate:mcp-configs": "node scripts/generate-mcp-configs.mjs",
+    "generate:mcp-configs": "node scripts/generate-mcp-configs.mjs --oss",
+    "verify:integrations": "node scripts/verify-client-surfaces.mjs && node scripts/verify-integration-configs.mjs",
+    "test:python": "python3 -m pip install --upgrade pip -q && python3 -m pip install -e \"packages/client-python[dev]\" -q && python3 -m pytest packages/client-python/tests -q",
     "demo:mcp-smoke": "node scripts/mcp-smoke.mjs",
     "demo:sdk": "node scripts/demo-sdk.mjs",
     "demo:latency": "node scripts/demo-latency.mjs",

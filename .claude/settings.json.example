@@ -1,0 +1,51 @@
+{
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Read",
+      "Bash(pnpm *)",
+      "Bash(node *)",
+      "Bash(npx *)",
+      "Bash(tsx *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(gh issue *)",
+      "Bash(gh pr *)",
+      "Bash(gh api *)",
+      "Bash(gh repo *)",
+      "Bash(gh run *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(head *)",
+      "Bash(tail *)"
+    ]
+  },
+  "mcpServers": {
+    "blekline": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/packages/mcp-server/dist/index.js"
+      ],
+      "env": {
+        "BLEKLINE_API_URL": "https://app.blekline.com",
+        "BLEKLINE_WORKSPACE_TOKEN": "blw_replace_with_workspace_token",
+        "BLEKLINE_CLIENT_SURFACE": "claude-code"
+      }
+    },
+    "blekline-proxy": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/packages/mcp-proxy/dist/index.js"
+      ],
+      "env": {
+        "BLEKLINE_API_URL": "https://app.blekline.com",
+        "BLEKLINE_WORKSPACE_TOKEN": "blw_replace_with_workspace_token",
+        "BLEKLINE_CLIENT_SURFACE": "claude-code",
+        "BLEKLINE_MCP_PROXY_MOCK": "1"
+      }
+    }
+  }
+}
