@@ -30,7 +30,10 @@ jobs:
           esac
           echo "enabled=$enabled" >> "$GITHUB_OUTPUT"
           if [ "$enabled" != "true" ]; then
-            echo "Skipping $provider — set SANDBOX_INTEGRATION_${provider^^}_ENABLED=true to opt in."
+            echo "Skipping $provider — set repo variable SANDBOX_INTEGRATION_${provider^^}_ENABLED=true to opt in."
+          elif [ -z "${{ secrets.BLEKLINE_WORKSPACE_TOKEN }}" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping $provider — add BLEKLINE_WORKSPACE_TOKEN secret for live mask smoke."
           fi
 
       - uses: actions/checkout@v4
