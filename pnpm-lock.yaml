@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@blekline/client':
+        specifier: workspace:*
+        version: link:packages/client
     devDependencies:
       tsx:
         specifier: ^4.19.2
