@@ -14,30 +14,48 @@ jobs:
       fail-fast: false
       matrix:
         provider: [daytona, modal, vercel, cloudflare, e2b]
-    # Opt-in per provider via repo variable (e.g. SANDBOX_INTEGRATION_DAYTONA_ENABLED)
-    if: >-
-      (matrix.provider == 'daytona' && vars.SANDBOX_INTEGRATION_DAYTONA_ENABLED == 'true') ||
-      (matrix.provider == 'modal' && vars.SANDBOX_INTEGRATION_MODAL_ENABLED == 'true') ||
-      (matrix.provider == 'vercel' && vars.SANDBOX_INTEGRATION_VERCEL_ENABLED == 'true') ||
-      (matrix.provider == 'cloudflare' && vars.SANDBOX_INTEGRATION_CLOUDFLARE_ENABLED == 'true') ||
-      (matrix.provider == 'e2b' && vars.SANDBOX_INTEGRATION_E2B_ENABLED == 'true')
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Skip if provider integration not enabled
+        id: enabled
+        run: |
+          provider="${{ matrix.provider }}"
+          enabled=false
+          case "$provider" in
+            daytona)    [ "${{ vars.SANDBOX_INTEGRATION_DAYTONA_ENABLED }}" = "true" ] && enabled=true ;;
+            modal)      [ "${{ vars.SANDBOX_INTEGRATION_MODAL_ENABLED }}" = "true" ] && enabled=true ;;
+            vercel)     [ "${{ vars.SANDBOX_INTEGRATION_VERCEL_ENABLED }}" = "true" ] && enabled=true ;;
+            cloudflare) [ "${{ vars.SANDBOX_INTEGRATION_CLOUDFLARE_ENABLED }}" = "true" ] && enabled=true ;;
+            e2b)        [ "${{ vars.SANDBOX_INTEGRATION_E2B_ENABLED }}" = "true" ] && enabled=true ;;
+          esac
+          echo "enabled=$enabled" >> "$GITHUB_OUTPUT"
+          if [ "$enabled" != "true" ]; then
+            echo "Skipping $provider — set SANDBOX_INTEGRATION_${provider^^}_ENABLED=true to opt in."
+          fi
 
-      - uses: pnpm/action-setup@v3
+      - uses: actions/checkout@v4
+        if: steps.enabled.outputs.enabled == 'true'
+
+      - uses: pnpm/action-setup@v4
+        if: steps.enabled.outputs.enabled == 'true'
         with:
-          version: 8
+          version: 9.15.4
 
       - uses: actions/setup-node@v4
+        if: steps.enabled.outputs.enabled == 'true'
         with:
-          node-version: 20
-          cache: pnpm
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
 
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
+        if: steps.enabled.outputs.enabled == 'true'
+
       - run: pnpm build:packages
+        if: steps.enabled.outputs.enabled == 'true'
 
       - name: Run sandbox smoke test (${{ matrix.provider }})
+        if: steps.enabled.outputs.enabled == 'true'
         env:
           SANDBOX_PROVIDER: ${{ matrix.provider }}
           BLEKLINE_WORKSPACE_TOKEN: ${{ secrets.BLEKLINE_WORKSPACE_TOKEN }}
