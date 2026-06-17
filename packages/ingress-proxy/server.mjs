@@ -44,6 +44,30 @@ function maskInline(text) {
   return { text: out, entitiesMasked: findings.length, ms };
 }
 
+function maskResponsePayload(path, payload) {
+  if (!payload || typeof payload !== "object") return { payload, entitiesMasked: 0 };
+  let entitiesMasked = 0;
+  if (path === "/v1/chat/completions" && Array.isArray(payload.choices)) {
+    for (const choice of payload.choices) {
+      const content = choice?.message?.content;
+      if (typeof content === "string") {
+        const r = maskInline(content);
+        choice.message.content = r.text;
+        entitiesMasked += r.entitiesMasked;
+      }
+    }
+  } else if (path === "/v1/messages" && Array.isArray(payload.content)) {
+    for (const block of payload.content) {
+      if (block?.type === "text" && typeof block.text === "string") {
+        const r = maskInline(block.text);
+        block.text = r.text;
+        entitiesMasked += r.entitiesMasked;
+      }
+    }
+  }
+  return { payload, entitiesMasked };
+}
+
 async function connectPolicyStream() {
   const token = process.env.BLEKLINE_WORKSPACE_TOKEN?.trim();
   if (!token) return;
@@ -175,13 +199,24 @@ const server = http.createServer(async (req, res) => {
     const ms = performance.now() - t0;
     metrics.upstreamMs.push(ms);
     if (metrics.upstreamMs.length > 200) metrics.upstreamMs.shift();
-    const text = await upstream.text();
+    let outText = await upstream.text();
+    if (localMask && upstream.ok) {
+      try {
+        const parsed = JSON.parse(outText);
+        const masked = maskResponsePayload(path, parsed);
+        if (masked.entitiesMasked > 0) {
+          outText = JSON.stringify(masked.payload);
+        }
+      } catch {
+        /* pass through */
+      }
+    }
     res.writeHead(upstream.status, {
       ...Object.fromEntries(upstream.headers.entries()),
       "x-blekline-ingress-region": region,
       "x-blekline-edge-upstream-ms": String(Math.round(ms)),
     });
-    res.end(text);
+    res.end(outText);
   } catch (err) {
     res.writeHead(502, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Upstream failed", detail: String(err) }));
