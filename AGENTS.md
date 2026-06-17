@@ -1,6 +1,6 @@
 # Blekline — agent onboarding
 
-Ingress control plane: mask, enforce, and audit agent calls before LLMs and tools.
+Production agent interaction governance — mask, enforce, and audit at the MCP, SDK, and ingress proxy boundary.
 
 ## Start (headless)
 
