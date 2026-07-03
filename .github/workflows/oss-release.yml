@@ -32,12 +32,15 @@ jobs:
 
       - run: pnpm demo:mcp-smoke
 
+      - run: pnpm demo:cursor-hook-smoke
+
       - name: Publish npm packages
         run: |
           pnpm --filter @blekline/contracts publish --access public --no-git-checks
           pnpm --filter @blekline/client publish --access public --no-git-checks
           pnpm --filter @blekline/mcp-server publish --access public --no-git-checks
           pnpm --filter @blekline/mcp-proxy publish --access public --no-git-checks
+          pnpm --filter @blekline/cursor-hooks publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
