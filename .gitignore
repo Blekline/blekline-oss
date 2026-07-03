@@ -5,6 +5,9 @@ dist/
 .env
 .env.local
 .cursor/mcp.json
+.cursor/hooks.json
+.blekline/
+config/blekline/cursor.json
 .claude/settings.json
 .codex/config.toml
 .vscode/mcp.json

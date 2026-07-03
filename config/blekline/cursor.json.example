@@ -1,0 +1,20 @@
+{
+  "apiUrl": "https://app.blekline.com",
+  "workspaceToken": "blw_replace_with_workspace_token",
+  "platform": "cursor",
+  "promptPolicy": "auto_mask",
+  "promptGuardMode": "local_first",
+  "promptMaskSource": "local",
+  "failClosed": true,
+  "readGuard": true,
+  "shellGuard": true,
+  "toolGuard": true,
+  "mcpGuard": true,
+  "shellGuardMode": "local",
+  "mcpGuardMode": "local",
+  "enterprisePreset": true,
+  "copyMaskedToClipboard": true,
+  "emitAuditEvents": true,
+  "showMaskedInUi": false,
+  "maskTimeoutMs": 3500
+}

@@ -19,7 +19,7 @@
 </div>
 
 <h3 align="center">
-  AI Agent Interaction Governance — open-core infrastructure to mask, enforce, and audit every agent call at the MCP, SDK, and ingress proxy boundary.
+  Production agent interaction governance — open-core infrastructure to mask, enforce, and audit every agent call at the MCP, SDK, and ingress proxy boundary.
 </h3>
 
 <p align="center">
