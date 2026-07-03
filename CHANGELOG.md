@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-03
+
+### Added
+
+- **`@blekline/cursor-hooks@0.1.0`** on npm — enterprise Cursor hooks (local-first chat mask, read/shell/tool/MCP guards, Activity audit)
+- `pnpm demo:cursor-hook-smoke` in OSS CI release gate
+
 ## [0.4.0] - 2026-06-10
 
 ### Added

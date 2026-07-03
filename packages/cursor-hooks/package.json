@@ -1,9 +1,17 @@
 {
   "name": "@blekline/cursor-hooks",
   "version": "0.1.0",
-  "private": true,
-  "type": "module",
+  "license": "AGPL-3.0-or-later",
   "description": "Cursor IDE hooks for Blekline chat prompt masking, shell/tool/MCP guards, and file read guard",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Blekline/blekline-oss.git",
+    "directory": "packages/cursor-hooks"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
   "bin": {
     "blekline-cursor-mask-prompt": "./mask-prompt.mjs",
     "blekline-cursor-session-start": "./session-start.mjs",
@@ -27,6 +35,9 @@
     "*.mjs",
     "lib"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@blekline/contracts": "workspace:*"
   },
