@@ -7,7 +7,7 @@
  *   node scripts/generate-mcp-configs.mjs --local   # live gitignored configs
  *   node scripts/generate-mcp-configs.mjs --oss     # npx @blekline/* paths (blekline-oss)
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
@@ -21,10 +21,10 @@ const isLocal = process.argv.includes("--local");
 const isOss = process.argv.includes("--oss");
 const useExampleSuffix = !isLocal;
 
-function loadEnv() {
-  const out = { ...process.env };
-  if (!existsSync(envPath)) return out;
-  for (const line of readFileSync(envPath, "utf8").split("\n")) {
+function parseEnvFile(path) {
+  const out = {};
+  if (!existsSync(path)) return out;
+  for (const line of readFileSync(path, "utf8").split("\n")) {
     const t = line.trim();
     if (!t || t.startsWith("#")) continue;
     const i = t.indexOf("=");
@@ -34,9 +34,30 @@ function loadEnv() {
   return out;
 }
 
+function loadEnv() {
+  return {
+    ...process.env,
+    ...parseEnvFile(envPath),
+    ...parseEnvFile(resolve(root, "webapp", ".env.local")),
+  };
+}
+
+const PLACEHOLDER_TOKEN = "blw_replace_with_workspace_token";
+
+function resolveWorkspaceToken() {
+  if (isLocal) {
+    return (
+      env.BLEKLINE_WORKSPACE_TOKEN ??
+      env.BLEKLINE_SAMPLE_WORKSPACE_TOKEN ??
+      PLACEHOLDER_TOKEN
+    );
+  }
+  return PLACEHOLDER_TOKEN;
+}
+
 const env = loadEnv();
-const apiUrl = env.BLEKLINE_API_URL ?? "https://app.blekline.com";
-const token = env.BLEKLINE_WORKSPACE_TOKEN ?? "blw_replace_with_workspace_token";
+const apiUrl = env.BLEKLINE_API_URL ?? env.BLEKLINE_APP_ORIGIN ?? "https://app.blekline.com";
+const token = resolveWorkspaceToken();
 const absRoot = root.replace(/\\/g, "/");
 
 function serverCommand() {
@@ -65,14 +86,7 @@ function proxyCommand() {
   };
 }
 
-function envBlock(surface, useCursorVars = false) {
-  if (useCursorVars && isLocal) {
-    return {
-      BLEKLINE_API_URL: "${env:BLEKLINE_API_URL}",
-      BLEKLINE_WORKSPACE_TOKEN: "${env:BLEKLINE_WORKSPACE_TOKEN}",
-      BLEKLINE_CLIENT_SURFACE: surface,
-    };
-  }
+function envBlock(surface) {
   return {
     BLEKLINE_API_URL: apiUrl,
     BLEKLINE_WORKSPACE_TOKEN: token,
@@ -80,8 +94,8 @@ function envBlock(surface, useCursorVars = false) {
   };
 }
 
-function proxyEnvBlock(surface, useCursorVars = false) {
-  const base = envBlock(surface, useCursorVars);
+function proxyEnvBlock(surface) {
+  const base = envBlock(surface);
   return { ...base, BLEKLINE_MCP_PROXY_MOCK: "1" };
 }
 
@@ -93,22 +107,72 @@ function absProxyArgs() {
   return [`${absRoot}/packages/mcp-proxy/dist/index.js`];
 }
 
-function buildMcpJson(surface, { useCursorVars = false, includeProxy = true } = {}) {
+function buildMcpJson(surface, { includeProxy = true } = {}) {
   const srv = serverCommand();
   const servers = {
     blekline: {
       ...srv,
-      env: envBlock(surface, useCursorVars),
+      env: envBlock(surface),
     },
   };
   if (includeProxy) {
     const prx = proxyCommand();
     servers["blekline-proxy"] = {
       ...prx,
-      env: proxyEnvBlock(surface, useCursorVars),
+      env: proxyEnvBlock(surface),
     };
   }
   return { mcpServers: servers };
+}
+
+function buildCursorHooksJson() {
+  const failClosedHook = { failClosed: true };
+  return {
+    version: 1,
+    hooks: {
+      sessionStart: [{ command: ".cursor/hooks/blekline-session-start.sh" }],
+      beforeSubmitPrompt: [{ command: ".cursor/hooks/blekline-mask-prompt.sh", timeout: 5 }],
+      beforeReadFile: [{ command: ".cursor/hooks/blekline-before-read-file.sh", ...failClosedHook }],
+      beforeShellExecution: [
+        {
+          command: ".cursor/hooks/blekline-before-shell-execution.sh",
+          matcher: "curl|wget|cat|grep|type|head|tail",
+          ...failClosedHook,
+        },
+      ],
+      preToolUse: [
+        {
+          command: ".cursor/hooks/blekline-pre-tool-use.sh",
+          matcher: "Read|Write|Shell|Grep|Delete|edit|write_file|run_terminal_cmd",
+        },
+      ],
+      beforeMCPExecution: [{ command: ".cursor/hooks/blekline-before-mcp-execution.sh", ...failClosedHook }],
+      afterShellExecution: [{ command: ".cursor/hooks/blekline-after-shell-execution.sh" }],
+    },
+  };
+}
+
+function buildCursorBleklineJson({ enterprise = false, forExample = false } = {}) {
+  return {
+    apiUrl,
+    workspaceToken: forExample ? "blw_replace_with_workspace_token" : token,
+    platform: "cursor",
+    promptPolicy: "auto_mask",
+    promptGuardMode: "local_first",
+    promptMaskSource: "local",
+    failClosed: enterprise,
+    readGuard: true,
+    shellGuard: enterprise,
+    toolGuard: enterprise,
+    mcpGuard: enterprise,
+    shellGuardMode: "local",
+    mcpGuardMode: "local",
+    enterprisePreset: enterprise,
+    copyMaskedToClipboard: true,
+    emitAuditEvents: true,
+    showMaskedInUi: false,
+    maskTimeoutMs: 3500,
+  };
 }
 
 function buildClaudeDesktop(surface) {
@@ -206,12 +270,9 @@ const written = [];
 for (const entry of manifest.entries) {
   if (!entry.configFormat) continue;
   const surface = entry.BLEKLINE_CLIENT_SURFACE;
-  const useCursorVars = entry.id === "cursor" && isLocal;
-
   switch (entry.configFormat) {
     case "mcp-json": {
       const cfg = buildMcpJson(surface, {
-        useCursorVars,
         includeProxy: entry.includesProxy,
       });
       written.push(writeConfig(entry.repoPath, cfg));
@@ -243,6 +304,21 @@ for (const entry of manifest.entries) {
     default:
       break;
   }
+}
+
+if (isLocal) {
+  written.push(writeConfig(".cursor/hooks.json", buildCursorHooksJson()));
+  written.push(writeConfig(".blekline/cursor.json", buildCursorBleklineJson({ enterprise: true })));
+  const ruleExample = join(root, ".cursor/rules/blekline-chat-guard.mdc.example");
+  const ruleLive = join(root, ".cursor/rules/blekline-chat-guard.mdc");
+  if (existsSync(ruleExample)) {
+    mkdirSync(dirname(ruleLive), { recursive: true });
+    copyFileSync(ruleExample, ruleLive);
+    written.push(".cursor/rules/blekline-chat-guard.mdc");
+  }
+} else {
+  written.push(writeConfig(".cursor/hooks.json.example", buildCursorHooksJson()));
+  written.push(writeConfig("config/blekline/cursor.json.example", buildCursorBleklineJson({ enterprise: true, forExample: true })));
 }
 
 console.log(`Generated (${isLocal ? "local" : isOss ? "oss" : "example"}):`);

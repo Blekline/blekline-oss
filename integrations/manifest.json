@@ -45,7 +45,7 @@
       "BLEKLINE_CLIENT_SURFACE": "cursor",
       "headless": true,
       "docSlug": "mcp/cursor",
-      "verify": ["tools/list"],
+      "verify": ["tools/list", "demo:cursor-hook-smoke"],
       "includesProxy": true,
       "configFormat": "mcp-json"
     },

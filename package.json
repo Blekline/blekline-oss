@@ -2,7 +2,7 @@
   "name": "blekline-oss",
   "private": true,
   "license": "AGPL-3.0-or-later",
-  "description": "Blekline AI ingress control plane — MCP, SDK, open core",
+  "description": "Blekline production agent interaction governance — MCP, SDK, open core",
   "repository": {
     "type": "git",
     "url": "https://github.com/Blekline/blekline-oss.git"

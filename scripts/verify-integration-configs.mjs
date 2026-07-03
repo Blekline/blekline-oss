@@ -9,6 +9,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const TRACKED_LIVE_CONFIGS = [
   ".cursor/mcp.json",
+  ".cursor/hooks.json",
+  ".blekline/cursor.json",
   ".claude/settings.json",
   ".codex/config.toml",
   ".vscode/mcp.json",
@@ -67,6 +69,35 @@ for (const entry of manifest.entries) {
       errors.push(`MISSING permissions.allow in ${entry.repoPath}`);
     }
   }
+}
+
+const hooksExample = join(ROOT, ".cursor/hooks.json.example");
+if (!existsSync(hooksExample)) {
+  errors.push("MISSING .cursor/hooks.json.example");
+} else {
+  const hooks = JSON.parse(readFileSync(hooksExample, "utf8"));
+  if (!hooks.hooks?.beforeSubmitPrompt?.length) {
+    errors.push("MISSING hooks.beforeSubmitPrompt in .cursor/hooks.json.example");
+  }
+  const cmd = hooks.hooks?.beforeSubmitPrompt?.[0]?.command;
+  if (typeof cmd !== "string" || !cmd.includes(".cursor/hooks/")) {
+    errors.push("beforeSubmitPrompt must use .cursor/hooks/*.sh command path (not bare node + args)");
+  }
+}
+
+for (const sh of [
+  ".cursor/hooks/blekline-mask-prompt.sh",
+  ".cursor/hooks/blekline-session-start.sh",
+  ".cursor/hooks/blekline-before-read-file.sh",
+]) {
+  if (!existsSync(join(ROOT, sh))) {
+    errors.push(`MISSING ${sh}`);
+  }
+}
+
+const cursorCfgExample = join(ROOT, "config/blekline/cursor.json.example");
+if (!existsSync(cursorCfgExample)) {
+  errors.push("MISSING config/blekline/cursor.json.example");
 }
 
 if (errors.length) {

@@ -1,0 +1,37 @@
+{
+  "name": "@blekline/cursor-hooks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cursor IDE hooks for Blekline chat prompt masking, shell/tool/MCP guards, and file read guard",
+  "bin": {
+    "blekline-cursor-mask-prompt": "./mask-prompt.mjs",
+    "blekline-cursor-session-start": "./session-start.mjs",
+    "blekline-cursor-before-read-file": "./before-read-file.mjs",
+    "blekline-cursor-before-shell": "./before-shell-execution.mjs",
+    "blekline-cursor-pre-tool-use": "./pre-tool-use.mjs",
+    "blekline-cursor-before-mcp": "./before-mcp-execution.mjs",
+    "blekline-cursor-after-shell": "./after-shell-execution.mjs"
+  },
+  "exports": {
+    "./mask-prompt": "./lib/mask-prompt-hook.mjs",
+    "./session-start": "./lib/session-start-hook.mjs",
+    "./before-read-file": "./lib/before-read-file-hook.mjs",
+    "./shell-guard": "./lib/shell-guard.mjs",
+    "./tool-guard": "./lib/tool-guard.mjs",
+    "./mcp-guard": "./lib/mcp-guard.mjs",
+    "./after-shell": "./lib/after-shell-hook.mjs",
+    "./config": "./lib/config.mjs"
+  },
+  "files": [
+    "*.mjs",
+    "lib"
+  ],
+  "dependencies": {
+    "@blekline/contracts": "workspace:*"
+  },
+  "scripts": {
+    "build": "node -e \"console.log('@blekline/cursor-hooks: no compile step')\"",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
