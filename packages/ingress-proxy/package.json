@@ -10,7 +10,6 @@
     "directory": "packages/ingress-proxy"
   },
   "dependencies": {
-    "@blekline/contracts": "workspace:*",
-    "@blekline/runtime-engine": "workspace:*"
+    "@blekline/contracts": "workspace:*"
   }
 }

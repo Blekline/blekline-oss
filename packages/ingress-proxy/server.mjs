@@ -1,22 +1,22 @@
+/**
+ * OSS sidecar — contracts-only. Trust Vault and lineage ship in the NHIM Docker image.
+ */
 import http from "node:http";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { performance } from "node:perf_hooks";
-import { mkdirSync } from "node:fs";
-import { join } from "node:path";
 import { scanTextForSecrets, enforceToolCallLocally } from "@blekline/contracts";
-import {
-  TrustVaultStore,
-  VaultLockError,
-  LineageGraph,
-  applyFailureMode,
-  parseFailureMode,
-  createRedactingLogger,
-  buildSiemPayload,
-  parseSessionTtlMs,
-  parseMaxSessions,
-} from "@blekline/runtime-engine";
 
-const log = createRedactingLogger("[blekline-sidecar]");
+const log = {
+  info(msg, detail) {
+    console.log(`[blekline-sidecar] ${msg}`, detail ? JSON.stringify(detail) : "");
+  },
+  warn(msg, detail) {
+    console.warn(`[blekline-sidecar] ${msg}`, detail ? JSON.stringify(detail) : "");
+  },
+  error(msg, detail) {
+    console.error(`[blekline-sidecar] ${msg}`, detail ? JSON.stringify(detail) : "");
+  },
+};
 
 const target = (process.env.BLEKLINE_INGRESS_TARGET || "https://app.blekline.com").replace(/\/$/, "");
 const port = Number(process.env.LISTEN_PORT || 8787);
@@ -25,14 +25,15 @@ const region = process.env.BLEKLINE_INGRESS_REGION || "global";
 const localMask = process.env.BLEKLINE_EDGE_LOCAL_MASK !== "false";
 const maxBodyBytes = Number(process.env.BLEKLINE_MAX_BODY_BYTES || 1_048_576);
 const sidecarAuth = process.env.BLEKLINE_SIDECAR_AUTH?.trim() || "";
-const failureMode = parseFailureMode(process.env.BLEKLINE_FAILURE_MODE);
-const trustVaultEnabled = process.env.BLEKLINE_TRUST_VAULT !== "false";
-const lineageEnabled = process.env.BLEKLINE_LINEAGE !== "false";
 const debugUpstream = process.env.BLEKLINE_DEBUG_UPSTREAM === "true";
-const vaultDataDir = process.env.BLEKLINE_VAULT_DATA_DIR || join(process.cwd(), "data", "vault");
 const policyStreamUrl =
   process.env.BLEKLINE_POLICY_STREAM_URL ||
   `${target}/api/workspace/policy-stream`;
+
+const NHIM_ONLY = {
+  error: "Available in NHIM sidecar image (Trust Vault / lineage)",
+  code: "NHIM_IMAGE_REQUIRED",
+};
 
 /** @type {{ revision: string | null; mcpToolPolicy: import('@blekline/contracts').McpToolPolicy | null }} */
 const policyCache = { revision: null, mcpToolPolicy: null };
@@ -47,36 +48,7 @@ const metrics = {
   localMaskMs: [],
   upstreamMs: [],
   enforceCalls: 0,
-  lineageBlocks: 0,
 };
-
-const lineage = new LineageGraph({
-  sessionTtlMs: parseSessionTtlMs(process.env.BLEKLINE_LINEAGE_SESSION_TTL_MS),
-  maxSessions: parseMaxSessions(process.env.BLEKLINE_LINEAGE_MAX_SESSIONS),
-});
-/** @type {TrustVaultStore | null} */
-let vault = null;
-
-if (trustVaultEnabled) {
-  try {
-    mkdirSync(vaultDataDir, { recursive: true });
-    vault = new TrustVaultStore({ dataDir: vaultDataDir });
-    vault.acquireLock();
-    process.on("exit", () => vault?.releaseLock());
-    process.on("SIGTERM", () => {
-      vault?.releaseLock();
-      process.exit(0);
-    });
-    log.info("Trust Vault enabled", { dataDir: vaultDataDir });
-  } catch (err) {
-    if (err instanceof VaultLockError) {
-      log.error(err.message);
-      process.exit(1);
-    }
-    log.warn("Trust Vault disabled — missing master key or init error", { err: String(err) });
-    vault = null;
-  }
-}
 
 const FORWARD_HEADER_ALLOWLIST = new Set([
   "authorization",
@@ -208,12 +180,6 @@ function validateEnforceBody(body) {
   return { ok: true, toolName, arguments: args ?? {}, sessionId };
 }
 
-function emitSiem(kind, detail) {
-  const payload = buildSiemPayload({ kind, detail });
-  log.info("siem_forward", payload);
-}
-
-/** Return sanitized upstream error body — never echo raw stack traces or secrets. */
 function sanitizedUpstreamResponse(upstreamStatus, rawBody, errorId) {
   if (debugUpstream) {
     return {
@@ -232,6 +198,11 @@ function sanitizedUpstreamResponse(upstreamStatus, rawBody, errorId) {
     }),
     contentType: "application/json",
   };
+}
+
+function nhimOnly(res) {
+  res.writeHead(503, { "Content-Type": "application/json" });
+  res.end(JSON.stringify(NHIM_ONLY));
 }
 
 async function connectPolicyStream() {
@@ -301,12 +272,10 @@ const server = http.createServer(async (req, res) => {
         target,
         localMask,
         listenHost,
-        trustVault: !!vault,
-        lineage: lineageEnabled,
-        failureMode,
+        oss: true,
+        trustVault: false,
+        lineage: false,
         policyRevision: policyCache.revision,
-        lineageStats: lineageEnabled ? lineage.stats() : null,
-        vault: vault?.stats() ?? null,
         latency: {
           localMaskP50Ms: percentile(local, 50).toFixed(2),
           localMaskP95Ms: percentile(local, 95).toFixed(2),
@@ -338,44 +307,6 @@ const server = http.createServer(async (req, res) => {
     metrics.enforceCalls += 1;
     const t0 = performance.now();
 
-    if (lineageEnabled) {
-      try {
-        lineage.append({
-          id: randomUUID(),
-          sessionId: validated.sessionId,
-          kind: "tool_call",
-          toolName: validated.toolName,
-        });
-        const verdict = lineage.evaluateToolCall(validated.sessionId, validated.toolName);
-        if (!verdict.allow) {
-          metrics.lineageBlocks += 1;
-          emitSiem("lineage_block", { sessionId: validated.sessionId, toolName: validated.toolName });
-          res.writeHead(200, {
-            "Content-Type": "application/json",
-            "x-blekline-ingress-region": region,
-            "x-blekline-latency-ms": String(Math.round(performance.now() - t0)),
-          });
-          res.end(
-            JSON.stringify({
-              action: "block",
-              reason: verdict.reason,
-              lineage: { contaminated: verdict.contaminated },
-            })
-          );
-          return;
-        }
-      } catch (err) {
-        const degraded = applyFailureMode(failureMode, err, { allow: false, contaminated: true });
-        if (!degraded.allow) {
-          emitSiem("governance_block", { err: String(err) });
-          res.writeHead(503, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: degraded.reason, code: "GOVERNANCE_BLOCK" }));
-          return;
-        }
-        emitSiem("governance_degraded", { err: String(err) });
-      }
-    }
-
     const result = enforceToolCallLocally({
       toolName: validated.toolName,
       arguments: validated.arguments,
@@ -391,91 +322,14 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === "POST" && path === "/v1/vault/tokenize") {
+  if (
+    req.method === "POST" &&
+    (path === "/v1/vault/tokenize" ||
+      path === "/v1/vault/hydrate" ||
+      path === "/v1/lineage/contaminate")
+  ) {
     if (!requireAuth(req, res)) return;
-    if (!vault) {
-      res.writeHead(503, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Trust Vault not enabled" }));
-      return;
-    }
-    const raw = await readBody(req, res);
-    if (raw === null) return;
-    let body;
-    try {
-      body = JSON.parse(raw || "{}");
-    } catch {
-      res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Invalid JSON" }));
-      return;
-    }
-    const plaintext = String(body.plaintext ?? "");
-    const sessionId = String(body.sessionId ?? "default");
-    const toolName = String(body.toolName ?? "tokenize");
-    if (!plaintext || plaintext.length > 65536) {
-      res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Invalid plaintext" }));
-      return;
-    }
-    try {
-      const placeholder = vault.tokenize(plaintext, sessionId, toolName);
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ placeholder }));
-    } catch (err) {
-      log.error("vault_tokenize_failed", { err: String(err) });
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Tokenize failed", code: "VAULT_ERROR" }));
-    }
-    return;
-  }
-
-  if (req.method === "POST" && path === "/v1/vault/hydrate") {
-    if (!requireAuth(req, res)) return;
-    if (!vault) {
-      res.writeHead(503, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Trust Vault not enabled" }));
-      return;
-    }
-    const raw = await readBody(req, res);
-    if (raw === null) return;
-    let body;
-    try {
-      body = JSON.parse(raw || "{}");
-    } catch {
-      res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Invalid JSON" }));
-      return;
-    }
-    const placeholder = String(body.placeholder ?? "");
-    const sessionId = String(body.sessionId ?? "");
-    const toolName = String(body.toolName ?? "");
-    const spiffeId = typeof body.spiffeId === "string" ? body.spiffeId : undefined;
-    const value = vault.hydrate(placeholder, sessionId, toolName, { spiffeId });
-    if (value === null) {
-      res.writeHead(403, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Hydrate denied", code: "HYDRATE_DENIED" }));
-      return;
-    }
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ plaintext: value }));
-    return;
-  }
-
-  if (req.method === "POST" && path === "/v1/lineage/contaminate") {
-    if (!requireAuth(req, res)) return;
-    const raw = await readBody(req, res);
-    if (raw === null) return;
-    let body;
-    try {
-      body = JSON.parse(raw || "{}");
-    } catch {
-      res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: "Invalid JSON" }));
-      return;
-    }
-    const sessionId = String(body.sessionId ?? "default");
-    lineage.markContaminated(sessionId, body.detail ? String(body.detail) : undefined);
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true, sessionId, contaminated: true }));
+    nhimOnly(res);
     return;
   }
 
@@ -589,6 +443,6 @@ server.listen(port, listenHost, () => {
     target,
     localMask,
     sidecarAuthConfigured: !!sidecarAuth,
-    failureMode,
+    oss: true,
   });
 });
