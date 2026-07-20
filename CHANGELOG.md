@@ -6,6 +6,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0-nhim] - 2026-06-10
+
+### Added
+
+- NHIM sidecar security: `BLEKLINE_SIDECAR_AUTH`, listen host default `127.0.0.1`, body size limit
+- Trust Vault + Lineage APIs on sidecar (compiled runtime; source private)
+- Helm: `Recreate` strategy, NetworkPolicy, non-root, `replicaCount: 1` for vault mode
+- `docker-compose.yaml` + `scripts/local-sidecar-env.sh` for local trial
+
+### Changed
+
+- Sidecar image tag `blekline-sidecar:0.2.0-nhim`
+- OSS sync allowlist — excludes `runtime-engine`, `k8s-admission`
+
+### Security
+
+- Unauthenticated enforce endpoint removed (401 without Bearer)
+- Upstream errors return generic `errorId` (no stack leak)
+
 ## [0.4.1] - 2026-07-03
 
 ### Added

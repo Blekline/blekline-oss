@@ -19,7 +19,7 @@
 </div>
 
 <h3 align="center">
-  Production agent interaction governance — open-core infrastructure to mask, enforce, and audit every agent call at the MCP, SDK, and ingress proxy boundary.
+  NHIM + AI runtime enforcement — open-core MCP/SDK wedge to mask, enforce, and audit every agent call. Trust Vault and Lineage ship in the private sidecar image.
 </h3>
 
 <p align="center">
@@ -59,7 +59,13 @@ The compliance question is catching up to the capability question. And most team
 
 ## What Blekline is
 
-Blekline is an open-core MCP ingress control plane — infrastructure that sits between your agents and everything they can touch.
+Blekline is an **open-core NHIM wedge** — MCP/SDK/ingress sidecar for mask, enforce, and audit at the agent boundary.
+
+| Open source (this repo) | Private (enterprise image) |
+|-------------------------|----------------------------|
+| `@blekline/mcp-server`, `mcp-proxy`, `contracts`, `client` | Trust Vault (stateful tokenization) |
+| `ingress-proxy` sidecar shell + Helm | Lineage Firewall engine |
+| Cursor hooks | `runtime-engine` crypto + admission webhook |
 
 It does three things, in real time, before any LLM sees a prompt or any tool executes:
 

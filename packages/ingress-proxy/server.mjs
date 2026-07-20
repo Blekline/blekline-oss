@@ -1,12 +1,35 @@
 import http from "node:http";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import { performance } from "node:perf_hooks";
-import { scanTextForSecrets } from "@blekline/contracts/dist/secret-patterns.js";
-import { enforceToolCallLocally } from "@blekline/contracts/dist/enforce-local.js";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { scanTextForSecrets, enforceToolCallLocally } from "@blekline/contracts";
+import {
+  TrustVaultStore,
+  VaultLockError,
+  LineageGraph,
+  applyFailureMode,
+  parseFailureMode,
+  createRedactingLogger,
+  buildSiemPayload,
+  parseSessionTtlMs,
+  parseMaxSessions,
+} from "@blekline/runtime-engine";
+
+const log = createRedactingLogger("[blekline-sidecar]");
 
 const target = (process.env.BLEKLINE_INGRESS_TARGET || "https://app.blekline.com").replace(/\/$/, "");
 const port = Number(process.env.LISTEN_PORT || 8787);
+const listenHost = process.env.BLEKLINE_LISTEN_HOST || "127.0.0.1";
 const region = process.env.BLEKLINE_INGRESS_REGION || "global";
 const localMask = process.env.BLEKLINE_EDGE_LOCAL_MASK !== "false";
+const maxBodyBytes = Number(process.env.BLEKLINE_MAX_BODY_BYTES || 1_048_576);
+const sidecarAuth = process.env.BLEKLINE_SIDECAR_AUTH?.trim() || "";
+const failureMode = parseFailureMode(process.env.BLEKLINE_FAILURE_MODE);
+const trustVaultEnabled = process.env.BLEKLINE_TRUST_VAULT !== "false";
+const lineageEnabled = process.env.BLEKLINE_LINEAGE !== "false";
+const debugUpstream = process.env.BLEKLINE_DEBUG_UPSTREAM === "true";
+const vaultDataDir = process.env.BLEKLINE_VAULT_DATA_DIR || join(process.cwd(), "data", "vault");
 const policyStreamUrl =
   process.env.BLEKLINE_POLICY_STREAM_URL ||
   `${target}/api/workspace/policy-stream`;
@@ -23,7 +46,53 @@ const metrics = {
   requests: 0,
   localMaskMs: [],
   upstreamMs: [],
+  enforceCalls: 0,
+  lineageBlocks: 0,
 };
+
+const lineage = new LineageGraph({
+  sessionTtlMs: parseSessionTtlMs(process.env.BLEKLINE_LINEAGE_SESSION_TTL_MS),
+  maxSessions: parseMaxSessions(process.env.BLEKLINE_LINEAGE_MAX_SESSIONS),
+});
+/** @type {TrustVaultStore | null} */
+let vault = null;
+
+if (trustVaultEnabled) {
+  try {
+    mkdirSync(vaultDataDir, { recursive: true });
+    vault = new TrustVaultStore({ dataDir: vaultDataDir });
+    vault.acquireLock();
+    process.on("exit", () => vault?.releaseLock());
+    process.on("SIGTERM", () => {
+      vault?.releaseLock();
+      process.exit(0);
+    });
+    log.info("Trust Vault enabled", { dataDir: vaultDataDir });
+  } catch (err) {
+    if (err instanceof VaultLockError) {
+      log.error(err.message);
+      process.exit(1);
+    }
+    log.warn("Trust Vault disabled — missing master key or init error", { err: String(err) });
+    vault = null;
+  }
+}
+
+const FORWARD_HEADER_ALLOWLIST = new Set([
+  "authorization",
+  "content-type",
+  "accept",
+  "x-request-id",
+  "x-blekline-workspace-token",
+  "x-blekline-workspace-id",
+  "x-blekline-client-surface",
+  "x-blekline-model-provider",
+  "x-blekline-model-id",
+]);
+
+const enforceRate = { windowStart: Date.now(), count: 0 };
+const ENFORCE_RATE_MAX = 60;
+const ENFORCE_RATE_WINDOW_MS = 60_000;
 
 function percentile(sorted, p) {
   if (sorted.length === 0) return 0;
@@ -68,44 +137,152 @@ function maskResponsePayload(path, payload) {
   return { payload, entitiesMasked };
 }
 
+function authOk(req) {
+  if (!sidecarAuth) return false;
+  const h = req.headers.authorization;
+  if (!h?.startsWith("Bearer ")) return false;
+  const token = h.slice(7);
+  if (token.length !== sidecarAuth.length) return false;
+  try {
+    return timingSafeEqual(Buffer.from(token), Buffer.from(sidecarAuth));
+  } catch {
+    return false;
+  }
+}
+
+function requireAuth(req, res) {
+  if (!sidecarAuth) {
+    res.writeHead(503, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Sidecar auth not configured", code: "SIDECAR_AUTH_REQUIRED" }));
+    return false;
+  }
+  if (!authOk(req)) {
+    res.writeHead(401, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Unauthorized", code: "SIDECAR_AUTH_FAILED" }));
+    return false;
+  }
+  return true;
+}
+
+function checkEnforceRate(res) {
+  const now = Date.now();
+  if (now - enforceRate.windowStart > ENFORCE_RATE_WINDOW_MS) {
+    enforceRate.windowStart = now;
+    enforceRate.count = 0;
+  }
+  enforceRate.count += 1;
+  if (enforceRate.count > ENFORCE_RATE_MAX) {
+    res.writeHead(429, { "Content-Type": "application/json", "Retry-After": "60" });
+    res.end(JSON.stringify({ error: "Too many enforce-tool-call requests" }));
+    return false;
+  }
+  return true;
+}
+
+async function readBody(req, res) {
+  const chunks = [];
+  let total = 0;
+  for await (const chunk of req) {
+    total += chunk.length;
+    if (total > maxBodyBytes) {
+      res.writeHead(413, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Payload too large", maxBytes: maxBodyBytes }));
+      return null;
+    }
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+function validateEnforceBody(body) {
+  if (!body || typeof body !== "object") return { ok: false, error: "Invalid payload" };
+  const toolName = body.toolName;
+  if (typeof toolName !== "string" || toolName.length < 1 || toolName.length > 120) {
+    return { ok: false, error: "Invalid toolName" };
+  }
+  const args = body.arguments;
+  if (args !== undefined && (typeof args !== "object" || args === null || Array.isArray(args))) {
+    return { ok: false, error: "Invalid arguments" };
+  }
+  const sessionId = typeof body.sessionId === "string" ? body.sessionId : "default";
+  return { ok: true, toolName, arguments: args ?? {}, sessionId };
+}
+
+function emitSiem(kind, detail) {
+  const payload = buildSiemPayload({ kind, detail });
+  log.info("siem_forward", payload);
+}
+
+/** Return sanitized upstream error body — never echo raw stack traces or secrets. */
+function sanitizedUpstreamResponse(upstreamStatus, rawBody, errorId) {
+  if (debugUpstream) {
+    return {
+      status: upstreamStatus,
+      body: rawBody,
+      contentType: "application/json",
+    };
+  }
+  const clientStatus = upstreamStatus >= 500 ? 502 : upstreamStatus;
+  return {
+    status: clientStatus,
+    body: JSON.stringify({
+      error: "Upstream request failed",
+      errorId,
+      upstreamStatus,
+    }),
+    contentType: "application/json",
+  };
+}
+
 async function connectPolicyStream() {
   const token = process.env.BLEKLINE_WORKSPACE_TOKEN?.trim();
   if (!token) return;
-  try {
-    const res = await fetch(policyStreamUrl, {
-      headers: {
-        "x-blekline-workspace-token": token,
-        ...(process.env.BLEKLINE_WORKSPACE_ID
-          ? { "x-blekline-workspace-id": process.env.BLEKLINE_WORKSPACE_ID }
-          : {}),
-      },
-    });
-    if (!res.ok || !res.body) return;
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const parts = buffer.split("\n\n");
-      buffer = parts.pop() ?? "";
-      for (const chunk of parts) {
-        const dataLine = chunk.split("\n").find((l) => l.startsWith("data: "));
-        if (!dataLine) continue;
-        try {
-          const payload = JSON.parse(dataLine.slice(6));
-          if (payload.mcpToolPolicy) {
-            policyCache.mcpToolPolicy = payload.mcpToolPolicy;
-            policyCache.revision = payload.revision ?? policyCache.revision;
+  let backoffMs = 5000;
+  const maxBackoff = 60_000;
+  while (true) {
+    try {
+      const res = await fetch(policyStreamUrl, {
+        headers: {
+          "x-blekline-workspace-token": token,
+          ...(process.env.BLEKLINE_WORKSPACE_ID
+            ? { "x-blekline-workspace-id": process.env.BLEKLINE_WORKSPACE_ID }
+            : {}),
+        },
+      });
+      if (!res.ok || !res.body) {
+        await new Promise((r) => setTimeout(r, backoffMs));
+        backoffMs = Math.min(maxBackoff, backoffMs * 1.5 + Math.random() * 1000);
+        continue;
+      }
+      backoffMs = 5000;
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() ?? "";
+        for (const chunk of parts) {
+          const dataLine = chunk.split("\n").find((l) => l.startsWith("data: "));
+          if (!dataLine) continue;
+          try {
+            const payload = JSON.parse(dataLine.slice(6));
+            if (payload.mcpToolPolicy) {
+              policyCache.mcpToolPolicy = payload.mcpToolPolicy;
+              policyCache.revision = payload.revision ?? policyCache.revision;
+            }
+          } catch {
+            /* ignore */
           }
-        } catch {
-          /* ignore */
         }
       }
+    } catch (err) {
+      log.warn("policy_stream_disconnected", { err: String(err) });
     }
-  } catch {
-    setTimeout(connectPolicyStream, 5000);
+    await new Promise((r) => setTimeout(r, backoffMs));
+    backoffMs = Math.min(maxBackoff, backoffMs * 1.5 + Math.random() * 1000);
   }
 }
 
@@ -123,7 +300,13 @@ const server = http.createServer(async (req, res) => {
         region,
         target,
         localMask,
+        listenHost,
+        trustVault: !!vault,
+        lineage: lineageEnabled,
+        failureMode,
         policyRevision: policyCache.revision,
+        lineageStats: lineageEnabled ? lineage.stats() : null,
+        vault: vault?.stats() ?? null,
         latency: {
           localMaskP50Ms: percentile(local, 50).toFixed(2),
           localMaskP95Ms: percentile(local, 95).toFixed(2),
@@ -134,13 +317,68 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && path === "/v1/enforce-tool-call") {
-    const chunks = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const body = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+    if (!requireAuth(req, res)) return;
+    if (!checkEnforceRate(res)) return;
+    const raw = await readBody(req, res);
+    if (raw === null) return;
+    let body;
+    try {
+      body = JSON.parse(raw || "{}");
+    } catch {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid JSON" }));
+      return;
+    }
+    const validated = validateEnforceBody(body);
+    if (!validated.ok) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: validated.error }));
+      return;
+    }
+    metrics.enforceCalls += 1;
     const t0 = performance.now();
+
+    if (lineageEnabled) {
+      try {
+        lineage.append({
+          id: randomUUID(),
+          sessionId: validated.sessionId,
+          kind: "tool_call",
+          toolName: validated.toolName,
+        });
+        const verdict = lineage.evaluateToolCall(validated.sessionId, validated.toolName);
+        if (!verdict.allow) {
+          metrics.lineageBlocks += 1;
+          emitSiem("lineage_block", { sessionId: validated.sessionId, toolName: validated.toolName });
+          res.writeHead(200, {
+            "Content-Type": "application/json",
+            "x-blekline-ingress-region": region,
+            "x-blekline-latency-ms": String(Math.round(performance.now() - t0)),
+          });
+          res.end(
+            JSON.stringify({
+              action: "block",
+              reason: verdict.reason,
+              lineage: { contaminated: verdict.contaminated },
+            })
+          );
+          return;
+        }
+      } catch (err) {
+        const degraded = applyFailureMode(failureMode, err, { allow: false, contaminated: true });
+        if (!degraded.allow) {
+          emitSiem("governance_block", { err: String(err) });
+          res.writeHead(503, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: degraded.reason, code: "GOVERNANCE_BLOCK" }));
+          return;
+        }
+        emitSiem("governance_degraded", { err: String(err) });
+      }
+    }
+
     const result = enforceToolCallLocally({
-      toolName: String(body.toolName ?? ""),
-      arguments: body.arguments && typeof body.arguments === "object" ? body.arguments : {},
+      toolName: validated.toolName,
+      arguments: validated.arguments,
       requestId: `edge-${Date.now()}`,
       mcpToolPolicy: policyCache.mcpToolPolicy ?? undefined,
     });
@@ -153,22 +391,118 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === "POST" && path === "/v1/vault/tokenize") {
+    if (!requireAuth(req, res)) return;
+    if (!vault) {
+      res.writeHead(503, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Trust Vault not enabled" }));
+      return;
+    }
+    const raw = await readBody(req, res);
+    if (raw === null) return;
+    let body;
+    try {
+      body = JSON.parse(raw || "{}");
+    } catch {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid JSON" }));
+      return;
+    }
+    const plaintext = String(body.plaintext ?? "");
+    const sessionId = String(body.sessionId ?? "default");
+    const toolName = String(body.toolName ?? "tokenize");
+    if (!plaintext || plaintext.length > 65536) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid plaintext" }));
+      return;
+    }
+    try {
+      const placeholder = vault.tokenize(plaintext, sessionId, toolName);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ placeholder }));
+    } catch (err) {
+      log.error("vault_tokenize_failed", { err: String(err) });
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Tokenize failed", code: "VAULT_ERROR" }));
+    }
+    return;
+  }
+
+  if (req.method === "POST" && path === "/v1/vault/hydrate") {
+    if (!requireAuth(req, res)) return;
+    if (!vault) {
+      res.writeHead(503, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Trust Vault not enabled" }));
+      return;
+    }
+    const raw = await readBody(req, res);
+    if (raw === null) return;
+    let body;
+    try {
+      body = JSON.parse(raw || "{}");
+    } catch {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid JSON" }));
+      return;
+    }
+    const placeholder = String(body.placeholder ?? "");
+    const sessionId = String(body.sessionId ?? "");
+    const toolName = String(body.toolName ?? "");
+    const spiffeId = typeof body.spiffeId === "string" ? body.spiffeId : undefined;
+    const value = vault.hydrate(placeholder, sessionId, toolName, { spiffeId });
+    if (value === null) {
+      res.writeHead(403, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Hydrate denied", code: "HYDRATE_DENIED" }));
+      return;
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ plaintext: value }));
+    return;
+  }
+
+  if (req.method === "POST" && path === "/v1/lineage/contaminate") {
+    if (!requireAuth(req, res)) return;
+    const raw = await readBody(req, res);
+    if (raw === null) return;
+    let body;
+    try {
+      body = JSON.parse(raw || "{}");
+    } catch {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid JSON" }));
+      return;
+    }
+    const sessionId = String(body.sessionId ?? "default");
+    lineage.markContaminated(sessionId, body.detail ? String(body.detail) : undefined);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ ok: true, sessionId, contaminated: true }));
+    return;
+  }
+
   const upstreamPath = routeMap[path];
   if (!upstreamPath || req.method !== "POST") {
     res.writeHead(404, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
         error: "Not found",
-        routes: ["POST /v1/chat/completions", "POST /v1/messages", "POST /v1/enforce-tool-call", "GET /health"],
+        routes: [
+          "POST /v1/chat/completions",
+          "POST /v1/messages",
+          "POST /v1/enforce-tool-call",
+          "POST /v1/vault/tokenize",
+          "POST /v1/vault/hydrate",
+          "POST /v1/lineage/contaminate",
+          "GET /health",
+        ],
       })
     );
     return;
   }
 
   metrics.requests += 1;
-  const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
-  let bodyStr = Buffer.concat(chunks).toString("utf8");
+  const bodyStrRaw = await readBody(req, res);
+  if (bodyStrRaw === null) return;
+  let bodyStr = bodyStrRaw;
 
   if (localMask) {
     try {
@@ -185,11 +519,18 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  const headers = { ...req.headers, host: new URL(target).host };
+  const headers = { host: new URL(target).host };
+  for (const [k, v] of Object.entries(req.headers)) {
+    const lower = k.toLowerCase();
+    if (FORWARD_HEADER_ALLOWLIST.has(lower) && typeof v === "string") {
+      headers[lower] = v;
+    }
+  }
   delete headers["content-length"];
   headers["x-blekline-ingress-region"] = region;
 
   const t0 = performance.now();
+  const errorId = randomUUID();
   try {
     const upstream = await fetch(`${target}${upstreamPath}`, {
       method: "POST",
@@ -200,7 +541,23 @@ const server = http.createServer(async (req, res) => {
     metrics.upstreamMs.push(ms);
     if (metrics.upstreamMs.length > 200) metrics.upstreamMs.shift();
     let outText = await upstream.text();
-    if (localMask && upstream.ok) {
+    if (!upstream.ok) {
+      log.error("upstream_error", {
+        errorId,
+        upstreamStatus: upstream.status,
+        ...(debugUpstream ? { detail: outText.slice(0, 2048) } : {}),
+      });
+      const sanitized = sanitizedUpstreamResponse(upstream.status, outText, errorId);
+      res.writeHead(sanitized.status, {
+        "Content-Type": sanitized.contentType,
+        "x-blekline-ingress-region": region,
+        "x-blekline-edge-upstream-ms": String(Math.round(ms)),
+        "x-blekline-error-id": errorId,
+      });
+      res.end(sanitized.body);
+      return;
+    }
+    if (localMask) {
       try {
         const parsed = JSON.parse(outText);
         const masked = maskResponsePayload(path, parsed);
@@ -218,11 +575,20 @@ const server = http.createServer(async (req, res) => {
     });
     res.end(outText);
   } catch (err) {
+    log.error("upstream_failed", { errorId, err: String(err) });
     res.writeHead(502, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Upstream failed", detail: String(err) }));
+    res.end(JSON.stringify({ error: "Upstream failed", errorId }));
   }
 });
 
-server.listen(port, "0.0.0.0", () => {
-  console.log(`[blekline-ingress] region=${region} port=${port} target=${target} localMask=${localMask}`);
+server.listen(port, listenHost, () => {
+  log.info("sidecar_listening", {
+    region,
+    port,
+    listenHost,
+    target,
+    localMask,
+    sidecarAuthConfigured: !!sidecarAuth,
+    failureMode,
+  });
 });

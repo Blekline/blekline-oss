@@ -1,14 +1,15 @@
-replicaCount: 2
+replicaCount: 1
 
 image:
-  repository: blekline/ingress
-  tag: "0.1.0"
+  repository: blekline/sidecar
+  tag: "0.2.0-nhim"
   pullPolicy: IfNotPresent
 
 service:
   type: ClusterIP
   port: 8787
 
+# NEVER expose sidecar via public Ingress — ClusterIP + localhost/agent pod only (NHIM)
 ingress:
   enabled: false
   className: ""
@@ -18,15 +19,56 @@ ingress:
         - path: /
           pathType: Prefix
 
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1001
+  capabilities:
+    drop:
+      - ALL
+
+networkPolicy:
+  enabled: true
+  agentPodLabel: blekline-agent
+  namespace: ""
+
+trustVault:
+  enabled: true
+  dataDir: /app/data/vault
+  # Create via ExternalSecrets or: kubectl create secret generic blekline-vault-master --from-literal=masterKey=...
+  masterKeySecret: ""
+  masterKeySecretKey: masterKey
+
+lineage:
+  enabled: true
+
+failureMode: block
+
 env:
   BLEKLINE_INGRESS_TARGET: "https://app.blekline.com"
   BLEKLINE_INGRESS_REGION: "eu-central-1"
   BLEKLINE_EDGE_LOCAL_MASK: "true"
+  BLEKLINE_LISTEN_HOST: "0.0.0.0"
   LISTEN_PORT: "8787"
+  BLEKLINE_MAX_BODY_BYTES: "1048576"
 
+# Do NOT commit real tokens — use existingSecret or kubectl create secret
 secrets:
+  existingSecret: ""
   workspaceToken: ""
   workspaceId: ""
+  sidecarAuth: ""
 
 resources:
   requests:
@@ -35,3 +77,8 @@ resources:
   limits:
     cpu: 500m
     memory: 256Mi
+
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
