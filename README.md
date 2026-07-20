@@ -19,7 +19,7 @@
 </div>
 
 <h3 align="center">
-  Zero-trust execution plane for AI agents — open-core MCP/SDK to mask, enforce, and audit every agent call.
+  Runtime Enforcement Plane for AI Agents — open-core MCP/SDK to mask, enforce, and audit every agent call.
 </h3>
 
 <p align="center">
