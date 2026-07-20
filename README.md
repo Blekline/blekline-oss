@@ -1,6 +1,43 @@
-### NHIM + AI runtime enforcement — open-core MCP/SDK to mask, enforce, and audit every agent call. Trust Vault and Lineage ship in the private sidecar image.
+<!-- GitHub repo About field: Zero-trust execution plane for AI agents — open-core MCP/SDK to mask, enforce, and audit agent calls. -->
 
-[Quick start](https://app.blekline.com/docs/introduction/quick-start) · [Why ingress](https://app.blekline.com/docs/introduction/why-ingress) · [Architecture](https://app.blekline.com/docs/introduction/architecture) · [MCP Server](https://app.blekline.com/docs/mcp/server) · [Security](SECURITY.md) · [Cloud](https://app.blekline.com)
+<div align="center">
+  <picture>
+    <source
+      media="(prefers-color-scheme: dark)"
+      srcset="https://github.com/Blekline/blekline-oss/raw/main/assets/images/blekline-logo-dark.svg"
+    />
+    <source
+      media="(prefers-color-scheme: light)"
+      srcset="https://github.com/Blekline/blekline-oss/raw/main/assets/images/blekline-logo-light.svg"
+    />
+    <img
+      alt="Blekline — mark and wordmark"
+      src="https://github.com/Blekline/blekline-oss/raw/main/assets/images/blekline-logo-light.svg"
+      width="46%"
+    />
+  </picture>
+</div>
+
+<h3 align="center">
+  Zero-trust execution plane for AI agents — open-core MCP/SDK to mask, enforce, and audit every agent call.
+</h3>
+
+<p align="center">
+  <a href="https://app.blekline.com/docs/introduction/quick-start">Quick start</a> ·
+  <a href="https://app.blekline.com/docs/introduction/why-ingress">Why ingress</a> ·
+  <a href="https://app.blekline.com/docs/introduction/architecture">Architecture</a> ·
+  <a href="https://app.blekline.com/docs/mcp/server">MCP Server</a> ·
+  <a href="SECURITY.md">Security</a> ·
+  <a href="https://app.blekline.com">Cloud</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Blekline/blekline-oss/actions/workflows/oss-ci.yml"><img src="https://github.com/Blekline/blekline-oss/actions/workflows/oss-ci.yml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/Proxy%20%26%20server-AGPL%20v3-blue.svg" alt="AGPL v3" /></a>
+  <a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/SDK%20%26%20contracts-Apache%202.0-green.svg" alt="Apache-2.0" /></a>
+  <a href="https://www.npmjs.com/package/@blekline/mcp-server"><img src="https://img.shields.io/npm/v/@blekline/mcp-server?label=mcp-server" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/@blekline/mcp-proxy"><img src="https://img.shields.io/npm/v/@blekline/mcp-proxy?label=mcp-proxy" alt="npm proxy" /></a>
+</p>
 
 ---
 
