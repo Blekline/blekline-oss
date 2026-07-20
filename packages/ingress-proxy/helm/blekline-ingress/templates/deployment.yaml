@@ -6,6 +6,10 @@ metadata:
     app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  {{- if .Values.trustVault.enabled }}
+  strategy:
+    type: Recreate
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
@@ -13,11 +17,25 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+        {{- if .Values.networkPolicy.enabled }}
+        blekline-sidecar: "true"
+        {{- end }}
     spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ default (include "blekline-ingress.fullname" .) .Values.serviceAccount.name }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: ingress
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - containerPort: {{ .Values.service.port }}
           env:
@@ -27,18 +45,49 @@ spec:
               value: {{ .Values.env.BLEKLINE_INGRESS_REGION | quote }}
             - name: BLEKLINE_EDGE_LOCAL_MASK
               value: {{ .Values.env.BLEKLINE_EDGE_LOCAL_MASK | quote }}
+            - name: BLEKLINE_LISTEN_HOST
+              value: {{ .Values.env.BLEKLINE_LISTEN_HOST | quote }}
             - name: LISTEN_PORT
               value: {{ .Values.env.LISTEN_PORT | quote }}
+            - name: BLEKLINE_MAX_BODY_BYTES
+              value: {{ .Values.env.BLEKLINE_MAX_BODY_BYTES | quote }}
+            - name: BLEKLINE_FAILURE_MODE
+              value: {{ .Values.failureMode | quote }}
+            - name: BLEKLINE_TRUST_VAULT
+              value: {{ .Values.trustVault.enabled | quote }}
+            - name: BLEKLINE_LINEAGE
+              value: {{ .Values.lineage.enabled | quote }}
+            - name: BLEKLINE_VAULT_DATA_DIR
+              value: {{ .Values.trustVault.dataDir | quote }}
             - name: BLEKLINE_WORKSPACE_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "blekline-ingress.fullname" . }}-secret
+                  name: {{ include "blekline-ingress.secretName" . }}
                   key: workspaceToken
+                  optional: true
             - name: BLEKLINE_WORKSPACE_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "blekline-ingress.fullname" . }}-secret
+                  name: {{ include "blekline-ingress.secretName" . }}
                   key: workspaceId
+                  optional: true
+            - name: BLEKLINE_SIDECAR_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "blekline-ingress.secretName" . }}
+                  key: sidecarAuth
+            {{- if .Values.trustVault.enabled }}
+            - name: BLEKLINE_VAULT_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (printf "%s-vault" (include "blekline-ingress.fullname" .)) .Values.trustVault.masterKeySecret }}
+                  key: {{ .Values.trustVault.masterKeySecretKey }}
+            {{- end }}
+          volumeMounts:
+            {{- if and .Values.trustVault.enabled .Values.persistence.enabled }}
+            - name: vault-data
+              mountPath: {{ .Values.trustVault.dataDir }}
+            {{- end }}
           readinessProbe:
             httpGet:
               path: /health
@@ -53,7 +102,14 @@ spec:
             periodSeconds: 30
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        {{- if and .Values.trustVault.enabled .Values.persistence.enabled }}
+        - name: vault-data
+          persistentVolumeClaim:
+            claimName: {{ include "blekline-ingress.fullname" . }}-vault
+        {{- end }}
 ---
+{{- if not .Values.secrets.existingSecret }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -62,6 +118,24 @@ type: Opaque
 stringData:
   workspaceToken: {{ .Values.secrets.workspaceToken | quote }}
   workspaceId: {{ .Values.secrets.workspaceId | quote }}
+  sidecarAuth: {{ .Values.secrets.sidecarAuth | quote }}
+{{- end }}
+---
+{{- if and .Values.trustVault.enabled .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "blekline-ingress.fullname" . }}-vault
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+  {{- if .Values.persistence.storageClass }}
+  storageClassName: {{ .Values.persistence.storageClass | quote }}
+  {{- end }}
+{{- end }}
 ---
 apiVersion: v1
 kind: Service
@@ -74,3 +148,37 @@ spec:
   ports:
     - port: {{ .Values.service.port }}
       targetPort: {{ .Values.service.port }}
+---
+{{- if .Values.serviceAccount.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ default (include "blekline-ingress.fullname" .) .Values.serviceAccount.name }}
+  labels:
+    app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+---
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "blekline-ingress.fullname" . }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{ .Values.networkPolicy.agentPodLabel }}: "true"
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.port }}
+{{- end }}

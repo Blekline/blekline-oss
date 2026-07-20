@@ -33,11 +33,20 @@ In scope:
 
 - This repository (`blekline-oss`) and published npm packages under `@blekline/*`
 - `blekline-client` on PyPI when published
+- Ingress sidecar (`packages/ingress-proxy`) — including auth misconfiguration if `BLEKLINE_SIDECAR_AUTH` unset in production
 
 Out of scope:
 
 - The proprietary app at `app.blekline.com` (report via the same email; routed internally)
+- Private `runtime-engine` source (sidecar image issues in scope; crypto internals NDA)
 - Third-party MCP servers (e.g. Daytona) unless the issue is in Blekline proxy code
+
+## Sidecar hardening checklist
+
+- Set `BLEKLINE_SIDECAR_AUTH` (32+ characters)
+- Bind `BLEKLINE_LISTEN_HOST=127.0.0.1` outside K8s pod network
+- Never expose port 8787 via public Ingress
+- Helm: `trustVault.enabled` → `replicaCount: 1` + `strategy.type: Recreate`
 
 ## Third-party dependencies
 

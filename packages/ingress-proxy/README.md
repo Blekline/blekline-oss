@@ -1,46 +1,66 @@
-# Blekline ingress edge sidecar
+# Blekline NHIM sidecar (`ingress-proxy`)
 
-Regional HTTP proxy for OpenAI/Anthropic SDK base URL swaps, with **local** tool-call enforcement and optional edge pre-mask.
+Regional HTTP proxy for OpenAI/Anthropic SDK base URL swaps, with **authenticated** tool-call enforcement, Trust Vault, and Lineage Firewall.
+
+## Security (required)
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `BLEKLINE_SIDECAR_AUTH` | *(required)* | Bearer token for `/v1/enforce-tool-call`, vault, lineage APIs |
+| `BLEKLINE_LISTEN_HOST` | `127.0.0.1` | Bind address — use `0.0.0.0` only inside K8s pod network |
+| `BLEKLINE_MAX_BODY_BYTES` | `1048576` | JSON body limit |
+| `BLEKLINE_FAILURE_MODE` | `block` | `passthrough_with_alert` for staging only |
+
+**Warning:** Never expose port 8787 via public Ingress. ClusterIP + agent pod only.
 
 ## Build & run
 
 ```bash
 pnpm build:packages
-pnpm docker:ingress
-# or: docker build -t blekline-ingress -f packages/ingress-proxy/Dockerfile .
+pnpm docker:sidecar
+# Image tag: blekline-sidecar:0.2.0-nhim
 
-docker run -p 8787:8787 \
-  -e BLEKLINE_INGRESS_TARGET=https://app.blekline.com \
-  -e BLEKLINE_INGRESS_REGION=eu-central-1 \
-  -e BLEKLINE_WORKSPACE_TOKEN=blw_... \
-  -e BLEKLINE_WORKSPACE_ID=ws_... \
-  -e BLEKLINE_EDGE_LOCAL_MASK=true \
-  blekline-ingress
+bash scripts/local-sidecar-env.sh   # docker compose, <30s
+```
+
+```bash
+docker run -p 127.0.0.1:8787:8787 \
+  -e BLEKLINE_SIDECAR_AUTH=your-secret \
+  -e BLEKLINE_VAULT_MASTER_KEY=0123...64hex \
+  -e BLEKLINE_LISTEN_HOST=0.0.0.0 \
+  blekline-sidecar:0.2.0-nhim
 ```
 
 ## Routes
 
-| Route | Purpose |
-|-------|---------|
-| `GET /health` | Region + local mask p50/p95 |
-| `POST /v1/enforce-tool-call` | Edge-local MCP policy (<10ms p99 target) |
-| `POST /v1/chat/completions` | OpenAI-compatible → control plane ingress |
-| `POST /v1/messages` | Anthropic-compatible → control plane ingress |
-
-Pass through `x-blekline-workspace-token` and client metadata headers from your agent runtime.
+| Route | Auth | Purpose |
+|-------|------|---------|
+| `GET /health` | No | Sidecar status |
+| `POST /v1/enforce-tool-call` | Bearer | MCP policy + lineage |
+| `POST /v1/vault/tokenize` | Bearer | Trust Vault placeholder |
+| `POST /v1/vault/hydrate` | Bearer | In-cluster hydrate |
+| `POST /v1/lineage/contaminate` | Bearer | Pilot/test contamination |
+| `POST /v1/chat/completions` | Upstream token | OpenAI-compatible ingress |
+| `POST /v1/messages` | Upstream token | Anthropic-compatible ingress |
 
 ## Helm
 
 ```bash
-helm upgrade --install ingress-eu ./helm/blekline-ingress \
-  --set env.BLEKLINE_INGRESS_REGION=eu-central-1 \
-  --set secrets.workspaceToken=blw_... \
-  --set secrets.workspaceId=ws_...
+helm upgrade --install sidecar ./helm/blekline-ingress \
+  --set trustVault.enabled=true \
+  --set replicaCount=1 \
+  --set failureMode=block \
+  --set secrets.existingSecret=blekline-sidecar-secret
 ```
+
+Create secrets with `kubectl create secret` — do not commit tokens in `values.yaml`.
 
 ## Docs
 
-- [Ingress proxy](https://app.blekline.com/docs/api/ingress-proxy)
-- [Multi-region ingress](https://app.blekline.com/docs/enterprise/multi-region)
-- [Latency SLO](https://app.blekline.com/docs/reference/latency-slo)
-- [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
+- [NHIM overview](https://app.blekline.com/docs/introduction/nhim)
+- [Trust Vault sidecar](https://app.blekline.com/docs/enterprise/trust-vault-sidecar)
+- [Ingress proxy API](https://app.blekline.com/docs/api/ingress-proxy)
+
+## OSS boundary
+
+This package is open source. Trust Vault / Lineage **source** lives in private `runtime-engine` (compiled into the Docker image only).

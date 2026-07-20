@@ -1,0 +1,30 @@
+services:
+  blekline-sidecar:
+    build:
+      context: ../..
+      dockerfile: packages/ingress-proxy/Dockerfile
+    image: blekline-sidecar:0.2.0-nhim
+    ports:
+      - "127.0.0.1:8787:8787"
+    environment:
+      BLEKLINE_LISTEN_HOST: "0.0.0.0"
+      BLEKLINE_SIDECAR_AUTH: "${BLEKLINE_SIDECAR_AUTH:-dev-sidecar-auth-change-me}"
+      BLEKLINE_VAULT_MASTER_KEY: "${BLEKLINE_VAULT_MASTER_KEY:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}"
+      BLEKLINE_TRUST_VAULT: "true"
+      BLEKLINE_LINEAGE: "true"
+      BLEKLINE_FAILURE_MODE: "${BLEKLINE_FAILURE_MODE:-block}"
+      BLEKLINE_INGRESS_TARGET: "${BLEKLINE_INGRESS_TARGET:-https://app.blekline.com}"
+      BLEKLINE_WORKSPACE_TOKEN: "${BLEKLINE_WORKSPACE_TOKEN:-}"
+      BLEKLINE_WORKSPACE_ID: "${BLEKLINE_WORKSPACE_ID:-}"
+    volumes:
+      - sidecar-vault:/app/data/vault
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8787/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  sidecar-vault:
