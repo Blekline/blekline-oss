@@ -1,4 +1,4 @@
-<!-- GitHub repo About field: Zero-trust execution plane for AI agents — open-core MCP/SDK to mask, enforce, and audit agent calls. -->
+<!-- GitHub repo About field: Non-Human Identity & Runtime Enforcement for AI agents — open-core MCP/SDK to mask, enforce, and audit agent calls. -->
 
 <div align="center">
   <picture>
@@ -19,10 +19,13 @@
 </div>
 
 <h3 align="center">
-  Runtime Enforcement Plane for AI Agents — open-core MCP/SDK to mask, enforce, and audit every agent call.
+  Non-Human Identity &amp; Runtime Enforcement for AI agents — open-core MCP/SDK to mask, enforce, and audit every agent call.
 </h3>
 
 <p align="center">
+  <a href="https://app.blekline.com/playground">Runtime Simulator</a> ·
+  <a href="https://app.blekline.com/definitions">Definitions</a> ·
+  <a href="https://app.blekline.com/docs/introduction/nhim">NHIM</a> ·
   <a href="https://app.blekline.com/docs/introduction/quick-start">Quick start</a> ·
   <a href="https://app.blekline.com/docs/introduction/why-ingress">Why ingress</a> ·
   <a href="https://app.blekline.com/docs/introduction/architecture">Architecture</a> ·
@@ -123,9 +126,15 @@ In any client: *"Use blekline_mask_prompt on: Contact Jane at [jane@acme.com](ma
 
 Blekline sits at **Layer 4** — between L5 agents (Cursor, Claude, Codex) and L1 sandboxes (Daytona, Modal, Vercel Sandbox, Cloudflare, E2B) and model APIs.
 
-```text
-L5 Agents → L4 Blekline (mask · enforce · audit) → L1 sandbox MCP / model APIs
+```mermaid
+flowchart LR
+  L5[L5 Agents] --> L4[Blekline L4<br/>mask · enforce · audit]
+  L4 --> L1[L1 sandboxes / MCP]
+  L4 --> Models[Model APIs]
+  L4 --> Vault[Trust Vault VPC]
 ```
+
+Try it interactively: **[Runtime Simulator](https://app.blekline.com/playground)** · [NHIM docs](https://app.blekline.com/docs/introduction/nhim) · [Definitions](https://app.blekline.com/definitions)
 
 [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack) · [Architecture](https://app.blekline.com/docs/introduction/architecture) · [Trust boundaries](https://app.blekline.com/docs/security/trust-boundaries) · [Latency SLO](https://app.blekline.com/docs/reference/latency-slo)
 
