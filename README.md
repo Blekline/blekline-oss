@@ -3,17 +3,13 @@
 <div align="center">
   <picture>
     <source
-      media="(prefers-color-scheme: dark)"
-      srcset="https://github.com/Blekline/blekline-oss/raw/main/assets/images/blekline-logo-dark.svg"
-    />
-    <source
       media="(prefers-color-scheme: light)"
       srcset="https://github.com/Blekline/blekline-oss/raw/main/assets/images/blekline-logo-light.svg"
     />
     <img
-      alt="Blekline — mark and wordmark"
-      src="https://github.com/Blekline/blekline-oss/raw/main/assets/images/blekline-logo-light.svg"
-      width="46%"
+      alt="Blekline"
+      src="https://github.com/Blekline/blekline-oss/raw/main/assets/images/blekline-logo-dark.svg"
+      width="420"
     />
   </picture>
 </div>
@@ -23,8 +19,8 @@
 </h3>
 
 <p align="center">
-  <a href="https://app.blekline.com/playground">Runtime Simulator</a> ·
-  <a href="https://app.blekline.com/definitions">Definitions</a> ·
+  <a href="https://app.blekline.com/docs/playground/runtime-enforcement">Runtime Simulator</a> ·
+  <a href="https://app.blekline.com/docs/definitions">Definitions</a> ·
   <a href="https://app.blekline.com/docs/introduction/nhim">NHIM</a> ·
   <a href="https://app.blekline.com/docs/introduction/quick-start">Quick start</a> ·
   <a href="https://app.blekline.com/docs/introduction/why-ingress">Why ingress</a> ·
@@ -134,7 +130,7 @@ flowchart LR
   L4 --> Vault[Trust Vault VPC]
 ```
 
-Try it interactively: **[Runtime Simulator](https://app.blekline.com/playground)** · [NHIM docs](https://app.blekline.com/docs/introduction/nhim) · [Definitions](https://app.blekline.com/definitions)
+Try it interactively: **[Runtime Simulator](https://app.blekline.com/docs/playground/runtime-enforcement)** · [NHIM docs](https://app.blekline.com/docs/introduction/nhim) · [Definitions](https://app.blekline.com/docs/definitions)
 
 [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack) · [Architecture](https://app.blekline.com/docs/introduction/architecture) · [Trust boundaries](https://app.blekline.com/docs/security/trust-boundaries) · [Latency SLO](https://app.blekline.com/docs/reference/latency-slo)
 

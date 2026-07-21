@@ -109,6 +109,16 @@ spec:
             claimName: {{ include "blekline-ingress.fullname" . }}-vault
         {{- end }}
 ---
+{{- if and .Values.trustVault.enabled (not .Values.trustVault.masterKeySecret) .Values.trustVault.masterKey }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "blekline-ingress.fullname" . }}-vault
+type: Opaque
+stringData:
+  {{ .Values.trustVault.masterKeySecretKey }}: {{ .Values.trustVault.masterKey | quote }}
+{{- end }}
+---
 {{- if not .Values.secrets.existingSecret }}
 apiVersion: v1
 kind: Secret
