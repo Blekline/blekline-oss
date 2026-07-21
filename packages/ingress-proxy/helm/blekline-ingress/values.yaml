@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: blekline/sidecar
+  repository: ghcr.io/blekline/sidecar
   tag: "0.2.0-nhim"
   pullPolicy: IfNotPresent
 
@@ -49,6 +49,8 @@ trustVault:
   # Create via ExternalSecrets or: kubectl create secret generic blekline-vault-master --from-literal=masterKey=...
   masterKeySecret: ""
   masterKeySecretKey: masterKey
+  # Dev-only: set inline master key when masterKeySecret empty (never in prod git)
+  masterKey: ""
 
 lineage:
   enabled: true
