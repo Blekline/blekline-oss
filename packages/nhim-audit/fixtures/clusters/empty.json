@@ -1,0 +1,15 @@
+{
+  "clusterName": "kind-empty",
+  "namespaces": ["default"],
+  "pods": [],
+  "deployments": [],
+  "replicaSets": [],
+  "statefulSets": [],
+  "networkPolicies": [],
+  "mutatingWebhooks": [],
+  "validatingWebhooks": [],
+  "services": [],
+  "secrets": [],
+  "hasGatekeeper": false,
+  "hasBleklineHelm": false
+}

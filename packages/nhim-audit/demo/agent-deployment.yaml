@@ -1,0 +1,29 @@
+# Broken agent candidate — no sidecar, no NetworkPolicy (NHIM audit demo).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langgraph-worker
+  namespace: agent-ns
+  labels:
+    app: langgraph-worker
+    app.kubernetes.io/component: agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: langgraph-worker
+  template:
+    metadata:
+      labels:
+        app: langgraph-worker
+        app.kubernetes.io/component: agent
+    spec:
+      containers:
+        - name: langgraph-worker
+          image: curlimages/curl:8.5.0
+          command: ["sleep", "infinity"]
+          env:
+            - name: OPENAI_API_KEY
+              value: placeholder
+            - name: MCP_SERVER_URL
+              value: http://mcp.example.svc.cluster.local

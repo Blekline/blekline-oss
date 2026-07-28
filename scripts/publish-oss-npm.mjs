@@ -10,6 +10,7 @@ const FILTERS = [
   "@blekline/mcp-server",
   "@blekline/mcp-proxy",
   "@blekline/cursor-hooks",
+  "@blekline/nhim-audit",
 ];
 
 function npmVersionPublished(name, version) {
