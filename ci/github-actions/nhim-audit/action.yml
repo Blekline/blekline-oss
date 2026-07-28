@@ -1,0 +1,58 @@
+name: NHIM Audit
+description: Static Kubernetes agent-hop audit (merge-blocking)
+inputs:
+  kubeconfig:
+    description: Kubeconfig contents (store in secrets.KUBECONFIG — never echo or commit)
+    required: true
+  fail-on:
+    description: Fail on critical, high, or any finding
+    required: false
+    default: high
+  min-score:
+    description: Minimum NHIM readiness score (0-100)
+    required: false
+    default: "75"
+  output:
+    description: Report output path (JSON or SARIF per format input)
+    required: false
+    default: nhim-audit.json
+  format:
+    description: Report format — json or sarif (SARIF 2.1 for GitHub Advanced Security)
+    required: false
+    default: json
+  baseline:
+    description: Optional path to baseline JSON — fail only on new findings
+    required: false
+    default: ""
+  eval-token:
+    description: Optional BLEKLINE_EVAL_TOKEN for --probe (mature customers only)
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Run nhim-audit
+      shell: bash
+      env:
+        KUBECONFIG_FILE: ${{ runner.temp }}/kubeconfig-nhim-audit
+        BLEKLINE_EVAL_TOKEN: ${{ inputs.eval-token }}
+      run: |
+        set -euo pipefail
+        set +x
+        umask 077
+        trap 'rm -f "$KUBECONFIG_FILE"' EXIT
+        printf '%s' "${{ inputs.kubeconfig }}" > "$KUBECONFIG_FILE"
+        export KUBECONFIG="$KUBECONFIG_FILE"
+        ARGS=(audit --plain --fail-on "${{ inputs.fail-on }}" --min-score "${{ inputs.min-score }}" -o "${{ inputs.output }}" --format "${{ inputs.format }}")
+        if [ "${{ inputs.format }}" = "sarif" ]; then
+          :
+        else
+          ARGS+=(--json)
+        fi
+        if [ -n "${{ inputs.baseline }}" ]; then
+          ARGS+=(--baseline "${{ inputs.baseline }}")
+        fi
+        if [ -n "${BLEKLINE_EVAL_TOKEN:-}" ]; then
+          ARGS+=(--probe)
+        fi
+        npx --yes @blekline/nhim-audit@0.1.0 "${ARGS[@]}"

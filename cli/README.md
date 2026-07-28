@@ -46,4 +46,14 @@ Unit tests (no token): `pip install -e "packages/client-python[dev]" && pytest p
 pnpm verify:integrations
 ```
 
-Docs: [Quick start](https://app.blekline.com/docs/introduction/quick-start)
+## NHIM Audit (K8s)
+
+Static agent-hop audit — no workspace token:
+
+```bash
+npx @blekline/nhim-audit audit --plain --json -o nhim-audit.json
+```
+
+Docs: [NHIM Audit CLI](https://app.blekline.com/docs/tools/nhim-audit)
+
+## SDK packages

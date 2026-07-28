@@ -1,0 +1,48 @@
+{
+  "clusterName": "kind-blekline-nhim",
+  "namespaces": ["default", "agent-ns", "blekline"],
+  "pods": [],
+  "deployments": [
+    {
+      "namespace": "default",
+      "name": "langgraph-worker",
+      "labels": { "app": "langgraph-worker", "app.kubernetes.io/component": "agent" },
+      "annotations": { "blekline.com/inject-sidecar": "enabled" },
+      "containers": ["langgraph-worker", "blekline-sidecar"],
+      "envKeys": ["OPENAI_API_KEY", "BLEKLINE_SIDECAR_URL"],
+      "image": "langchain/langgraph-api:latest"
+    }
+  ],
+  "replicaSets": [],
+  "statefulSets": [],
+  "networkPolicies": [
+    {
+      "namespace": "default",
+      "name": "agent-egress-deny",
+      "podSelector": { "app": "langgraph-worker" },
+      "policyTypes": ["Egress"],
+      "egressRestricted": true,
+      "allowsSidecarHop": true
+    }
+  ],
+  "mutatingWebhooks": [
+    {
+      "name": "blekline-admission",
+      "failurePolicy": "Fail",
+      "matchesBlekline": true
+    }
+  ],
+  "validatingWebhooks": [],
+  "services": [
+    {
+      "namespace": "blekline",
+      "name": "blekline-sidecar",
+      "type": "ClusterIP",
+      "ports": [8787],
+      "selector": { "app": "blekline-sidecar" }
+    }
+  ],
+  "secrets": [{ "namespace": "default", "name": "blekline-sidecar-auth" }],
+  "hasGatekeeper": true,
+  "hasBleklineHelm": true
+}

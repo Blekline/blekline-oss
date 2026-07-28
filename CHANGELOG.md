@@ -6,6 +6,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `@blekline/nhim-audit` — static Kubernetes agent-hop audit CLI (`npx @blekline/nhim-audit audit`)
+- NHIM Audit GitHub Action under `ci/github-actions/nhim-audit/`
+
 ## [0.2.0-nhim] - 2026-06-10
 
 ### Added

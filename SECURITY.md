@@ -34,6 +34,7 @@ In scope:
 - This repository (`blekline-oss`) and published npm packages under `@blekline/*`
 - `blekline-client` on PyPI when published
 - Ingress sidecar (`packages/ingress-proxy`) — including auth misconfiguration if `BLEKLINE_SIDECAR_AUTH` unset in production
+- `@blekline/nhim-audit` — kubeconfig handling, false negatives hiding bypass, accidental secret logging in JSON reports
 
 Out of scope:
 

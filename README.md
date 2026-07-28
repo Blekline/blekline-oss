@@ -36,6 +36,7 @@
   <a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/SDK%20%26%20contracts-Apache%202.0-green.svg" alt="Apache-2.0" /></a>
   <a href="https://www.npmjs.com/package/@blekline/mcp-server"><img src="https://img.shields.io/npm/v/@blekline/mcp-server?label=mcp-server" alt="npm" /></a>
   <a href="https://www.npmjs.com/package/@blekline/mcp-proxy"><img src="https://img.shields.io/npm/v/@blekline/mcp-proxy?label=mcp-proxy" alt="npm proxy" /></a>
+  <a href="https://www.npmjs.com/package/@blekline/nhim-audit"><img src="https://img.shields.io/npm/v/@blekline/nhim-audit?label=nhim-audit" alt="npm nhim-audit" /></a>
 </p>
 
 ---
@@ -167,10 +168,13 @@ Try it interactively: **[Runtime Simulator](https://app.blekline.com/docs/playgr
 | `@blekline/mcp-proxy`  | `npm i @blekline/mcp-proxy`  | AGPL-3.0   |
 | `@blekline/client`     | `npm i @blekline/client`     | Apache-2.0 |
 | `@blekline/contracts`  | workspace / embed            | Apache-2.0 |
+| `@blekline/nhim-audit` | `npx @blekline/nhim-audit audit` | AGPL-3.0   |
 | `ingress-proxy`        | Docker / Helm                | AGPL-3.0   |
 
 
-OpenAPI: `[packages/contracts/openapi.yaml](packages/contracts/openapi.yaml)`
+**NHIM Audit CLI** — static scan for K8s agent candidates that can bypass enforcement hops (no account). Finds gaps; sidecar + admission close them. [Package README](packages/nhim-audit/README.md) · [docs](https://app.blekline.com/docs/tools/nhim-audit)
+
+OpenAPI: `[packages/contracts/openapi.yaml](packages/contracts/openapi.yaml)` `[packages/contracts/openapi.yaml](packages/contracts/openapi.yaml)`
 
 ## MCP tools
 
@@ -328,6 +332,8 @@ All docs: **[app.blekline.com/docs](https://app.blekline.com/docs)**
 
 - [Open a design partner issue](https://github.com/Blekline/blekline-oss/issues/new?template=design_partner.yml)
 - Or [start a discussion](https://github.com/Blekline/blekline-oss/discussions/new) — choose **Design partner interest**
+
+**Enterprise eval (OWASP ASI + AIUC-1 evidence pack)** — qualified teams receive private sandbox access (K8s/Docker/MCP tracks). [Compliance overview](https://app.blekline.com/docs/enterprise/compliance-evidence) · request via design partner issue or sales.
 
 ## Contributing
 
