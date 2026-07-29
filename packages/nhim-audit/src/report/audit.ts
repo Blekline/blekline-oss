@@ -8,7 +8,7 @@ import type { ClusterSnapshot } from "../types.js";
 import type { DiscoverOptions } from "../discover/agents.js";
 import { redactReport } from "./redact.js";
 
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 
 export interface AuditOptions {
   discover?: DiscoverOptions;

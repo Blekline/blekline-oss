@@ -6,6 +6,29 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- README rewritten — concise intro, open-core boundary table, deploy tracks (removed long essay sections)
+- README reframes `ingress-proxy` as **reference sidecar** (optional); Track 02/03 default to NHIM image `ghcr.io/blekline/sidecar`
+- README + docs stub aligned to platform eval IA (eval journey, NHIM audit, deploy tracks, glossary on app)
+- `ingress-proxy/README.md` — reference sidecar scope; vault/lineage via NHIM image
+- GitHub issue/discussion templates — eval journey links (replacing legacy quick-start)
+- Design partner template — Track 01/02/03 eval framing
+- Benchmark scripts under `scripts/benchmarks/` (methodology + adapters for B1–B8 lab tests)
+
+### Fixed
+
+- Sync purge for `.cursor` marketing images and non-brand PDFs in `assets/images/`
+- NHIM audit README — CI example uses composite action in this repo (not unpublished marketplace action)
+
+## [0.1.1] - 2026-07-28
+
+### Fixed
+
+- `@blekline/nhim-audit` — ship `fixtures/clusters/` in npm tarball so `demo broken` and `--fixture` work via `npx`
+
+## [0.1.0] - 2026-07-28
+
 ### Added
 
 - `@blekline/nhim-audit` — static Kubernetes agent-hop audit CLI (`npx @blekline/nhim-audit audit`)

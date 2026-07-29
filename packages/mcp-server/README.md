@@ -37,6 +37,6 @@ Generate configs: `pnpm generate:mcp-configs` — examples in `.cursor/`, `.clau
 
 ## Docs
 
-- [Quick start](https://app.blekline.com/docs/introduction/quick-start)
+- [Eval journey](https://app.blekline.com/docs/get-started/eval-journey)
 - [MCP server reference](https://app.blekline.com/docs/mcp/server)
 - [Cursor setup](https://app.blekline.com/docs/mcp/cursor)

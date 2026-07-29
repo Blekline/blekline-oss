@@ -8,7 +8,7 @@
       "configPathHuman": null,
       "BLEKLINE_CLIENT_SURFACE": "sdk",
       "headless": true,
-      "docSlug": "introduction/quick-start",
+      "docSlug": "get-started/eval-journey",
       "verify": ["demo:mcp-smoke"],
       "includesProxy": false,
       "configFormat": null

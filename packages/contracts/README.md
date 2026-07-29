@@ -24,4 +24,4 @@ pnpm --filter @blekline/contracts build
 
 - [OpenAPI](https://app.blekline.com/docs/api/openapi)
 - [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
-- [Quick start](https://app.blekline.com/docs/introduction/quick-start)
+- [Eval journey](https://app.blekline.com/docs/get-started/eval-journey)

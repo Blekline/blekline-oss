@@ -20,7 +20,7 @@ import type { AuditReport, Severity } from "./types.js";
 
 const program = new Command();
 
-program.name("nhim-audit").description("Agent execution path audit for Kubernetes").version("0.1.0");
+program.name("nhim-audit").description("Agent execution path audit for Kubernetes").version("0.1.1");
 
 function computeExitCode(
   fullReport: AuditReport,
@@ -150,7 +150,7 @@ program
   .command("version")
   .description("Print version")
   .action(() => {
-    console.log("nhim-audit 0.1.0");
+    console.log("nhim-audit 0.1.1");
   });
 
 program.parse();

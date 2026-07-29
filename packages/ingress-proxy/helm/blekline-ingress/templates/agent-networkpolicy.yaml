@@ -1,0 +1,39 @@
+{{- if .Values.networkPolicy.agentEgressDeny.enabled }}
+# Apply to agent workloads (label blekline-agent=true) — deny direct egress except to Blekline sidecar and DNS.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "blekline-ingress.fullname" . }}-agent-egress
+  labels:
+    app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+spec:
+  podSelector:
+    matchLabels:
+      {{ .Values.networkPolicy.agentPodLabel }}: "true"
+  policyTypes:
+    - Egress
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Blekline sidecar (in-cluster standalone or localhost injected)
+    - to:
+        - podSelector:
+            matchLabels:
+              blekline-sidecar: "true"
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.port }}
+    # Cloud control plane (policy SSE, mask API) — tighten to CIDR in prod
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+{{- end }}

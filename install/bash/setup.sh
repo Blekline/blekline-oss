@@ -9,4 +9,4 @@ pnpm install
 pnpm build:packages
 node scripts/generate-mcp-configs.mjs
 echo "==> Done. Next: export BLEKLINE_WORKSPACE_TOKEN=blw_... && pnpm demo:mcp-smoke"
-echo "    Docs: https://app.blekline.com/docs/introduction/quick-start"
+echo "    Docs: https://app.blekline.com/docs/get-started/eval-journey"

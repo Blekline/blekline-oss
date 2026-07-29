@@ -27,7 +27,7 @@ pnpm --filter @blekline/mcp-proxy test
 
 **Pitch:** Blekline = **Layer 4** governance. Pick an **Layer 1** sandbox — [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers). [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
 
-**Docs:** [app.blekline.com/docs](https://app.blekline.com/docs) · [Quick start](https://app.blekline.com/docs/introduction/quick-start)
+**Docs:** [app.blekline.com/docs](https://app.blekline.com/docs) · [Eval journey](https://app.blekline.com/docs/get-started/eval-journey)
 
 ## L1 sandbox integration smoke tests
 

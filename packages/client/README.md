@@ -38,4 +38,4 @@ const tool = await client.enforceToolCall({
 
 - [TypeScript SDK](https://app.blekline.com/docs/sdk/typescript)
 - [OpenAPI](https://app.blekline.com/docs/api/openapi)
-- [Quick start](https://app.blekline.com/docs/introduction/quick-start)
+- [Eval journey](https://app.blekline.com/docs/get-started/eval-journey)

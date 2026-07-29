@@ -50,6 +50,7 @@ export class BleklineClient {
         }
         lastError = new BleklineApiError(`HTTP ${res.status}`, { status: res.status });
       } catch (err) {
+        if (err instanceof BleklineApiError) throw err;
         lastError = err;
       }
     }
