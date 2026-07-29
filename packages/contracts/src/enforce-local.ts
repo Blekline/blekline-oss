@@ -1,6 +1,10 @@
 import type { EnforceToolCallResult, EnforcementAction, ToolCallFinding } from "./enforcement.js";
+import type { FleetMode } from "./fleet-mode.js";
+import { isWriteTool } from "./fleet-mode.js";
 import type { McpToolPolicy } from "./mcp-policy.js";
 import { resolveMcpToolPolicyDecision } from "./mcp-policy.js";
+import type { ToolArgPolicy } from "./tool-arg-policy.js";
+import { evaluateToolArgPolicy } from "./tool-arg-policy.js";
 import { scanTextForSecrets } from "./secret-patterns.js";
 
 const DESTRUCTIVE_RE = /\brm\s+-rf\b|\bformat\s+c:\b|\bdrop\s+database\b/i;
@@ -67,9 +71,54 @@ export function enforceToolCallLocally(input: {
   arguments: Record<string, unknown>;
   requestId: string;
   mcpToolPolicy?: McpToolPolicy;
+  toolArgPolicy?: ToolArgPolicy;
+  fleetMode?: FleetMode;
+  agentId?: string;
 }): EnforceToolCallResult {
   const findings: ToolCallFinding[] = [];
   const blob = stringifyArgs(input.arguments);
+
+  if (input.fleetMode === "deny_all_tools") {
+    findings.push({ id: "fleet_kill_switch", label: "FLEET_DENY", field: "toolName" });
+    return {
+      action: "block",
+      maskedArguments: input.arguments,
+      findings,
+      entitiesMasked: 0,
+      riskTier: "high",
+      requestId: input.requestId,
+    };
+  }
+  if (input.fleetMode === "deny_writes" && isWriteTool(input.toolName)) {
+    findings.push({ id: "fleet_deny_writes", label: "FLEET_DENY_WRITES", field: "toolName" });
+    return {
+      action: "block",
+      maskedArguments: input.arguments,
+      findings,
+      entitiesMasked: 0,
+      riskTier: "high",
+      requestId: input.requestId,
+    };
+  }
+
+  if (input.toolArgPolicy?.rules?.length) {
+    const argVerdict = evaluateToolArgPolicy(input.toolArgPolicy, input.toolName, input.arguments);
+    if (argVerdict.block) {
+      findings.push({
+        id: argVerdict.ruleId ?? "arg_policy",
+        label: "ARG_POLICY",
+        field: "arguments",
+      });
+      return {
+        action: "block",
+        maskedArguments: input.arguments,
+        findings,
+        entitiesMasked: 0,
+        riskTier: "high",
+        requestId: input.requestId,
+      };
+    }
+  }
 
   if (DESTRUCTIVE_RE.test(blob)) {
     findings.push({ id: "destructive_command", label: "DESTRUCTIVE", field: "arguments" });

@@ -2,7 +2,9 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { callDownstreamTool, listDownstreamTools } from "./downstream/mcp-client.js";
+import { assertDownstreamInRegistry, hashDownstreamCommand } from "./downstream/registry.js";
 import { createProxyContext, interceptToolCall } from "./mcp-proxy.js";
+import { normalizeMcpToolPolicy } from "@blekline/contracts";
 
 const server = new Server(
   { name: "blekline-mcp-proxy", version: "0.1.0" },
@@ -72,6 +74,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
+  const downstreamCommand = process.env.BLEKLINE_DOWNSTREAM_COMMAND?.trim() || "node";
+  const downstreamArgs = (process.env.BLEKLINE_DOWNSTREAM_ARGS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const commandHash = hashDownstreamCommand(downstreamCommand, downstreamArgs);
+  const registryJson = process.env.BLEKLINE_MCP_REGISTRY_JSON?.trim();
+  let registryPolicy = normalizeMcpToolPolicy(undefined);
+  if (registryJson) {
+    try {
+      registryPolicy = normalizeMcpToolPolicy(JSON.parse(registryJson));
+    } catch {
+      throw new Error("Invalid BLEKLINE_MCP_REGISTRY_JSON");
+    }
+  }
+  assertDownstreamInRegistry(
+    registryPolicy,
+    commandHash,
+    process.env.BLEKLINE_DOWNSTREAM_SERVER_ID?.trim()
+  );
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

@@ -49,5 +49,6 @@ https://app.blekline.com/docs
 
 - `@blekline/mcp-server` — MCP tools (AGPL)
 - `@blekline/mcp-proxy` — downstream MCP governance (AGPL)
+- `@blekline/nhim-audit` — static K8s NHIM audit CLI (AGPL)
 - `@blekline/client` — TypeScript SDK (Apache-2.0)
 - `@blekline/contracts` — schemas + local enforce (Apache-2.0)

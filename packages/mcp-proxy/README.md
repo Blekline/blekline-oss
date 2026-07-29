@@ -30,4 +30,4 @@ Smoke test: `pnpm demo:mcp-smoke` from repo root. Sandbox providers: `SANDBOX_PR
 
 - [MCP proxy](https://app.blekline.com/docs/mcp/proxy)
 - [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers)
-- [Quick start](https://app.blekline.com/docs/introduction/quick-start)
+- [Eval journey](https://app.blekline.com/docs/get-started/eval-journey)

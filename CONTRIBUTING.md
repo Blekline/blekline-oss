@@ -15,6 +15,7 @@ pnpm build:packages
 pnpm verify:integrations
 pnpm demo:mcp-smoke
 pnpm --filter @blekline/mcp-proxy test
+pnpm --filter @blekline/nhim-audit test
 pip install -e "./packages/client-python[dev]" && pnpm test:python
 ```
 

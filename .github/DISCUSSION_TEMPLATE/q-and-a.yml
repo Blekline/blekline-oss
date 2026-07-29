@@ -4,7 +4,7 @@ body:
     attributes:
       value: |
         Ask about MCP setup, proxy wiring, local enforce, or cloud workspace tokens.
-        Docs: [Quick start](https://app.blekline.com/docs/introduction/quick-start) · [MCP proxy](https://app.blekline.com/docs/mcp/proxy)
+        Docs: [Eval journey](https://app.blekline.com/docs/get-started/eval-journey) · [MCP proxy](https://app.blekline.com/docs/mcp/proxy)
   - type: dropdown
     id: surface
     attributes:

@@ -7,3 +7,5 @@ export * from "./policy.js";
 export * from "./enforcement.js";
 export * from "./enforce-local.js";
 export * from "./secret-patterns.js";
+export * from "./tool-arg-policy.js";
+export * from "./fleet-mode.js";

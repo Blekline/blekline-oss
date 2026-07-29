@@ -65,7 +65,7 @@ npx @blekline/nhim-audit audit --format sarif -o nhim-audit.sarif
 ## CI
 
 ```yaml
-- uses: blekline/nhim-audit-action@v1
+- uses: Blekline/blekline-oss/ci/github-actions/nhim-audit@main
   with:
     kubeconfig: ${{ secrets.KUBECONFIG }}
     fail-on: high
@@ -80,7 +80,7 @@ npx @blekline/nhim-audit audit --format sarif -o nhim-audit.sarif
 Baseline on release branches (fail only on **new** findings):
 
 ```yaml
-- uses: blekline/nhim-audit-action@v1
+- uses: Blekline/blekline-oss/ci/github-actions/nhim-audit@main
   with:
     kubeconfig: ${{ secrets.KUBECONFIG }}
     baseline: nhim-audit-baseline.json

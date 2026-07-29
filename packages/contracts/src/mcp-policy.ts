@@ -1,15 +1,23 @@
 export type McpToolPolicyAction = "allow" | "mask" | "block";
 
+export type ApprovedDownstreamServer = {
+  id: string;
+  commandHash?: string;
+  riskTier?: "low" | "medium" | "high";
+};
+
 export type McpToolPolicy = {
   allowedTools: string[];
   deniedTools: string[];
   defaultAction: McpToolPolicyAction;
+  approvedDownstreamServers?: ApprovedDownstreamServer[];
 };
 
 export const DEFAULT_MCP_TOOL_POLICY: McpToolPolicy = {
   allowedTools: [],
   deniedTools: [],
   defaultAction: "mask",
+  approvedDownstreamServers: [],
 };
 
 export function normalizeMcpToolPolicy(raw: unknown): McpToolPolicy {
@@ -25,7 +33,23 @@ export function normalizeMcpToolPolicy(raw: unknown): McpToolPolicy {
     o.defaultAction === "allow" || o.defaultAction === "mask" || o.defaultAction === "block"
       ? o.defaultAction
       : "mask";
-  return { allowedTools, deniedTools, defaultAction };
+  const approvedDownstreamServers = Array.isArray(o.approvedDownstreamServers)
+    ? o.approvedDownstreamServers
+        .filter((x): x is Record<string, unknown> => !!x && typeof x === "object")
+        .map((x): ApprovedDownstreamServer => {
+          const riskRaw = x.riskTier;
+          const riskTier: ApprovedDownstreamServer["riskTier"] =
+            riskRaw === "low" || riskRaw === "medium" || riskRaw === "high" ? riskRaw : undefined;
+          return {
+            id: String(x.id ?? "").slice(0, 64),
+            commandHash: typeof x.commandHash === "string" ? x.commandHash.slice(0, 128) : undefined,
+            riskTier,
+          };
+        })
+        .filter((x) => x.id)
+        .slice(0, 32)
+    : [];
+  return { allowedTools, deniedTools, defaultAction, approvedDownstreamServers };
 }
 
 /** Resolve workspace MCP tool policy before local/cloud enforcement. */

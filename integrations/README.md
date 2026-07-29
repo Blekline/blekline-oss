@@ -7,7 +7,7 @@ Full docs: [app.blekline.com/docs](https://app.blekline.com/docs).
 
 | Surface | Path | `BLEKLINE_CLIENT_SURFACE` | Docs |
 |---------|------|---------------------------|------|
-| CLI / SDK | [`cli/`](../cli/) | `sdk` | [Quick start](https://app.blekline.com/docs/introduction/quick-start) |
+| CLI / SDK | [`cli/`](../cli/) | `sdk` | [Eval journey](https://app.blekline.com/docs/get-started/eval-journey) |
 | CI / CD | [`ci/`](../ci/) | `sdk` | [CI/CD](https://app.blekline.com/docs/sdk/ci-cd) |
 | Claude Code | [`.claude/settings.json.example`](../.claude/settings.json.example) | `claude-code` | [Claude Code](https://app.blekline.com/docs/mcp/claude-code) |
 | Cursor | [`.cursor/mcp.json.example`](../.cursor/mcp.json.example) | `cursor` | [Cursor](https://app.blekline.com/docs/mcp/cursor) |

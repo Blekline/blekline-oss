@@ -21,6 +21,8 @@
     "demo:mcp-smoke": "node scripts/mcp-smoke.mjs",
     "demo:sdk": "node scripts/demo-sdk.mjs",
     "demo:latency": "node scripts/demo-latency.mjs",
+    "benchmark:run": "node scripts/benchmarks/run-suite.mjs",
+    "benchmark:publish": "node scripts/benchmarks/publish.mjs",
     "demo:daytona-smoke": "SANDBOX_PROVIDER=daytona tsx demo/sandbox-smoke/index.ts",
     "demo:sandbox-smoke": "tsx demo/sandbox-smoke/index.ts",
     "docker:ingress": "docker build -t blekline-ingress -f packages/ingress-proxy/Dockerfile ."

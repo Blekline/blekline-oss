@@ -1,5 +1,5 @@
 name: Design partner inquiry
-description: Funded team evaluating Blekline for agent ingress
+description: Platform eval — NHIM audit + Track 01/02/03 deploy
 labels: ["design-partner"]
 body:
   - type: input
@@ -18,6 +18,18 @@ body:
         - Series A+
         - Enterprise pilot
         - Open source project
+    validations:
+      required: true
+
+  - type: dropdown
+    id: track
+    attributes:
+      label: Preferred eval track
+      options:
+        - Track 01 — MCP (Cursor / Claude / Codex)
+        - Track 02 — Docker sidecar (staging)
+        - Track 03 — Kubernetes fleet
+        - Not sure yet
     validations:
       required: true
 
@@ -47,8 +59,8 @@ body:
   - type: textarea
     id: usecase
     attributes:
-      label: What do you need from ingress governance?
-      placeholder: e.g. block secrets in tool calls, fleet policy, EU hosting
+      label: What do you need from platform eval?
+      placeholder: e.g. NHIM audit on staging, mandatory-hop verification, MCP mask/enforce, compliance export
     validations:
       required: true
 

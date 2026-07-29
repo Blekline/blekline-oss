@@ -1,6 +1,6 @@
 {
   "name": "@blekline/nhim-audit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Static Kubernetes audit for agent candidate workloads that may bypass MCP/runtime enforcement hops",
   "license": "AGPL-3.0-or-later",
   "private": false,
@@ -16,6 +16,7 @@
   },
   "files": [
     "dist",
+    "fixtures/clusters",
     "deploy/rbac",
     "README.md",
     "LICENSE"
@@ -31,7 +32,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "test": "node --test dist/**/*.test.js",
+    "test": "node --test dist/nhim-audit.test.js",
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
