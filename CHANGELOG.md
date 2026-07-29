@@ -6,22 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-07-29
+
+### Added
+
+- `@blekline/contracts` — `fleet-mode` and `tool-arg-policy` modules; extended local enforce helpers
+- `@blekline/mcp-proxy` — approved downstream server registry (`approvedDownstreamServers`) with command-hash guard at proxy start
+
 ### Changed
 
-- README rewritten — concise intro, open-core boundary table, deploy tracks (removed long essay sections)
-- README reframes `ingress-proxy` as **reference sidecar** (optional); Track 02/03 default to NHIM image `ghcr.io/blekline/sidecar`
-- README + docs stub aligned to platform eval IA (eval journey, NHIM audit, deploy tracks, glossary on app)
-- `ingress-proxy/README.md` — reference sidecar scope; vault/lineage via NHIM image
-- GitHub issue/discussion templates — eval journey links (replacing legacy quick-start)
-- Design partner template — Track 01/02/03 eval framing
-- Benchmark scripts under `scripts/benchmarks/` (methodology + adapters for B1–B8 lab tests)
+- `@blekline/contracts` — MCP policy normalization updates
+- `@blekline/client`, `@blekline/mcp-server`, `@blekline/mcp-proxy` — **0.4.2** aligns npm with GitHub `main` (platform eval sync)
 
-### Fixed
-
-- Sync purge for `.cursor` marketing images and non-brand PDFs in `assets/images/`
-- NHIM audit README — CI example uses composite action in this repo (not unpublished marketplace action)
-
-## [0.1.1] - 2026-07-28
+## [0.1.1] - 2026-07-29
 
 ### Fixed
 
@@ -104,7 +101,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ingress-proxy` — Docker image and Helm chart
 - Docs: Cursor, Claude Desktop, Codex, trust boundaries, latency SLO
 
-[Unreleased]: https://github.com/Blekline/blekline-oss/compare/v0.4.0...main
+[Unreleased]: https://github.com/Blekline/blekline-oss/compare/v0.4.2...main
+[0.4.2]: https://github.com/Blekline/blekline-oss/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/Blekline/blekline-oss/releases/tag/v0.4.1
+[0.1.1]: https://github.com/Blekline/blekline-oss/compare/v0.1.0-nhim-audit...v0.1.1
 [0.4.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.4.0
 [0.3.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.3.0
 [0.2.0]: https://github.com/Blekline/blekline-oss/releases/tag/v0.2.0
