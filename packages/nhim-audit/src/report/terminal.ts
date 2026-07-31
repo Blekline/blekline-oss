@@ -3,6 +3,7 @@ import type { AuditReport, Finding } from "../types.js";
 import { DOCS_BASE } from "../types.js";
 import { renderBriefingBox, renderHeader } from "./wordmark.js";
 import { compareFindings } from "./audit.js";
+import { VERSION } from "../version.js";
 
 export interface TerminalOptions {
   plain?: boolean;
@@ -52,7 +53,14 @@ function renderFinding(f: Finding, plain: boolean, verbose: boolean): string[] {
 function tieredCta(report: AuditReport): string[] {
   const band = report.score.band;
   const lines: string[] = [];
-  if (band === "CRITICAL") {
+  const hasCritical = report.summary.critical > 0;
+  const phase0Fail = report.score.redTeamPhase0 === "fail";
+
+  if (hasCritical || phase0Fail) {
+    lines.push(
+      "  ► CRITICAL bypass surfaces — email enterprise@blekline.com + attach nhim-audit.json for free probe token",
+    );
+  } else if (band === "CRITICAL") {
     lines.push(
       "  ► Mandatory hop not enforced — email enterprise@blekline.com + attach nhim-audit.json for free probe token",
     );
@@ -74,10 +82,10 @@ export function renderTerminal(report: AuditReport, opts: TerminalOptions = {}):
   const plain = opts.plain ?? false;
   const parts: string[] = [];
 
-  parts.push(renderHeader({ plain, brand: opts.brand, version: "0.1.0" }));
+  parts.push(renderHeader({ plain, brand: opts.brand, version: VERSION }));
   if (!plain) {
     parts.push("");
-    parts.push(renderBriefingBox(report.cluster, "0.1.0"));
+    parts.push(renderBriefingBox(report.cluster, VERSION));
   }
 
   parts.push("");

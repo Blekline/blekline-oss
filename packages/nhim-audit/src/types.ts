@@ -149,5 +149,12 @@ export const EVIDENCE_DISCLAIMER =
   "Evidence enablement only — not certification. Static findings infer architectural risk.";
 
 export const DOCS_BASE = "https://app.blekline.com/docs";
-export const OSS_HELM_BASE =
+/** Relative chart path (blekline-oss / monorepo). */
+export const OSS_HELM_CHART = "packages/ingress-proxy/helm/blekline-ingress";
+/** GHCR sidecar image for NHIM pilots. */
+export const PILOT_SIDECAR_IMAGE = "ghcr.io/blekline/sidecar:0.2.0-nhim";
+/** Public doc link for the reference Helm layout. */
+export const OSS_HELM_REPO =
   "https://github.com/Blekline/blekline-oss/tree/main/packages/ingress-proxy/helm/blekline-ingress";
+/** @deprecated Use OSS_HELM_CHART for install commands; OSS_HELM_REPO for doc links. */
+export const OSS_HELM_BASE = OSS_HELM_CHART;

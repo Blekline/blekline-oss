@@ -1,5 +1,5 @@
 import type { Finding, Severity } from "../types.js";
-import { STATIC_SUBTITLE, DOCS_BASE, OSS_HELM_BASE } from "../types.js";
+import { STATIC_SUBTITLE, DOCS_BASE, OSS_HELM_CHART, PILOT_SIDECAR_IMAGE } from "../types.js";
 import {
   discoverAgents,
   hasInjectAnnotation,
@@ -71,9 +71,11 @@ export function runStaticRules(
           namespace: ns,
           asi: ["ASI10"],
           fix: {
-            summary: "Apply agent egress deny NetworkPolicy",
+            summary: "Apply mandatory-hop NetworkPolicy (agent egress via sidecar only)",
             commands: [
-              `helm upgrade blekline ${OSS_HELM_BASE} --set networkPolicy.agentEgressDeny.enabled=true -n ${ns}`,
+              `helm upgrade --install sidecar ${OSS_HELM_CHART} -n blekline --create-namespace \\`,
+              `  --set networkPolicy.agentEgressDeny.enabled=true`,
+              `# Image: ${PILOT_SIDECAR_IMAGE} — see ${DOCS_BASE}/enterprise/k8s-deployment`,
             ],
             docUrl: `${DOCS_BASE}/enterprise/k8s-deployment`,
           },
@@ -174,20 +176,25 @@ export function runStaticRules(
   );
   for (const ns of sidecarNamespaces) {
     const hasAuth = cluster.secrets.some(
-      (s) => s.namespace === ns && s.name === "blekline-sidecar-auth",
+      (s) =>
+        s.namespace === ns &&
+        (s.name === "blekline-sidecar-secret" || s.name === "blekline-sidecar-auth"),
     );
     if (!hasAuth) {
       findings.push(
         mkFinding({
           id: "NHIM-007",
           severity: "MEDIUM",
-          title: "blekline-sidecar-auth secret missing",
-          resource: `${ns}/Secret/blekline-sidecar-auth`,
+          title: "blekline-sidecar-secret missing",
+          resource: `${ns}/Secret/blekline-sidecar-secret`,
           namespace: ns,
           asi: ["ASI03"],
           fix: {
-            summary: "Create blekline-sidecar-auth secret in namespace",
-            commands: [`kubectl -n ${ns} create secret generic blekline-sidecar-auth --from-literal=token=REPLACE_ME`],
+            summary: "Create blekline-sidecar-secret with sidecarAuth key",
+            commands: [
+              `kubectl -n ${ns} create secret generic blekline-sidecar-secret --from-literal=sidecarAuth=REPLACE_ME`,
+              `# Must match blekline-sidecar-auth token if admission/smoke Job installed`,
+            ],
             docUrl: `${DOCS_BASE}/enterprise/trust-vault-sidecar`,
           },
         }),
@@ -226,7 +233,10 @@ export function runStaticRules(
         asi: [],
         fix: {
           summary: "Install Blekline ingress Helm chart",
-          commands: [`helm install blekline ${OSS_HELM_BASE}`],
+          commands: [
+            `helm upgrade --install sidecar ${OSS_HELM_CHART} -n blekline --create-namespace`,
+            `# Image: ${PILOT_SIDECAR_IMAGE} — ${DOCS_BASE}/enterprise/k8s-deployment`,
+          ],
           docUrl: `${DOCS_BASE}/enterprise/k8s-deployment`,
         },
       }),
@@ -292,6 +302,25 @@ export function runStaticRules(
       },
     }),
   );
+
+  if (candidates.length === 0) {
+    findings.push(
+      mkFinding({
+        id: "NHIM-013",
+        severity: "MEDIUM",
+        title: "No agent candidates discovered",
+        resource: "cluster/workloads",
+        namespace: "*",
+        asi: ["ASI10"],
+        subtitle: "Static scan incomplete — deploy agent workloads or widen discovery",
+        fix: {
+          summary: "Deploy agent workloads or pass --label-selector to discover candidates",
+          commands: ["nhim-audit audit --label-selector app.kubernetes.io/component=agent"],
+          docUrl: `${DOCS_BASE}/tools/nhim-audit`,
+        },
+      }),
+    );
+  }
 
   return { candidates, findings: dedupeFindings(findings) };
 }

@@ -3,6 +3,22 @@ import { CLIENT_SURFACES } from "./auth.js";
 
 export type EnforcementAction = "allow" | "mask" | "block";
 
+/** Extended NHIM sidecar verbs (metadata / roadmap UI — mask/block shipped; others SIEM workflow). */
+export type ExtendedEnforcementVerb =
+  | EnforcementAction
+  | "flag"
+  | "restrict"
+  | "quarantine";
+
+export const ENFORCEMENT_VERBS: ExtendedEnforcementVerb[] = [
+  "allow",
+  "mask",
+  "block",
+  "flag",
+  "restrict",
+  "quarantine",
+];
+
 export const enforceToolCallRequestSchema = z.object({
   toolName: z.string().min(1).max(120),
   arguments: z.record(z.string(), z.unknown()),

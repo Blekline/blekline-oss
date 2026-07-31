@@ -7,8 +7,7 @@ import { runStaticRules } from "../rules/engine.js";
 import type { ClusterSnapshot } from "../types.js";
 import type { DiscoverOptions } from "../discover/agents.js";
 import { redactReport } from "./redact.js";
-
-const VERSION = "0.1.1";
+import { VERSION } from "../version.js";
 
 export interface AuditOptions {
   discover?: DiscoverOptions;
@@ -20,7 +19,7 @@ export function runAudit(
   options: AuditOptions = {},
 ): AuditReport {
   const { candidates, findings } = runStaticRules(cluster, options.discover ?? {});
-  const score = calculateScore(findings);
+  const score = calculateScore(findings, candidates.length);
   const summary = countBySeverity(findings);
 
   return {

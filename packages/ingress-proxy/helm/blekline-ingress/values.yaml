@@ -5,6 +5,9 @@ image:
   tag: "0.2.0-nhim"
   pullPolicy: IfNotPresent
 
+# Optional — set when pulling from private GHCR (create secret: kubectl create secret docker-registry ghcr-blekline ...)
+imagePullSecrets: []
+
 service:
   type: ClusterIP
   port: 8787

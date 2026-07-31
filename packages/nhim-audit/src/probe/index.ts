@@ -23,8 +23,7 @@ export async function validateEvalToken(
     return { valid: false, reason: "Use BLEKLINE_EVAL_TOKEN (blw_eval_…), not workspace live token" };
   }
 
-  const offlineValid =
-    (t.startsWith("blw_eval_") && t.length >= 16) || t.split(".").length === 3;
+  const offlineValid = t.startsWith("blw_eval_") && t.length >= 16;
 
   if (!offlineValid) {
     return {
@@ -53,8 +52,10 @@ export async function validateEvalToken(
     if (body.valid) return { valid: true };
     return { valid: false, reason: body.reason ?? "Online token validation failed" };
   } catch {
-    // Offline fallback when validate endpoint unreachable
-    return { valid: true };
+    return {
+      valid: false,
+      reason: "Online token validation unreachable — set BLEKLINE_EVAL_ONLINE=0 for offline eval only",
+    };
   }
 }
 
@@ -75,7 +76,7 @@ export async function runProbes(
 ): Promise<AuditReport> {
   const probeFindings = await runProbeSuite(cluster, report.candidates, { ...options, token });
   const findings = [...report.findings, ...probeFindings];
-  const score = calculateScore(findings);
+  const score = calculateScore(findings, report.candidates.length);
   const summary = countBySeverity(findings);
 
   return {

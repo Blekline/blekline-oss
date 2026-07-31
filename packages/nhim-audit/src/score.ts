@@ -22,7 +22,10 @@ function redTeamPhase0(band: ScoreBand, criticalCount: number): RedTeamPhase0 {
   return "fail";
 }
 
-export function calculateScore(findings: Finding[]): ScoreResult {
+const EMPTY_CLUSTER_OBJECTIVE =
+  "No agent candidates discovered — static scan incomplete; deploy workloads or use --label-selector";
+
+export function calculateScore(findings: Finding[], candidateCount?: number): ScoreResult {
   let value = 100;
   let criticalCount = 0;
 
@@ -33,13 +36,22 @@ export function calculateScore(findings: Finding[]): ScoreResult {
   }
 
   value = Math.max(0, Math.min(100, value));
+
+  if (candidateCount === 0) {
+    value = Math.min(value, 74);
+  }
+
   const band = bandForScore(value);
+  const objective =
+    candidateCount === 0 ? EMPTY_CLUSTER_OBJECTIVE : BAND_OBJECTIVES[band];
+  const phase0 =
+    candidateCount === 0 ? "unknown" : redTeamPhase0(band, criticalCount);
 
   return {
     value,
     band,
-    controlObjective: BAND_OBJECTIVES[band],
-    redTeamPhase0: redTeamPhase0(band, criticalCount),
+    controlObjective: objective,
+    redTeamPhase0: phase0,
   };
 }
 
