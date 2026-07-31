@@ -43,7 +43,7 @@
 
 This is Blekline’s **open-core repository**: npm packages, client integrations, and the NHIM audit CLI. Documentation, the eval workspace, the hosted control plane, and the **production NHIM sidecar image** are on **[blekline.com](https://blekline.com)** and **[app.blekline.com](https://app.blekline.com)**.
 
-**Typical path:** [NHIM audit](https://app.blekline.com/docs/get-started/nhim-audit-quickstart) on staging → [platform eval](https://app.blekline.com/docs/get-started/eval-journey) (Track 01 MCP · 02 Docker · 03 K8s).
+**Typical path:** [NHIM audit](https://app.blekline.com/docs/get-started/nhim-audit-quickstart) on staging → [platform eval](https://app.blekline.com/docs/get-started/eval-journey) (Track 01 K8s · 02 Docker · 03 MCP).
 
 ## What lives here vs on blekline.com
 
@@ -53,7 +53,7 @@ This is Blekline’s **open-core repository**: npm packages, client integrations
 | `@blekline/mcp-server`, `mcp-proxy`, `contracts`, `client`, `cursor-hooks` | Workspace policy, fleet SSE, Azure-backed PII masking |
 | Eval onboarding, glossary, full doc set | [app.blekline.com/docs](https://app.blekline.com/docs) |
 
-**Track 02 / 03 deploy the NHIM sidecar image** (`ghcr.io/blekline/sidecar`) — Trust Vault, Lineage Firewall, admission — documented under [Docker sidecar](https://app.blekline.com/docs/deploy/docker-sidecar) and [K8s fleet](https://app.blekline.com/docs/deploy/k8s-fleet). That image is not built from this repository.
+**Track 01 / 02 deploy the NHIM sidecar image** (`ghcr.io/blekline/sidecar`) — Trust Vault, Lineage Firewall, admission — documented under [Docker sidecar](https://app.blekline.com/docs/deploy/docker-sidecar) and [K8s fleet](https://app.blekline.com/docs/deploy/k8s-fleet). That image is not built from this repository.
 
 ### Why `packages/ingress-proxy` is still open source
 
@@ -63,7 +63,7 @@ This folder is a **reference sidecar** — source you can audit, fork, and run l
 - **Helm chart** as a starting layout for sidecar injection (values default vault/lineage off)
 - **For contributors and self-hosters** who want contracts-level enforcement without pulling the NHIM image
 
-It is **not** a stand-in for the production sidecar on eval tracks. If you only need Track 01, use MCP. If you need Trust Vault or Lineage, use the NHIM image from the deploy guides — not a DIY build of this package alone.
+It is **not** a stand-in for the production sidecar on eval tracks. If you only need Track 03, use MCP. If you need Trust Vault or Lineage, use the NHIM image from the deploy guides — not a DIY build of this package alone.
 
 Details: [packages/ingress-proxy/README.md](packages/ingress-proxy/README.md) · [Ingress proxy API](https://app.blekline.com/docs/api/ingress-proxy)
 
@@ -76,7 +76,7 @@ kubectl apply -f https://raw.githubusercontent.com/Blekline/blekline-oss/main/pa
 npx @blekline/nhim-audit audit --plain --json -o nhim-audit.json
 ```
 
-**Track 01 — MCP smoke**
+**Track 03 — MCP smoke**
 
 ```bash
 git clone https://github.com/Blekline/blekline-oss.git && cd blekline-oss
@@ -109,9 +109,9 @@ OpenAPI: [packages/contracts/openapi.yaml](packages/contracts/openapi.yaml)
 | Track | Surface | Link |
 | ----- | ------- | ---- |
 | 0 | NHIM audit + CI gate | [quickstart](https://app.blekline.com/docs/get-started/nhim-audit-quickstart) · [ci-nhim-gate](https://app.blekline.com/docs/deploy/ci-nhim-gate) |
-| 01 | MCP (Cursor, Claude, Codex) | [mcp/cursor](https://app.blekline.com/docs/mcp/cursor) · `npx -y @blekline/mcp-server` |
+| 01 | Kubernetes fleet (NHIM **image** + Helm) | [k8s-fleet](https://app.blekline.com/docs/deploy/k8s-fleet) |
 | 02 | Docker sidecar (NHIM **image**) | [docker-sidecar](https://app.blekline.com/docs/deploy/docker-sidecar) |
-| 03 | Kubernetes fleet (NHIM **image** + Helm) | [k8s-fleet](https://app.blekline.com/docs/deploy/k8s-fleet) |
+| 03 | MCP (Cursor, Claude, Codex) | [mcp/cursor](https://app.blekline.com/docs/mcp/cursor) · `npx -y @blekline/mcp-server` |
 
 ## Connect a client
 

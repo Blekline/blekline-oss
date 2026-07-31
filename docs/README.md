@@ -8,7 +8,7 @@ All Blekline documentation lives at **[app.blekline.com/docs](https://app.blekli
 | NHIM audit quickstart | [app.blekline.com/docs/get-started/nhim-audit-quickstart](https://app.blekline.com/docs/get-started/nhim-audit-quickstart) |
 | NHIM audit tool reference | [app.blekline.com/docs/tools/nhim-audit](https://app.blekline.com/docs/tools/nhim-audit) |
 | Glossary (A–Z) | [app.blekline.com/docs/definitions](https://app.blekline.com/docs/definitions) |
-| K8s fleet (Track 03) | [app.blekline.com/docs/deploy/k8s-fleet](https://app.blekline.com/docs/deploy/k8s-fleet) |
+| K8s fleet (Track 01) | [app.blekline.com/docs/deploy/k8s-fleet](https://app.blekline.com/docs/deploy/k8s-fleet) |
 | Docker sidecar (Track 02) | [app.blekline.com/docs/deploy/docker-sidecar](https://app.blekline.com/docs/deploy/docker-sidecar) |
 | CI NHIM gate | [app.blekline.com/docs/deploy/ci-nhim-gate](https://app.blekline.com/docs/deploy/ci-nhim-gate) |
 | NHIM overview | [app.blekline.com/docs/introduction/nhim](https://app.blekline.com/docs/introduction/nhim) |

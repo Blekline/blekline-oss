@@ -36,7 +36,7 @@ function probeFinding(
     fix: {
       summary: passed
         ? "No action — probe passed"
-        : "Apply mandatory-hop NetworkPolicy and sidecar per Track 03",
+        : "Apply mandatory-hop NetworkPolicy and sidecar per Track 01",
       commands: passed ? [] : ["# See app.blekline.com/docs/enterprise/k8s-deployment"],
       docUrl: `${DOCS_BASE}/enterprise/k8s-deployment`,
     },

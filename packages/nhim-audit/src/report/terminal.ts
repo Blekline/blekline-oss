@@ -71,7 +71,7 @@ function tieredCta(report: AuditReport): string[] {
   } else {
     lines.push(`  ► Add CI gate: ${DOCS_BASE}/enterprise/k8s-deployment`);
   }
-  lines.push(`  ► Track 03: ${DOCS_BASE}/enterprise/k8s-deployment`);
+  lines.push(`  ► Track 01: ${DOCS_BASE}/enterprise/k8s-deployment`);
   lines.push(`  ► Score band ${band} — ${report.score.controlObjective}`);
   lines.push(`  ► ${report.disclaimer}`);
   lines.push("  ► run with --probe (eval token) · --plain for CI · --json for automation");

@@ -1,6 +1,6 @@
 # Blekline ingress sidecar (reference — open source)
 
-Reference HTTP sidecar for **contracts-level** tool-call enforcement and model ingress. Trust Vault, Lineage Firewall, and the production NHIM image used in Track 02/03 are documented on [blekline.com](https://app.blekline.com/docs/deploy/docker-sidecar) — not built from this folder alone.
+Reference HTTP sidecar for **contracts-level** tool-call enforcement and model ingress. Trust Vault, Lineage Firewall, and the production NHIM image used in Track 01/02 are documented on [blekline.com](https://app.blekline.com/docs/deploy/docker-sidecar) — not built from this folder alone.
 
 ## Security (required)
 
@@ -14,7 +14,7 @@ Reference HTTP sidecar for **contracts-level** tool-call enforcement and model i
 
 ## Build & run (reference sidecar)
 
-For local enforcement trials or fork/audit — **not** the default Track 02/03 path (use `ghcr.io/blekline/sidecar` per [Docker sidecar](https://app.blekline.com/docs/deploy/docker-sidecar)).
+For local enforcement trials or fork/audit — **not** the default Track 01/02 path (use `ghcr.io/blekline/sidecar` per [Docker sidecar](https://app.blekline.com/docs/deploy/docker-sidecar)).
 
 ```bash
 pnpm build:packages
