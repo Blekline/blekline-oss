@@ -26,9 +26,9 @@ body:
     attributes:
       label: Preferred eval track
       options:
-        - Track 01 — MCP (Cursor / Claude / Codex)
+        - Track 01 — Kubernetes fleet
         - Track 02 — Docker sidecar (staging)
-        - Track 03 — Kubernetes fleet
+        - Track 03 — MCP (Cursor / Claude / Codex)
         - Not sure yet
     validations:
       required: true

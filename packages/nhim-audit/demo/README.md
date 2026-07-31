@@ -29,4 +29,4 @@ node scripts/nhim-audit-demo-kind.mjs broken   # demo manifests + audit
 node scripts/nhim-audit-demo-kind.mjs fixed    # kind-install-blekline + audit
 ```
 
-Track 03 sandbox: [app.blekline.com/docs/tools/nhim-audit](https://app.blekline.com/docs/tools/nhim-audit#demo)
+Track 01 sandbox: [app.blekline.com/docs/tools/nhim-audit](https://app.blekline.com/docs/tools/nhim-audit#demo)
