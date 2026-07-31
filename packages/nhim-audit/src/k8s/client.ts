@@ -203,8 +203,42 @@ function mapNetworkPolicy(np: k8s.V1NetworkPolicy, ns: string): NetworkPolicySna
     podSelector: np.spec?.podSelector?.matchLabels ?? {},
     policyTypes,
     egressRestricted,
-    allowsSidecarHop: egressRestricted,
+    allowsSidecarHop: egressRestricted && detectSidecarHopInEgress(np),
   };
+}
+
+/** True when egress rules allow traffic to blekline sidecar (mandatory-hop semantics). */
+function detectSidecarHopInEgress(np: k8s.V1NetworkPolicy): boolean {
+  const name = (np.metadata?.name ?? "").toLowerCase();
+  if (
+    name.includes("mandatory-hop") ||
+    name.includes("agent-egress") ||
+    name.includes("blekline-hop")
+  ) {
+    return true;
+  }
+
+  const egress = np.spec?.egress ?? [];
+  for (const rule of egress) {
+    const targets = rule.to ?? [];
+    for (const target of targets) {
+      const nsLabels = target.namespaceSelector?.matchLabels ?? {};
+      const podLabels = target.podSelector?.matchLabels ?? {};
+      const nsName =
+        nsLabels["kubernetes.io/metadata.name"] ?? nsLabels.name ?? "";
+      if (nsName === "blekline" || nsName.includes("blekline")) return true;
+
+      for (const [key, val] of Object.entries(podLabels)) {
+        const combined = `${key}=${val}`.toLowerCase();
+        if (combined.includes("blekline") || combined.includes("sidecar")) return true;
+      }
+    }
+
+    const ports = rule.ports ?? [];
+    if (ports.some((p) => p.port === 8787 || String(p.port) === "8787")) return true;
+  }
+
+  return false;
 }
 
 function mapService(s: k8s.V1Service, ns: string): ServiceSnapshot {

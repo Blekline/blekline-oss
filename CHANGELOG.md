@@ -6,6 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-07-31
+
+### Added
+
+- `@blekline/nhim-audit` — **NHIM-013** empty-cluster finding; score capped at ≤74 with `redTeamPhase0: unknown` when no agent candidates
+- Mandatory-hop detection via sidecar NetworkPolicy egress rules (`detectSidecarHopInEgress`)
+- CLI: `demo [fixture]`, `--wide`, `--no-color`; version from `src/version.ts`
+
+### Changed
+
+- Fix snippets reference public Helm chart and pilot sidecar image constants
+- GitHub Action pins `@blekline/nhim-audit@0.1.2`
+
 ## [0.4.2] - 2026-07-29
 
 ### Added

@@ -25,7 +25,8 @@
     "benchmark:publish": "node scripts/benchmarks/publish.mjs",
     "demo:daytona-smoke": "SANDBOX_PROVIDER=daytona tsx demo/sandbox-smoke/index.ts",
     "demo:sandbox-smoke": "tsx demo/sandbox-smoke/index.ts",
-    "docker:ingress": "docker build -t blekline-ingress -f packages/ingress-proxy/Dockerfile ."
+    "docker:ingress": "docker build -t blekline-ingress -f packages/ingress-proxy/Dockerfile .",
+    "test:nhim-audit:e2e": "node scripts/test-nhim-audit-e2e.mjs"
   },
   "dependencies": {
     "@blekline/client": "workspace:*"

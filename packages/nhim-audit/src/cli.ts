@@ -17,10 +17,11 @@ import { renderTerminal } from "./report/terminal.js";
 import { reportToSarif } from "./report/sarif.js";
 import { validateEvalToken, runProbes } from "./probe/index.js";
 import type { AuditReport, Severity } from "./types.js";
+import { VERSION } from "./version.js";
 
 const program = new Command();
 
-program.name("nhim-audit").description("Agent execution path audit for Kubernetes").version("0.1.1");
+program.name("nhim-audit").description("Agent execution path audit for Kubernetes").version(VERSION);
 
 function computeExitCode(
   fullReport: AuditReport,
@@ -122,7 +123,12 @@ program
         console.log(out);
       } else {
         console.log(
-          renderTerminal(displayReport, { plain: opts.plain, brand: opts.brand, verbose: opts.verbose }),
+          renderTerminal(displayReport, {
+            plain: opts.plain ?? opts.noColor,
+            brand: opts.brand,
+            verbose: opts.verbose,
+            wide: opts.wide,
+          }),
         );
       }
 
@@ -137,11 +143,13 @@ program
   });
 
 program
-  .command("demo broken")
-  .description("Run audit against broken fixture cluster")
+  .command("demo")
+  .description("Run audit against a fixture cluster (broken|fixed|empty)")
+  .argument("[fixture]", "Fixture name", "broken")
   .option("--plain", "Plain output")
-  .action(async (opts) => {
-    const cluster = await loadClusterSnapshot({ fixture: "broken" });
+  .action(async (fixture: string, opts: { plain?: boolean }) => {
+    const name = ["broken", "fixed", "empty"].includes(fixture) ? fixture : "broken";
+    const cluster = await loadClusterSnapshot({ fixture: name });
     const report = runAudit(cluster);
     console.log(renderTerminal(report, { plain: opts.plain, brand: true }));
   });
@@ -150,7 +158,7 @@ program
   .command("version")
   .description("Print version")
   .action(() => {
-    console.log("nhim-audit 0.1.1");
+    console.log(`nhim-audit ${VERSION}`);
   });
 
 program.parse();

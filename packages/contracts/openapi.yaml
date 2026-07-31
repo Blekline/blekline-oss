@@ -246,3 +246,39 @@ paths:
           description: Upstream message response
         "403":
           description: Blocked by ingress policy
+  /api/workspace/fleet-mode:
+    get:
+      summary: Read workspace fleet kill switch mode
+      operationId: getFleetMode
+      responses:
+        "200":
+          description: Current fleet mode
+    post:
+      summary: Set fleet kill switch (admin)
+      operationId: setFleetMode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fleetMode:
+                  type: string
+                  enum: [normal, deny_all_tools, deny_writes]
+      responses:
+        "200":
+          description: Updated fleet mode
+  /api/integrations/siem:
+    get:
+      summary: SIEM connector status (admin)
+      operationId: getSiemConnector
+      responses:
+        "200":
+          description: Connector configuration summary
+  /api/workspace/policy-stream:
+    get:
+      summary: SSE policy revision stream for sidecars
+      operationId: policyStream
+      responses:
+        "200":
+          description: text/event-stream of policy revisions

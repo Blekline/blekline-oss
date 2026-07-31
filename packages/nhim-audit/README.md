@@ -26,6 +26,10 @@ Platform teams deploy LangGraph, CrewAI, and MCP-backed workers in Kubernetes. W
 | NHIM-007 | MEDIUM | ASI03 | `blekline-sidecar-auth` secret missing |
 | NHIM-008 | MEDIUM | ASI10 | Agent namespace policy gap |
 | NHIM-009 | LOW | — | Blekline Helm release absent |
+| NHIM-010 | INFO | ASI08 | Sidecar health not verified (static mode) |
+| NHIM-011 | MEDIUM | ASI10 | Default-allow egress shared by agent candidates |
+| NHIM-012 | INFO | — | Shared responsibility reminder (not scored) |
+| NHIM-013 | MEDIUM | ASI10 | No agent candidates discovered (score capped ≤74) |
 
 Full rule reference: [app.blekline.com/docs/tools/nhim-audit](https://app.blekline.com/docs/tools/nhim-audit)
 

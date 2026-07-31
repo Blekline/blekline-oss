@@ -23,10 +23,14 @@ describe("nhim-audit fixtures", () => {
     assert.equal(report.score.redTeamPhase0, "pass");
   });
 
-  it("empty cluster scores high", () => {
+  it("empty cluster caps at AT RISK and fails min-score 75", () => {
     const cluster = loadFixture("empty");
     const report = runAudit(cluster);
-    assert.ok(report.score.value >= 90);
+    assert.ok(report.score.value <= 74);
+    assert.notEqual(report.score.band, "HARDENED");
+    assert.equal(report.score.redTeamPhase0, "unknown");
+    assert.ok(report.findings.some((f) => f.id === "NHIM-013"));
+    assert.equal(meetsMinScore(report, 75), false);
   });
 });
 
