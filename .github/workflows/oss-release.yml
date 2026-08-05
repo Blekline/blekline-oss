@@ -49,7 +49,7 @@ jobs:
         run: |
           pip install build twine
           python -m build packages/client-python
-          twine upload packages/client-python/dist/*
+          twine upload --skip-existing packages/client-python/dist/*
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
