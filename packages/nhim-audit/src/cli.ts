@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { writeFileSync } from "node:fs";
+import { buildAuditConfig } from "./config/load.js";
+import type { AuditProfileName } from "./config/profile.js";
 import { loadClusterSnapshot, K8sLoadError } from "./k8s/client.js";
 import {
   diffAgainstBaseline,
@@ -15,7 +17,7 @@ import {
 } from "./report/audit.js";
 import { renderTerminal } from "./report/terminal.js";
 import { reportToSarif } from "./report/sarif.js";
-import { validateEvalToken, runProbes } from "./probe/index.js";
+import { resolveProbeToken, validateEvalToken, runProbes } from "./probe/index.js";
 import type { AuditReport, Severity } from "./types.js";
 import { VERSION } from "./version.js";
 
@@ -37,22 +39,42 @@ function computeExitCode(
   return 0;
 }
 
+function validateProbeNamespaces(
+  report: AuditReport,
+  allowNamespaces: string[],
+): string | null {
+  if (!allowNamespaces.length) {
+    return "--probe requires --probe-allow-namespaces (comma-separated eval namespace list)";
+  }
+  const candidateNs = [...new Set(report.candidates.map((c) => c.namespace))];
+  const missing = candidateNs.filter((ns) => !allowNamespaces.includes(ns));
+  if (missing.length > 0) {
+    return `Probe not allowed in namespace(s): ${missing.join(", ")} — add to --probe-allow-namespaces`;
+  }
+  return null;
+}
+
 program
   .command("audit")
   .description("Run static NHIM audit against a cluster")
   .option("--kubeconfig <path>", "Path to kubeconfig")
   .option("--context <name>", "Kubeconfig context")
   .option("--namespace <ns...>", "Limit to namespaces")
-  .option("--fixture <name>", "Use fixture cluster (broken|fixed|empty)")
+  .option("--fixture <name>", "Use fixture cluster (broken|fixed|empty|hostnetwork-broken|fixed-generic|fixed-blekline|critical)")
+  .option("--profile <name>", "Audit profile: generic|blekline", "generic")
+  .option("--config <path>", "JSON config file (nhim-audit.example.json)")
+  .option("--cluster-alias <name>", "Cluster label in JSON output (vendor handoff)")
   .option("--label-selector <sel>", "Additional label selector")
-  .option("--include-pods", "Merge live pod env into workload candidates (post-inject Auto-Route)")
-  .option("--probe", "Run active probe tests (requires BLEKLINE_EVAL_TOKEN)")
-  .option("--eval-token <token>", "Eval token (or env BLEKLINE_EVAL_TOKEN)")
+  .option("--custom-selector <kv...>", "Custom label selector key=value")
+  .option("--include-pods", "Merge live pod env into workload candidates")
+  .option("--probe", "Run active probe tests (requires NHIM_PROBE_TOKEN or BLEKLINE_EVAL_TOKEN)")
+  .option("--probe-allow-namespaces <ns...>", "Namespaces allowed for probe exec (required with --probe)")
+  .option("--eval-token <token>", "Probe token (or env NHIM_PROBE_TOKEN / BLEKLINE_EVAL_TOKEN)")
   .option("-o, --output <path>", "Write report to path (JSON or SARIF per --format)")
   .option("--json", "JSON output only")
   .option("--format <fmt>", "Output format: json|sarif", "json")
   .option("--plain", "Plain output for CI")
-  .option("--brand", "Show NHIM AUDIT brand subline")
+  .option("--brand", "Show BLEKLINE wordmark (blekline profile)")
   .option("--wide", "Wide layout")
   .option("--verbose", "Verbose finding cards")
   .option("--no-color", "Disable color")
@@ -63,24 +85,51 @@ program
   .option("--min-severity <sev>", "Minimum severity to display")
   .action(async (opts) => {
     try {
+      const customSelector: Record<string, string> = {};
+      for (const pair of opts.customSelector ?? []) {
+        const [k, v] = pair.split("=");
+        if (k && v) customSelector[k] = v;
+      }
+
+      const config = buildAuditConfig({
+        profile: opts.profile as AuditProfileName,
+        configPath: opts.config,
+        clusterAlias: opts.clusterAlias,
+        probeAllowNamespaces: opts.probeAllowNamespaces,
+        labelSelector: opts.labelSelector,
+      });
+
       const cluster = await loadClusterSnapshot({
         kubeconfig: opts.kubeconfig,
         context: opts.context,
         fixture: opts.fixture,
         namespaces: opts.namespace,
-        includeKubeSystem: opts.includeKubeSystem,
         includePods: opts.includePods,
+        clusterAlias: opts.clusterAlias,
       });
 
+      const probeToken = resolveProbeToken(opts.evalToken);
       let fullReport = runAudit(cluster, {
-        discover: { labelSelector: opts.labelSelector },
+        config,
+        discover: { labelSelector: opts.labelSelector, customSelector },
         probe: false,
+        probeTokenPresent: Boolean(probeToken),
       });
 
-      const evalToken = opts.evalToken ?? process.env.BLEKLINE_EVAL_TOKEN;
       if (opts.probe) {
-        const v = await validateEvalToken(evalToken ?? "", {
+        const nsErr = validateProbeNamespaces(fullReport, config.probe.allowNamespaces);
+        if (nsErr) {
+          if (opts.json || opts.format === "sarif") {
+            console.error(JSON.stringify({ error: nsErr }));
+          } else {
+            console.error(nsErr);
+          }
+          process.exit(2);
+        }
+
+        const v = await validateEvalToken(probeToken ?? "", {
           online: process.env.BLEKLINE_EVAL_ONLINE === "1",
+          profile: config.profile,
         });
         if (!v.valid) {
           if (opts.json || opts.format === "sarif") {
@@ -90,10 +139,11 @@ program
           }
           process.exit(2);
         }
-        fullReport = await runProbes(fullReport, cluster, evalToken!, {
+        fullReport = await runProbes(fullReport, cluster, probeToken!, {
           fixture: opts.fixture,
           kubeconfig: opts.kubeconfig,
           context: opts.context,
+          config,
         });
       }
 
@@ -126,9 +176,10 @@ program
         console.log(
           renderTerminal(displayReport, {
             plain: opts.plain ?? opts.noColor,
-            brand: opts.brand,
+            brand: opts.brand ?? config.profile === "blekline",
             verbose: opts.verbose,
             wide: opts.wide,
+            suppressVendorCta: config.output.suppressVendorCta,
           }),
         );
       }
@@ -145,14 +196,23 @@ program
 
 program
   .command("demo")
-  .description("Run audit against a fixture cluster (broken|fixed|empty)")
+  .description("Run audit against a fixture cluster")
   .argument("[fixture]", "Fixture name", "broken")
   .option("--plain", "Plain output")
-  .action(async (fixture: string, opts: { plain?: boolean }) => {
-    const name = ["broken", "fixed", "empty"].includes(fixture) ? fixture : "broken";
+  .option("--profile <name>", "Audit profile", "generic")
+  .action(async (fixture: string, opts: { plain?: boolean; profile?: string }) => {
+    const allowed = ["broken", "fixed", "empty", "hostnetwork-broken", "fixed-generic", "fixed-blekline", "critical"];
+    const name = allowed.includes(fixture) ? fixture : "broken";
+    const config = buildAuditConfig({ profile: opts.profile as AuditProfileName });
     const cluster = await loadClusterSnapshot({ fixture: name });
-    const report = runAudit(cluster);
-    console.log(renderTerminal(report, { plain: opts.plain, brand: true }));
+    const report = runAudit(cluster, { config });
+    console.log(
+      renderTerminal(report, {
+        plain: opts.plain,
+        brand: config.profile === "blekline",
+        suppressVendorCta: config.output.suppressVendorCta,
+      }),
+    );
   });
 
 program

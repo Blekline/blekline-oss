@@ -6,6 +6,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `@blekline/nhim-audit@0.2.0` — enterprise-neutral hardening: `--profile generic|blekline`, schema 2.0 `assurance` block, NHIM-019 hostNetwork, namespaced RBAC manifests, `NHIM_PROBE_TOKEN` alias
+
+### Changed
+
+- NHIM Audit GitHub Action — default `profile: generic`, pin `@0.2.0`, require `probe-allow-namespaces` with probe token
+- Blekline-specific checks moved to BLEK-001..005 under `--profile blekline` only
+
 ## [0.2.1-nhim] - 2026-08-05
 
 ### Added

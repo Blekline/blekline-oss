@@ -1,8 +1,8 @@
-import type { Finding, RedTeamPhase0, ScoreBand, ScoreResult } from "./types.js";
+import type { Finding, ScoreBand, ScoreResult, StaticGateStatus } from "./types.js";
 import { SEVERITY_WEIGHT } from "./spec/rules.js";
 
 const BAND_OBJECTIVES: Record<ScoreBand, string> = {
-  CRITICAL: "Mandatory hop not enforced — agent candidates can reach tools/LLM without sidecar path",
+  CRITICAL: "Mandatory hop not enforced — agent candidates can reach tools/LLM without enforcement path",
   "AT RISK": "Partial enforcement — bypass surfaces remain",
   PARTIAL: "Static architecture clean — probe or pentest required for shipped claims",
   HARDENED: "Static clean — probe recommended for full mandatory-hop evidence",
@@ -15,8 +15,15 @@ function bandForScore(value: number): ScoreBand {
   return "HARDENED";
 }
 
-function redTeamPhase0(band: ScoreBand, criticalCount: number): RedTeamPhase0 {
+function staticGateStatus(
+  band: ScoreBand,
+  criticalCount: number,
+  candidateCount: number,
+  probeExecuted: boolean,
+): StaticGateStatus {
+  if (candidateCount === 0) return "unknown";
   if (criticalCount > 0 || band === "CRITICAL") return "fail";
+  if (!probeExecuted) return "unknown";
   if (band === "HARDENED" || band === "PARTIAL") return "pass";
   if (band === "AT RISK") return "unknown";
   return "fail";
@@ -25,7 +32,11 @@ function redTeamPhase0(band: ScoreBand, criticalCount: number): RedTeamPhase0 {
 const EMPTY_CLUSTER_OBJECTIVE =
   "No agent candidates discovered — static scan incomplete; deploy workloads or use --label-selector";
 
-export function calculateScore(findings: Finding[], candidateCount?: number): ScoreResult {
+export function calculateScore(
+  findings: Finding[],
+  candidateCount?: number,
+  probeExecuted = false,
+): ScoreResult {
   let value = 100;
   let criticalCount = 0;
 
@@ -44,14 +55,15 @@ export function calculateScore(findings: Finding[], candidateCount?: number): Sc
   const band = bandForScore(value);
   const objective =
     candidateCount === 0 ? EMPTY_CLUSTER_OBJECTIVE : BAND_OBJECTIVES[band];
-  const phase0 =
-    candidateCount === 0 ? "unknown" : redTeamPhase0(band, criticalCount);
+  const gate = staticGateStatus(band, criticalCount, candidateCount ?? 0, probeExecuted);
 
   return {
     value,
     band,
     controlObjective: objective,
-    redTeamPhase0: phase0,
+    staticGateStatus: gate,
+    redTeamPhase0: gate,
+    scoringVersion: 2,
   };
 }
 

@@ -1,3 +1,4 @@
+export { buildAuditConfig } from "./config/load.js";
 export { runAudit, reportToJson, shouldFail, meetsMinScore } from "./report/audit.js";
 export type { AuditReport, Finding, ClusterSnapshot } from "./types.js";
 export { calculateScore } from "./score.js";

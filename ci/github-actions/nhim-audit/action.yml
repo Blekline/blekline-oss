@@ -25,7 +25,15 @@ inputs:
     required: false
     default: ""
   eval-token:
-    description: Optional BLEKLINE_EVAL_TOKEN for --probe (mature customers only)
+    description: Optional NHIM_PROBE_TOKEN / BLEKLINE_EVAL_TOKEN for --probe
+    required: false
+    default: ""
+  profile:
+    description: Audit profile — generic (default) or blekline
+    required: false
+    default: generic
+  probe-allow-namespaces:
+    description: Comma-separated namespaces allowed for probe exec (required with --probe)
     required: false
     default: ""
 runs:
@@ -36,6 +44,7 @@ runs:
       env:
         KUBECONFIG_FILE: ${{ runner.temp }}/kubeconfig-nhim-audit
         BLEKLINE_EVAL_TOKEN: ${{ inputs.eval-token }}
+        NHIM_PROBE_TOKEN: ${{ inputs.eval-token }}
       run: |
         set -euo pipefail
         set +x
@@ -43,7 +52,7 @@ runs:
         trap 'rm -f "$KUBECONFIG_FILE"' EXIT
         printf '%s' "${{ inputs.kubeconfig }}" > "$KUBECONFIG_FILE"
         export KUBECONFIG="$KUBECONFIG_FILE"
-        ARGS=(audit --plain --fail-on "${{ inputs.fail-on }}" --min-score "${{ inputs.min-score }}" -o "${{ inputs.output }}" --format "${{ inputs.format }}")
+        ARGS=(audit --plain --profile "${{ inputs.profile }}" --fail-on "${{ inputs.fail-on }}" --min-score "${{ inputs.min-score }}" -o "${{ inputs.output }}" --format "${{ inputs.format }}")
         if [ "${{ inputs.format }}" = "sarif" ]; then
           :
         else
@@ -52,7 +61,11 @@ runs:
         if [ -n "${{ inputs.baseline }}" ]; then
           ARGS+=(--baseline "${{ inputs.baseline }}")
         fi
-        if [ -n "${BLEKLINE_EVAL_TOKEN:-}" ]; then
-          ARGS+=(--probe)
+        if [ -n "${NHIM_PROBE_TOKEN:-}${BLEKLINE_EVAL_TOKEN:-}" ]; then
+          if [ -z "${{ inputs.probe-allow-namespaces }}" ]; then
+            echo "probe-allow-namespaces is required when eval-token is set" >&2
+            exit 2
+          fi
+          ARGS+=(--probe --probe-allow-namespaces ${{ inputs.probe-allow-namespaces }})
         fi
-        npx --yes @blekline/nhim-audit@0.1.3 "${ARGS[@]}"
+        npx --yes @blekline/nhim-audit@0.2.0 "${ARGS[@]}"

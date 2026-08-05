@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import type { AuditReport, Finding } from "../types.js";
-import { DOCS_BASE } from "../types.js";
+import { DOCS_BASE, EVIDENCE_DISCLAIMER } from "../types.js";
 import { renderBriefingBox, renderHeader } from "./wordmark.js";
 import { compareFindings } from "./audit.js";
 import { VERSION } from "../version.js";
@@ -11,6 +11,7 @@ export interface TerminalOptions {
   wide?: boolean;
   verbose?: boolean;
   noAnim?: boolean;
+  suppressVendorCta?: boolean;
 }
 
 function bar(score: number, width = 20): string {
@@ -50,42 +51,51 @@ function renderFinding(f: Finding, plain: boolean, verbose: boolean): string[] {
   return lines;
 }
 
+function assuranceFooter(report: AuditReport): string[] {
+  const lines: string[] = [];
+  lines.push(`  staticGateStatus: ${report.score.staticGateStatus}`);
+  lines.push(`  schemaVersion: ${report.schemaVersion} · profile: ${report.profile}`);
+  if (report.assurance.limitations.length) {
+    lines.push(`  ${report.assurance.limitations[0]}`);
+    lines.push(`  ${report.assurance.limitations[4] ?? report.assurance.limitations[1]}`);
+  }
+  lines.push(`  ${EVIDENCE_DISCLAIMER}`);
+  lines.push(`  Rule reference: ${DOCS_BASE}/tools/nhim-audit`);
+  lines.push("  run with --probe (token) · --plain for CI · --json for automation");
+  return lines;
+}
+
 function tieredCta(report: AuditReport): string[] {
   const band = report.score.band;
   const lines: string[] = [];
   const hasCritical = report.summary.critical > 0;
-  const phase0Fail = report.score.redTeamPhase0 === "fail";
+  const gateFail = report.score.staticGateStatus === "fail";
 
-  if (hasCritical || phase0Fail) {
-    lines.push(
-      "  ► CRITICAL bypass surfaces — email enterprise@blekline.com + attach nhim-audit.json for free probe token",
-    );
-  } else if (band === "CRITICAL") {
-    lines.push(
-      "  ► Mandatory hop not enforced — email enterprise@blekline.com + attach nhim-audit.json for free probe token",
-    );
+  if (hasCritical || gateFail) {
+    lines.push("  ► CRITICAL bypass surfaces — remediate mandatory-hop policy before production");
   } else if (band === "AT RISK") {
-    lines.push(`  ► Request eval token: ${DOCS_BASE}/tools/nhim-audit#probe-access`);
+    lines.push(`  ► Partial enforcement — review findings and apply NetworkPolicy fixes`);
   } else if (band === "PARTIAL") {
-    lines.push("  ► Static clean — run --probe with eval token before shipped claims");
+    lines.push("  ► Static clean — run --probe with token before shipped claims");
   } else {
-    lines.push(`  ► Add CI gate: ${DOCS_BASE}/enterprise/k8s-deployment`);
+    lines.push(`  ► Add CI gate: ${DOCS_BASE}/tools/nhim-audit`);
   }
-  lines.push(`  ► Track 01: ${DOCS_BASE}/enterprise/k8s-deployment`);
   lines.push(`  ► Score band ${band} — ${report.score.controlObjective}`);
-  lines.push(`  ► ${report.disclaimer}`);
-  lines.push("  ► run with --probe (eval token) · --plain for CI · --json for automation");
+  if (report.profile === "blekline") {
+    lines.push(`  ► Blekline reference: ${DOCS_BASE}/enterprise/k8s-deployment`);
+  }
   return lines;
 }
 
 export function renderTerminal(report: AuditReport, opts: TerminalOptions = {}): string {
   const plain = opts.plain ?? false;
+  const suppressCta = opts.suppressVendorCta ?? report.profile === "generic";
   const parts: string[] = [];
 
   parts.push(renderHeader({ plain, brand: opts.brand, version: VERSION }));
   if (!plain) {
     parts.push("");
-    parts.push(renderBriefingBox(report.cluster, VERSION));
+    parts.push(renderBriefingBox(report.cluster, VERSION, report.profile));
   }
 
   parts.push("");
@@ -94,7 +104,7 @@ export function renderTerminal(report: AuditReport, opts: TerminalOptions = {}):
   parts.push(
     report.mode === "static+probe"
       ? "  ◈ PROBE … completed"
-      : "  ◈ PROBE … skipped (requires BLEKLINE_EVAL_TOKEN — see docs)",
+      : "  ◈ PROBE … skipped (requires NHIM_PROBE_TOKEN — see docs)",
   );
 
   parts.push("");
@@ -136,7 +146,11 @@ export function renderTerminal(report: AuditReport, opts: TerminalOptions = {}):
     `  candidates: ${report.summary.candidates}   critical: ${report.summary.critical}   high: ${report.summary.high}   medium: ${report.summary.medium}   probed: ${report.summary.probed}`,
   );
   parts.push("");
-  parts.push(...tieredCta(report));
+  if (!suppressCta) {
+    parts.push(...tieredCta(report));
+    parts.push("");
+  }
+  parts.push(...assuranceFooter(report));
 
   return parts.join("\n");
 }

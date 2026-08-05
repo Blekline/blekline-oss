@@ -1,0 +1,31 @@
+{
+  "profile": "generic",
+  "discovery": {
+    "excludeNamespaces": ["kube-system", "kube-public"],
+    "labelSelector": ""
+  },
+  "enforcement": {
+    "sidecarContainerNames": ["envoy", "istio-proxy", "linkerd-proxy", "*-sidecar"],
+    "injectAnnotationKeys": ["*inject*", "*sidecar*"],
+    "enforcementPorts": [8787, 15001, 15006],
+    "authSecretNamePatterns": ["*-sidecar-auth", "*-enforce-auth"]
+  },
+  "networkPolicy": {
+    "mandatoryHopNamePatterns": ["mandatory-hop", "agent-egress", "enforcement-hop"]
+  },
+  "admission": {
+    "enforcementWebhookNamePatterns": ["*inject*", "*sidecar*", "*mutate*"]
+  },
+  "allowlist": {
+    "findings": []
+  },
+  "output": {
+    "schemaVersion": "2.0",
+    "suppressVendorCta": true
+  },
+  "probe": {
+    "enforcePath": "/v1/enforce-tool-call",
+    "healthPath": "/health",
+    "allowNamespaces": ["nhim-eval"]
+  }
+}

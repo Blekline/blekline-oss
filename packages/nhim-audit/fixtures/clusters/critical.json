@@ -1,5 +1,5 @@
 {
-  "clusterName": "kind-blekline-nhim-critical",
+  "clusterName": "kind-nhim-critical",
   "namespaces": ["default", "agent-ns"],
   "pods": [],
   "deployments": [
@@ -15,11 +15,13 @@
   ],
   "replicaSets": [],
   "statefulSets": [],
+  "jobs": [],
+  "cronJobs": [],
   "networkPolicies": [
     {
       "namespace": "default",
       "name": "agent-egress-bypass",
-      "podSelector": { "blekline-agent": "true" },
+      "podSelector": { "app": "langgraph-worker" },
       "policyTypes": ["Egress"],
       "egressRestricted": true,
       "allowsSidecarHop": true,
@@ -28,14 +30,17 @@
   ],
   "mutatingWebhooks": [
     {
-      "name": "blekline-admission",
+      "name": "sidecar-inject-mutate",
       "failurePolicy": "Ignore",
-      "matchesBlekline": true
+      "matchesBlekline": false,
+      "matchesEnforcement": true
     }
   ],
   "validatingWebhooks": [],
   "services": [],
   "secrets": [],
   "hasGatekeeper": false,
+  "hasKyverno": false,
+  "hasIstioAuthPolicy": false,
   "hasBleklineHelm": false
 }

@@ -1,10 +1,22 @@
-import type { AgentCandidate, Confidence, PodSnapshot, WorkloadSnapshot } from "../types.js";
+import type { AuditConfig } from "../config/profile.js";
+import {
+  matchesAnnotationKey,
+  matchesContainerName,
+  globMatch,
+} from "../config/match.js";
+import type {
+  AgentCandidate,
+  ClusterSnapshot,
+  Confidence,
+  PodSnapshot,
+  WorkloadSnapshot,
+} from "../types.js";
 
 const AGENT_LABEL_KEYS = [
-  "blekline-agent",
   "app.kubernetes.io/component",
   "langgraph",
   "crewai",
+  "agent",
 ];
 
 const AGENT_LABEL_VALUES = new Set(["true", "agent", "langgraph", "crewai"]);
@@ -19,12 +31,10 @@ const ENV_SIGNALS = [
 
 const IMAGE_SIGNALS = ["langgraph", "autogen", "mcp", "agent", "crewai"];
 
-const SIDEcar_CONTAINER = "blekline-sidecar";
-const INJECT_ANNOTATION = "blekline.com/inject-sidecar";
-
 export interface DiscoverOptions {
   labelSelector?: string;
   customSelector?: Record<string, string>;
+  excludeNamespaces?: string[];
 }
 
 function matchesLabelSelector(labels: Record<string, string>, selector?: string): boolean {
@@ -37,9 +47,7 @@ function matchesLabelSelector(labels: Record<string, string>, selector?: string)
 }
 
 function scoreSignals(signals: string[]): Confidence {
-  if (signals.some((s) => s.startsWith("env:") || s.startsWith("label:blekline-agent"))) {
-    return "high";
-  }
+  if (signals.some((s) => s.startsWith("env:"))) return "high";
   if (signals.some((s) => s.startsWith("label:"))) return "medium";
   return "low";
 }
@@ -48,6 +56,7 @@ function collectSignals(
   labels: Record<string, string>,
   envKeys: string[],
   image: string,
+  usesEnvFrom?: boolean,
 ): string[] {
   const signals: string[] = [];
   for (const [k, v] of Object.entries(labels)) {
@@ -69,11 +78,15 @@ function collectSignals(
   for (const frag of IMAGE_SIGNALS) {
     if (img.includes(frag)) signals.push(`image:${frag}`);
   }
+  if (usesEnvFrom) signals.push("envFrom:secretOrConfigMap");
   return [...new Set(signals)];
 }
 
-function workloadToCandidate(w: WorkloadSnapshot, kind: AgentCandidate["kind"]): AgentCandidate | null {
-  const signals = collectSignals(w.labels, w.envKeys, w.image);
+function workloadToCandidate(
+  w: WorkloadSnapshot,
+  kind: AgentCandidate["kind"],
+): AgentCandidate | null {
+  const signals = collectSignals(w.labels, w.envKeys, w.image, w.usesEnvFrom);
   if (signals.length === 0) return null;
   return {
     namespace: w.namespace,
@@ -86,16 +99,18 @@ function workloadToCandidate(w: WorkloadSnapshot, kind: AgentCandidate["kind"]):
     image: w.image,
     signals,
     confidence: scoreSignals(signals),
+    hostNetwork: w.hostNetwork,
+    privileged: w.privileged,
+    hostPID: w.hostPID,
+    usesEnvFrom: w.usesEnvFrom,
   };
 }
 
 export function discoverAgents(
-  workloads: {
-    deployments: WorkloadSnapshot[];
-    replicaSets: WorkloadSnapshot[];
-    statefulSets: WorkloadSnapshot[];
-    pods: PodSnapshot[];
-  },
+  cluster: Pick<
+    ClusterSnapshot,
+    "deployments" | "replicaSets" | "statefulSets" | "jobs" | "cronJobs" | "pods"
+  >,
   options: DiscoverOptions = {},
 ): AgentCandidate[] {
   const candidates: AgentCandidate[] = [];
@@ -103,6 +118,7 @@ export function discoverAgents(
 
   const add = (c: AgentCandidate | null) => {
     if (!c) return;
+    if (options.excludeNamespaces?.includes(c.namespace)) return;
     if (!matchesLabelSelector(c.labels, options.labelSelector)) return;
     if (options.customSelector) {
       for (const [k, v] of Object.entries(options.customSelector)) {
@@ -115,12 +131,14 @@ export function discoverAgents(
     candidates.push(c);
   };
 
-  for (const d of workloads.deployments) add(workloadToCandidate(d, "Deployment"));
-  for (const r of workloads.replicaSets) add(workloadToCandidate(r, "ReplicaSet"));
-  for (const s of workloads.statefulSets) add(workloadToCandidate(s, "StatefulSet"));
-  for (const p of workloads.pods) {
-    if (p.ownerKind && p.ownerKind !== "ReplicaSet") continue;
-    const signals = collectSignals(p.labels, p.envKeys, p.image);
+  for (const d of cluster.deployments) add(workloadToCandidate(d, "Deployment"));
+  for (const r of cluster.replicaSets) add(workloadToCandidate(r, "ReplicaSet"));
+  for (const s of cluster.statefulSets) add(workloadToCandidate(s, "StatefulSet"));
+  for (const j of cluster.jobs ?? []) add(workloadToCandidate(j, "Job"));
+  for (const cj of cluster.cronJobs ?? []) add(workloadToCandidate(cj, "CronJob"));
+  for (const p of cluster.pods) {
+    if (p.ownerKind && p.ownerKind !== "ReplicaSet" && p.ownerKind !== "Job") continue;
+    const signals = collectSignals(p.labels, p.envKeys, p.image, p.usesEnvFrom);
     if (signals.length === 0) continue;
     add({
       namespace: p.namespace,
@@ -134,22 +152,78 @@ export function discoverAgents(
       image: p.image,
       signals,
       confidence: scoreSignals(signals),
+      hostNetwork: p.hostNetwork,
+      privileged: p.privileged,
+      hostPID: p.hostPID,
+      usesEnvFrom: p.usesEnvFrom,
     });
   }
 
   return candidates;
 }
 
-export function hasSidecar(candidate: AgentCandidate): boolean {
-  return candidate.containers.some((c) => c === SIDEcar_CONTAINER);
+export function hasEnforcementSidecar(candidate: AgentCandidate, config: AuditConfig): boolean {
+  if (candidate.annotations["sidecar.istio.io/status"]) return true;
+  if (candidate.annotations["linkerd.io/inject"] === "enabled") return true;
+  return candidate.containers.some((c) => matchesContainerName(config.enforcement.sidecarContainerNames, c));
 }
 
-export function hasInjectAnnotation(candidate: AgentCandidate): boolean {
-  const v = candidate.annotations[INJECT_ANNOTATION];
-  return v === "enabled" || v === "true";
+export function hasInjectAnnotation(candidate: AgentCandidate, config: AuditConfig): boolean {
+  for (const [key, value] of Object.entries(candidate.annotations)) {
+    for (const pattern of config.enforcement.injectAnnotationKeys) {
+      if (pattern.includes("=")) continue;
+      if (matchesAnnotationKey([pattern], key) && (value === "enabled" || value === "true")) {
+        return true;
+      }
+    }
+    if (key === "blekline.com/inject-sidecar" && (value === "enabled" || value === "true")) {
+      return true;
+    }
+  }
+  return false;
 }
 
-export function namespaceExcluded(ns: string, includeKubeSystem: boolean): boolean {
-  if (includeKubeSystem) return false;
-  return ns === "kube-system" || ns === "kube-public";
+export function annotationValue(candidate: AgentCandidate, keyPattern: string): string | undefined {
+  for (const [key, value] of Object.entries(candidate.annotations)) {
+    if (globMatch(keyPattern, key)) return value;
+  }
+  return undefined;
+}
+
+export function hasAutoRouteDisabled(candidate: AgentCandidate, config: AuditConfig): boolean {
+  for (const [key, value] of Object.entries(candidate.annotations)) {
+    if (
+      config.enforcement.autoRouteDisabledKeys.some((p) => globMatch(p, key)) &&
+      (value === "disabled" || value === "false")
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function hasAutoRouteIptables(candidate: AgentCandidate, config: AuditConfig): boolean {
+  for (const [key, value] of Object.entries(candidate.annotations)) {
+    if (
+      config.enforcement.autoRouteIptablesKeys.some((p) => globMatch(p, key)) &&
+      value === "iptables"
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function hasLlmEnv(candidate: AgentCandidate, config: AuditConfig): boolean {
+  return candidate.envKeys.some((e) =>
+    config.enforcement.llmEnvPrefixes.some((p) => e.startsWith(p) || e.includes(p)),
+  );
+}
+
+export function hasSidecarPathEnv(candidate: AgentCandidate, config: AuditConfig): boolean {
+  return candidate.envKeys.some((e) => config.enforcement.sidecarPathEnvKeys.includes(e));
+}
+
+export function namespaceExcluded(ns: string, exclude: string[]): boolean {
+  return exclude.includes(ns);
 }

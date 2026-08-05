@@ -35,27 +35,36 @@ export function renderWordmark(text: string, opts: RenderOptions = {}): string[]
 }
 
 export function renderHeader(opts: RenderOptions = {}): string {
-  const version = opts.version ?? "0.1.0";
+  const version = opts.version ?? "0.2.0";
   if (opts.plain) {
-    return `BLEKLINE nhim-audit v${version}`;
+    return opts.brand ? `BLEKLINE nhim-audit v${version}` : `NHIM AUDIT v${version}`;
   }
-
-  const block = renderWordmark("BLEKLINE", opts).map((l) => `      ${l}`);
-  const sublines: string[] = [`                        nhim-audit · v${version}`];
 
   if (opts.brand) {
-    sublines.unshift("");
-    sublines.unshift("                      NHIM AUDIT · agent execution path");
-    sublines.push("                        ───────────────────");
+    const block = renderWordmark("BLEKLINE", opts).map((l) => `      ${l}`);
+    return [
+      ...block,
+      "",
+      "                      NHIM AUDIT · agent execution path",
+      `                        nhim-audit · v${version}`,
+      "                        ───────────────────",
+    ].join("\n");
   }
 
-  return [...block, "", ...sublines].join("\n");
+  return [
+    "",
+    `  NHIM AUDIT v${version}`,
+    "  Agent execution path audit · Kubernetes",
+    "",
+  ].join("\n");
 }
 
-export function renderBriefingBox(cluster: string, version: string): string {
+export function renderBriefingBox(cluster: string, version: string, profile?: string): string {
+  const profileLabel = profile ? ` · ${profile}` : "";
   const top = "╔══════════════════════════════════════════════════════════════════════════════╗";
-  const mid = `║  NHIM EVAL · AGENT EXECUTION PATH · READ-ONLY · v${version.padEnd(28)}║`;
-  const ctx = `║  cluster ${cluster.slice(0, 58).padEnd(58)} ║`;
+  const mid = `║  NHIM AUDIT · READ-ONLY STATIC SCAN · v${version.padEnd(26)}║`;
+  const ctx = `║  cluster ${cluster.slice(0, 50).padEnd(50)} profile ${(profile ?? "generic").slice(0, 6).padEnd(6)} ║`;
   const bot = "╚══════════════════════════════════════════════════════════════════════════════╝";
+  void profileLabel;
   return [top, mid, ctx, bot].join("\n");
 }

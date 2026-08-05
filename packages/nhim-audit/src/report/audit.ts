@@ -1,6 +1,9 @@
+import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
-import type { AuditReport, Finding, Severity } from "../types.js";
-import { EVIDENCE_DISCLAIMER } from "../types.js";
+import type { AuditConfig } from "../config/profile.js";
+import { configFingerprint } from "../config/load.js";
+import type { AuditReport, AssuranceBlock, Finding, Severity } from "../types.js";
+import { ASSURANCE_LIMITATIONS, EVIDENCE_DISCLAIMER } from "../types.js";
 import type { AgentCandidate } from "../types.js";
 import { calculateScore, countBySeverity } from "../score.js";
 import { runStaticRules } from "../rules/engine.js";
@@ -10,30 +13,67 @@ import { redactReport } from "./redact.js";
 import { VERSION } from "../version.js";
 
 export interface AuditOptions {
+  config: AuditConfig;
   discover?: DiscoverOptions;
   probe?: boolean;
+  probeTokenPresent?: boolean;
+}
+
+function buildAssurance(probeExecuted: boolean): AssuranceBlock {
+  return {
+    notCertification: true,
+    staticOnly: !probeExecuted,
+    probeExecuted,
+    limitations: [...ASSURANCE_LIMITATIONS],
+  };
+}
+
+function reportSha256(report: Omit<AuditReport, "reportIntegrity">): string {
+  const payload = JSON.stringify({
+    findings: report.findings,
+    candidates: report.candidates,
+    score: report.score,
+  });
+  return createHash("sha256").update(payload).digest("hex");
 }
 
 export function runAudit(
   cluster: ClusterSnapshot,
-  options: AuditOptions = {},
+  options: AuditOptions,
 ): AuditReport {
-  const { candidates, findings } = runStaticRules(cluster, options.discover ?? {});
-  const score = calculateScore(findings, candidates.length);
+  const { candidates, findings, suppressedFindings } = runStaticRules(
+    cluster,
+    options.config,
+    options.discover ?? {},
+  );
+  const probeExecuted = options.probe === true;
+  const score = calculateScore(findings, candidates.length, probeExecuted);
   const summary = countBySeverity(findings);
+  const clusterLabel = options.config.output.clusterAlias ?? cluster.clusterName;
 
-  return {
+  const base: Omit<AuditReport, "reportIntegrity"> = {
     generator: `@blekline/nhim-audit@${VERSION}`,
     version: VERSION,
-    cluster: cluster.clusterName,
+    schemaVersion: "2.0",
+    profile: options.config.profile,
+    scoringVersion: 2,
+    configFingerprint: configFingerprint(options.config),
+    cluster: clusterLabel,
     timestamp: new Date().toISOString(),
-    mode: options.probe ? "static+probe" : "static",
+    mode: probeExecuted ? "static+probe" : "static",
     candidates,
     findings,
+    suppressedFindings: suppressedFindings.length ? suppressedFindings : undefined,
     score,
     summary: { candidates: candidates.length, ...summary },
-    probeAvailable: true,
+    assurance: buildAssurance(probeExecuted),
+    probeAvailable: Boolean(options.probeTokenPresent),
     disclaimer: EVIDENCE_DISCLAIMER,
+  };
+
+  return {
+    ...base,
+    reportIntegrity: { sha256: reportSha256(base) },
   };
 }
 

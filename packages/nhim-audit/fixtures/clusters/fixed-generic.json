@@ -1,15 +1,15 @@
 {
-  "clusterName": "kind-nhim-fixed-blekline",
-  "namespaces": ["default", "blekline"],
+  "clusterName": "kind-nhim-fixed-generic",
+  "namespaces": ["default", "istio-system"],
   "pods": [],
   "deployments": [
     {
       "namespace": "default",
       "name": "langgraph-worker",
       "labels": { "app": "langgraph-worker", "app.kubernetes.io/component": "agent" },
-      "annotations": { "blekline.com/inject-sidecar": "enabled" },
-      "containers": ["langgraph-worker", "blekline-sidecar"],
-      "envKeys": ["OPENAI_API_KEY", "BLEKLINE_SIDECAR_URL", "OPENAI_BASE_URL", "BLEKLINE_AUTO_ROUTE"],
+      "annotations": { "sidecar.istio.io/status": "{\"version\":\"1.22\"}" },
+      "containers": ["langgraph-worker", "istio-proxy"],
+      "envKeys": ["OPENAI_API_KEY", "OPENAI_BASE_URL", "HTTP_PROXY"],
       "image": "langchain/langgraph-api:latest"
     }
   ],
@@ -20,7 +20,7 @@
   "networkPolicies": [
     {
       "namespace": "default",
-      "name": "agent-egress-deny",
+      "name": "mandatory-hop",
       "podSelector": { "app": "langgraph-worker" },
       "policyTypes": ["Egress"],
       "egressRestricted": true,
@@ -30,25 +30,25 @@
   ],
   "mutatingWebhooks": [
     {
-      "name": "blekline-admission",
+      "name": "sidecar-inject-mutate",
       "failurePolicy": "Fail",
-      "matchesBlekline": true,
+      "matchesBlekline": false,
       "matchesEnforcement": true
     }
   ],
   "validatingWebhooks": [],
   "services": [
     {
-      "namespace": "blekline",
-      "name": "blekline-sidecar",
+      "namespace": "istio-system",
+      "name": "istio-ingressgateway",
       "type": "ClusterIP",
-      "ports": [8787],
-      "selector": { "app": "blekline-sidecar" }
+      "ports": [15001],
+      "selector": { "istio": "ingressgateway" }
     }
   ],
-  "secrets": [{ "namespace": "default", "name": "blekline-sidecar-auth" }],
-  "hasGatekeeper": true,
-  "hasKyverno": false,
-  "hasIstioAuthPolicy": false,
-  "hasBleklineHelm": true
+  "secrets": [{ "namespace": "default", "name": "agent-sidecar-auth" }],
+  "hasGatekeeper": false,
+  "hasKyverno": true,
+  "hasIstioAuthPolicy": true,
+  "hasBleklineHelm": false
 }

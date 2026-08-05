@@ -1,0 +1,29 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: nhim-audit-reader-cluster
+  labels:
+    app.kubernetes.io/name: nhim-audit
+    app.kubernetes.io/component: audit
+rules:
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: nhim-audit-reader-cluster
+  labels:
+    app.kubernetes.io/name: nhim-audit
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: nhim-audit-reader-cluster
+subjects:
+  - kind: ServiceAccount
+    name: nhim-audit
+    namespace: nhim-eval

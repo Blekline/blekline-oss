@@ -1,0 +1,26 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: nhim-audit-probe
+  labels:
+    app.kubernetes.io/name: nhim-audit
+    app.kubernetes.io/component: probe
+rules:
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nhim-audit-probe
+  labels:
+    app.kubernetes.io/name: nhim-audit
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: nhim-audit-probe
+subjects:
+  - kind: ServiceAccount
+    name: nhim-audit
+    namespace: nhim-eval

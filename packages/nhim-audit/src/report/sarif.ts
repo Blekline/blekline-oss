@@ -1,8 +1,9 @@
 import type { AuditReport } from "../types.js";
+import { DOCS_RULE_BASE, rulesForProfile } from "../spec/rules.js";
 
-/** SARIF 2.1 export (v1.1). */
+/** SARIF 2.1 export (v2.0). */
 export function reportToSarif(report: AuditReport): string {
-  const rules = [...new Map(report.findings.map((f) => [f.id, f])).values()];
+  const catalog = rulesForProfile(report.profile);
   const sarif = {
     version: "2.1.0",
     $schema: "https://json.schemastore.org/sarif-2.1.0.json",
@@ -12,12 +13,14 @@ export function reportToSarif(report: AuditReport): string {
           driver: {
             name: "nhim-audit",
             version: report.version,
-            informationUri: "https://app.blekline.com/docs/tools/nhim-audit",
-            rules: rules.map((f) => ({
-              id: f.id,
-              name: f.title,
-              shortDescription: { text: f.title },
-              properties: { asi: f.asi, severity: f.severity },
+            informationUri: DOCS_RULE_BASE,
+            rules: catalog.map((spec) => ({
+              id: spec.id,
+              name: spec.title,
+              shortDescription: { text: spec.title },
+              fullDescription: { text: spec.description },
+              helpUri: `${DOCS_RULE_BASE}#${spec.id}`,
+              properties: { asi: spec.asi, severity: spec.severity, profile: report.profile },
             })),
           },
         },
@@ -34,7 +37,12 @@ export function reportToSarif(report: AuditReport): string {
                 },
               },
             ],
-            properties: { namespace: f.namespace, asi: f.asi, evidence: f.evidence },
+            properties: {
+              namespace: f.namespace,
+              asi: f.asi,
+              evidence: f.evidence,
+              schemaVersion: report.schemaVersion,
+            },
           })),
       },
     ],
