@@ -59,12 +59,17 @@ export function renderHeader(opts: RenderOptions = {}): string {
   ].join("\n");
 }
 
+const BOX_INNER = 76;
+
+function boxLine(content: string): string {
+  return `║  ${content.slice(0, BOX_INNER).padEnd(BOX_INNER)}║`;
+}
+
 export function renderBriefingBox(cluster: string, version: string, profile?: string): string {
-  const profileLabel = profile ? ` · ${profile}` : "";
-  const top = "╔══════════════════════════════════════════════════════════════════════════════╗";
-  const mid = `║  NHIM AUDIT · READ-ONLY STATIC SCAN · v${version.padEnd(26)}║`;
-  const ctx = `║  cluster ${cluster.slice(0, 50).padEnd(50)} profile ${(profile ?? "generic").slice(0, 6).padEnd(6)} ║`;
-  const bot = "╚══════════════════════════════════════════════════════════════════════════════╝";
-  void profileLabel;
+  const prof = profile ?? "generic";
+  const top = `╔${"═".repeat(BOX_INNER + 2)}╗`;
+  const mid = boxLine(`NHIM AUDIT · READ-ONLY STATIC SCAN · v${version}`);
+  const ctx = boxLine(`cluster ${cluster} · profile ${prof}`);
+  const bot = `╚${"═".repeat(BOX_INNER + 2)}╝`;
   return [top, mid, ctx, bot].join("\n");
 }

@@ -7,7 +7,10 @@ Self-contained manifests for `nhim-audit demo broken` — agent deployment witho
 ```bash
 # From repo root after build
 node packages/nhim-audit/dist/cli.js demo broken
-node packages/nhim-audit/dist/cli.js audit --fixture broken
+node packages/nhim-audit/dist/cli.js audit --fixture broken --profile generic
+node packages/nhim-audit/dist/cli.js audit --fixture hostnetwork-broken --only-critical --plain
+node packages/nhim-audit/dist/cli.js audit --fixture fixed-generic --profile generic
+node packages/nhim-audit/dist/cli.js audit --fixture fixed-blekline --profile blekline --brand
 ```
 
 ## Self-contained kind demo (OSS)
@@ -16,8 +19,8 @@ Apply minimal broken cluster manifests (no Blekline install required):
 
 ```bash
 kubectl apply -f demo/namespace.yaml -f demo/agent-deployment.yaml
-kubectl apply -f deploy/rbac/nhim-audit-reader.yaml
-node dist/cli.js audit --namespace agent-ns
+kubectl apply -f deploy/rbac/nhim-audit-reader-namespaced.yaml -n agent-ns
+node dist/cli.js audit --namespace agent-ns --profile generic
 ```
 
 ## Private monorepo — full before/after

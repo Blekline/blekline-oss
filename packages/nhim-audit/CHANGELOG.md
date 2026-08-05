@@ -1,5 +1,12 @@
 # Changelog — @blekline/nhim-audit
 
+## 0.2.1 — Terminal header + probe health fix
+
+**Fixed**
+
+- Briefing box no longer truncates `profile generic` to `generi` on real cluster runs
+- PROBE-004 accepts **401** on injected sidecar `/health` (auth-required — matches production sidecar)
+
 ## 0.2.0 — Enterprise-neutral hardening
 
 **Breaking changes**
