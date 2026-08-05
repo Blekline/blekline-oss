@@ -72,8 +72,9 @@ Details: [packages/ingress-proxy/README.md](packages/ingress-proxy/README.md) ·
 **Step 0 — NHIM audit (no Blekline account)**
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/Blekline/blekline-oss/main/packages/nhim-audit/deploy/rbac/nhim-audit-reader.yaml
-npx @blekline/nhim-audit audit --plain --json -o nhim-audit.json
+kubectl apply -f https://raw.githubusercontent.com/Blekline/blekline-oss/main/packages/nhim-audit/deploy/rbac/nhim-audit-reader-namespaced.yaml -n nhim-eval
+kubectl apply -f https://raw.githubusercontent.com/Blekline/blekline-oss/main/packages/nhim-audit/deploy/rbac/nhim-audit-reader-cluster.yaml
+npx @blekline/nhim-audit audit --profile generic --namespace nhim-eval --plain --json -o nhim-audit.json
 ```
 
 **Track 03 — MCP smoke**

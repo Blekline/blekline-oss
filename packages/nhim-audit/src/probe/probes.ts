@@ -358,14 +358,16 @@ async function runLiveProbes(
         `http://127.0.0.1:${port}${healthPath}`,
       ]);
       const code = parseInt(r4.stdout.trim(), 10);
-      const ok = code === 200;
+      const ok = code === 200 || code === 401;
       findings.push(
         probeFinding(
           "PROBE-004",
           ok ? "INFO" : "HIGH",
           ok
-            ? "Probed: injected sidecar health reachable from agent container"
-            : `Probed: sidecar health returned ${code} from agent container (expected 200)`,
+            ? code === 401
+              ? "Probed: injected sidecar health reachable (auth required)"
+              : "Probed: injected sidecar health reachable from agent container"
+            : `Probed: sidecar health returned ${code} from agent container (expected 200 or 401)`,
           `${candidate.namespace}/Pod/${podRef.podName}`,
           candidate.namespace,
           ok,

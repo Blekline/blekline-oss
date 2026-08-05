@@ -11,7 +11,7 @@ import {
   reportToJson,
 } from "./report/audit.js";
 import { calculateScore } from "./score.js";
-import { renderWordmark, renderHeader } from "./report/wordmark.js";
+import { renderWordmark, renderHeader, renderBriefingBox } from "./report/wordmark.js";
 import { renderTerminal } from "./report/terminal.js";
 import { validateEvalToken, resolveProbeToken } from "./probe/index.js";
 import { rulesForProfile } from "./spec/rules.js";
@@ -112,6 +112,12 @@ describe("wordmark and terminal", () => {
     const header = renderHeader({ brand: false, version: "0.2.0" });
     assert.doesNotMatch(header, /BLEKLINE/);
     assert.match(header, /NHIM AUDIT/);
+  });
+
+  it("briefing box shows full profile name", () => {
+    const box = renderBriefingBox("kind-blekline-nhim", "0.2.0", "generic");
+    assert.match(box, /profile generic/);
+    assert.doesNotMatch(box, /profile generi[^c]/);
   });
 
   it("generic terminal has no enterprise@ email", () => {

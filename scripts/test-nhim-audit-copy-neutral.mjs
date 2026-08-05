@@ -29,4 +29,23 @@ if (!/NHIM AUDIT/i.test(text)) {
   process.exit(1);
 }
 
+const rich = spawnSync(
+  "node",
+  ["dist/cli.js", "audit", "--fixture", "fixed-generic"],
+  { cwd: PKG, encoding: "utf8" },
+);
+if (rich.status !== 0) {
+  console.error(rich.stderr);
+  process.exit(1);
+}
+const richText = rich.stdout + rich.stderr;
+if (!/profile generic/i.test(richText)) {
+  console.error("briefing box must show full profile generic (not truncated)");
+  process.exit(1);
+}
+if (/profile generi[^c]/i.test(richText)) {
+  console.error("briefing box truncates profile name");
+  process.exit(1);
+}
+
 console.log("Copy neutral check OK");

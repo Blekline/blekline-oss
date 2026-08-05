@@ -6,6 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.1-nhim-audit] - 2026-08-05
+
+### Fixed
+
+- `@blekline/nhim-audit@0.2.1` — briefing box shows full `profile generic` (no truncation on real clusters)
+- PROBE-004 accepts **401** on injected sidecar `/health` (auth-required production sidecar)
+
+### Changed
+
+- NHIM Audit GitHub Action pin `@0.2.1`; OSS README quickstart uses namespaced RBAC + `--profile generic`
+
+## [0.2.0-nhim-audit] - 2026-08-05
+
 ### Added
 
 - `@blekline/nhim-audit@0.2.0` — enterprise-neutral hardening: `--profile generic|blekline`, schema 2.0 `assurance` block, NHIM-019 hostNetwork, namespaced RBAC manifests, `NHIM_PROBE_TOKEN` alias
