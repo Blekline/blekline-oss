@@ -34,7 +34,7 @@ spec:
       {{- end }}
       containers:
         - name: ingress
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.repository }}{{- if .Values.image.digest }}@{{ .Values.image.digest }}{{- else }}:{{ .Values.image.tag }}{{- end }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- with .Values.securityContext }}
           securityContext:
@@ -80,6 +80,15 @@ spec:
                 secretKeyRef:
                   name: {{ include "blekline-ingress.secretName" . }}
                   key: sidecarAuth
+            {{- if .Values.imageDigestEnforcement.enabled }}
+            - name: BLEKLINE_REQUIRED_IMAGE_DIGEST
+              value: {{ required "image.digest is required when imageDigestEnforcement.enabled" .Values.image.digest | quote }}
+            - name: BLEKLINE_IMAGE_DIGEST
+              value: {{ .Values.image.digest | quote }}
+            {{- else if .Values.image.digest }}
+            - name: BLEKLINE_IMAGE_DIGEST
+              value: {{ .Values.image.digest | quote }}
+            {{- end }}
             {{- if .Values.trustVault.enabled }}
             - name: BLEKLINE_VAULT_MASTER_KEY
               valueFrom:
@@ -160,7 +169,8 @@ spec:
   selector:
     app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
   ports:
-    - port: {{ .Values.service.port }}
+    - name: http
+      port: {{ .Values.service.port }}
       targetPort: {{ .Values.service.port }}
 ---
 {{- if .Values.serviceAccount.create }}

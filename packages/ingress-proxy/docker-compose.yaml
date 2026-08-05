@@ -3,7 +3,7 @@ services:
     build:
       context: ../..
       dockerfile: packages/ingress-proxy/Dockerfile
-    image: blekline-sidecar:0.2.0-nhim
+    image: blekline-sidecar:0.2.1-nhim
     ports:
       - "127.0.0.1:8787:8787"
     environment:

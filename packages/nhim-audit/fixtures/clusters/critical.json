@@ -1,0 +1,41 @@
+{
+  "clusterName": "kind-blekline-nhim-critical",
+  "namespaces": ["default", "agent-ns"],
+  "pods": [],
+  "deployments": [
+    {
+      "namespace": "default",
+      "name": "langgraph-worker",
+      "labels": { "app": "langgraph-worker", "app.kubernetes.io/component": "agent" },
+      "annotations": { "blekline.com/inject-sidecar": "enabled", "blekline.com/auto-route": "disabled" },
+      "containers": ["langgraph-worker"],
+      "envKeys": ["OPENAI_API_KEY", "OPENAI_BASE_URL"],
+      "image": "langchain/langgraph-api:latest"
+    }
+  ],
+  "replicaSets": [],
+  "statefulSets": [],
+  "networkPolicies": [
+    {
+      "namespace": "default",
+      "name": "agent-egress-bypass",
+      "podSelector": { "blekline-agent": "true" },
+      "policyTypes": ["Egress"],
+      "egressRestricted": true,
+      "allowsSidecarHop": true,
+      "allowsWideHttpsEgress": true
+    }
+  ],
+  "mutatingWebhooks": [
+    {
+      "name": "blekline-admission",
+      "failurePolicy": "Ignore",
+      "matchesBlekline": true
+    }
+  ],
+  "validatingWebhooks": [],
+  "services": [],
+  "secrets": [],
+  "hasGatekeeper": false,
+  "hasBleklineHelm": false
+}

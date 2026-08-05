@@ -1,2 +1,2 @@
 /** Package version — single source for CLI, reports, and terminal output. */
-export const VERSION = "0.1.2";
+export const VERSION = "0.1.3";

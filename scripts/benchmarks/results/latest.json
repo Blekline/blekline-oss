@@ -6,7 +6,7 @@
   "versions": {
     "contracts": "0.4.1",
     "nhim-audit": "0.1.1",
-    "runtime-engine": "0.2.0-nhim"
+    "runtime-engine": "0.2.1-nhim"
   },
   "adapters": [
     "blekline",

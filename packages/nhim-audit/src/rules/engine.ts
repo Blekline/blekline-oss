@@ -61,7 +61,28 @@ export function runStaticRules(
   for (const ns of agentNamespaces) {
     const nps = cluster.networkPolicies.filter((np) => np.namespace === ns);
     const hasHop = nps.some((np) => np.egressRestricted && np.allowsSidecarHop);
-    if (!hasHop) {
+    const wideHttps = nps.some((np) => np.allowsWideHttpsEgress);
+    if (wideHttps) {
+      findings.push(
+        mkFinding({
+          id: "NHIM-014",
+          severity: "CRITICAL",
+          title: "NetworkPolicy allows wide HTTPS egress (0.0.0.0/0:443 bypass)",
+          resource: `${ns}/NetworkPolicy`,
+          namespace: ns,
+          asi: ["ASI10"],
+          fix: {
+            summary: "Remove 0.0.0.0/0:443 egress; route LLM traffic via sidecar mandatory hop",
+            commands: [
+              `# Apply mandatory-hop NetworkPolicy in ${ns} — see ${DOCS_BASE}/enterprise/k8s-deployment`,
+              `helm upgrade --install sidecar ${OSS_HELM_CHART} -n blekline --set networkPolicy.agentEgressDeny.allowHttpsEgress=false`,
+            ],
+            docUrl: `${DOCS_BASE}/enterprise/k8s-deployment`,
+          },
+        }),
+      );
+    }
+    if (!hasHop && !wideHttps) {
       findings.push(
         mkFinding({
           id: "NHIM-002",
@@ -151,7 +172,12 @@ export function runStaticRules(
         e.includes("ANTHROPIC") ||
         e.includes("AZURE_OPENAI"),
     );
-    if (llmEnv && !hasSidecar(c) && !c.envKeys.some((e) => e.includes("BLEKLINE_SIDECAR"))) {
+    const hasLlmSidecarPath =
+      c.envKeys.some((e) => e.includes("BLEKLINE_SIDECAR")) ||
+      c.envKeys.some((e) => e === "OPENAI_BASE_URL" || e === "OPENAI_API_BASE") ||
+      c.envKeys.some((e) => e === "ANTHROPIC_BASE_URL") ||
+      c.envKeys.some((e) => e === "BLEKLINE_AUTO_ROUTE");
+    if (llmEnv && !hasSidecar(c) && !hasLlmSidecarPath) {
       findings.push(
         mkFinding({
           id: "NHIM-006",
@@ -162,8 +188,10 @@ export function runStaticRules(
           asi: ["ASI02"],
           discovery: { signals: c.signals, confidence: c.confidence },
           fix: {
-            summary: "Route LLM calls through blekline-sidecar",
-            commands: [`# Inject sidecar and set BLEKLINE_SIDECAR_URL on ${c.name}`],
+            summary: "Enable Auto-Route (webhook inject) or set SDK base URL to blekline-sidecar",
+            commands: [
+              `kubectl -n ${c.namespace} annotate ${c.kind.toLowerCase()}/${c.name} blekline.com/inject-sidecar=enabled --overwrite`,
+            ],
             docUrl: `${DOCS_BASE}/enterprise/k8s-deployment`,
           },
         }),
@@ -302,6 +330,106 @@ export function runStaticRules(
       },
     }),
   );
+
+  for (const c of candidates) {
+    if (
+      hasInjectAnnotation(c) &&
+      (c.annotations?.["blekline.com/auto-route"] === "disabled" ||
+        c.annotations?.["blekline.com/auto-route"] === "false")
+    ) {
+      findings.push(
+        mkFinding({
+          id: "NHIM-015",
+          severity: "MEDIUM",
+          title: "Sidecar inject enabled but Auto-Route disabled",
+          resource: `${c.namespace}/${c.kind}/${c.name}`,
+          namespace: c.namespace,
+          asi: ["ASI02"],
+          fix: {
+            summary: "Remove auto-route disabled annotation or document intentional SDK bypass",
+            commands: [
+              `kubectl -n ${c.namespace} annotate ${c.kind.toLowerCase()}/${c.name} blekline.com/auto-route-`,
+            ],
+            docUrl: `${DOCS_BASE}/enterprise/k8s-deployment`,
+          },
+        }),
+      );
+    }
+  }
+
+  for (const c of candidates) {
+    const envFromOnly =
+      c.signals.some((s) => s.startsWith("envFrom:")) ||
+      (c.envKeys.length === 0 &&
+        c.signals.some((s) => s.includes("envFrom")));
+    const hasDirectLlmEnv = c.envKeys.some((e) =>
+      ["OPENAI_BASE_URL", "OPENAI_API_BASE", "ANTHROPIC_BASE_URL", "AZURE_OPENAI_ENDPOINT"].includes(e),
+    );
+    if (envFromOnly && !hasDirectLlmEnv && !hasSidecar(c)) {
+      findings.push(
+        mkFinding({
+          id: "NHIM-016",
+          severity: "MEDIUM",
+          title: "LLM config via envFrom only — Auto-Route cannot verify path",
+          resource: `${c.namespace}/${c.kind}/${c.name}`,
+          namespace: c.namespace,
+          asi: ["ASI02"],
+          fix: {
+            summary: "Set explicit SDK base URL env on container or use inject-sidecar with Auto-Route",
+            commands: [],
+            docUrl: `${DOCS_BASE}/enterprise/k8s-deployment`,
+          },
+        }),
+      );
+    }
+  }
+
+  for (const c of candidates) {
+    if (
+      hasSidecar(c) &&
+      !c.envKeys.some((e) => e === "OPENAI_API_BASE" || e === "BLEKLINE_SIDECAR_URL") &&
+      !c.containers.includes("blekline-sidecar")
+    ) {
+      findings.push(
+        mkFinding({
+          id: "NHIM-017",
+          severity: "MEDIUM",
+          title: "Injected sidecar missing upstream OPENAI_API_BASE on workload",
+          resource: `${c.namespace}/${c.kind}/${c.name}`,
+          namespace: c.namespace,
+          asi: ["ASI02"],
+          fix: {
+            summary: "Configure blekline-sidecar-upstream secret with OPENAI_API_BASE for provider BYOK",
+            commands: [`# See ${DOCS_BASE}/enterprise/k8s-deployment — provider upstream BYOK`],
+            docUrl: `${DOCS_BASE}/enterprise/k8s-deployment`,
+          },
+        }),
+      );
+    }
+  }
+
+  for (const c of candidates) {
+    if (c.annotations?.["blekline.com/auto-route"] === "iptables") {
+      const hasSidecarContainer = c.containers.includes("blekline-sidecar");
+      if (!hasSidecarContainer) {
+        findings.push(
+          mkFinding({
+            id: "NHIM-018",
+            severity: "HIGH",
+            title: "iptables Auto-Route requested without injected sidecar",
+            resource: `${c.namespace}/${c.kind}/${c.name}`,
+            namespace: c.namespace,
+            asi: ["ASI10"],
+            fix: {
+              summary: "Enable inject-sidecar when using blekline.com/auto-route: iptables",
+              commands: [],
+              docUrl: `${DOCS_BASE}/enterprise/k8s-deployment`,
+            },
+          }),
+        );
+      }
+    }
+  }
 
   if (candidates.length === 0) {
     findings.push(

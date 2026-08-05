@@ -6,6 +6,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.1-nhim] - 2026-08-05
+
+### Added
+
+- Production Profile Helm overlay — fail-closed NetworkPolicy, digest pin, monitoring ([K8s deployment](https://app.blekline.com/docs/enterprise/k8s-deployment))
+- `@blekline/nhim-audit@0.1.3` — NHIM-014–018, PROBE-004, `--include-pods`
+- Auto-Route Phase 2 opt-in (`blekline.com/auto-route: iptables`); admission Azure/OpenRouter env inject
+
+### Changed
+
+- Sidecar + admission GHCR pilot tag `0.2.1-nhim` (NetworkPolicy bypass fix, webhook objectSelector, `/metrics`)
+- Public Helm chart defaults aligned to `0.2.1-nhim`
+
+### Security
+
+- Removed default `0.0.0.0/0:443` agent egress bypass in NetworkPolicy template (NHIM-014)
+
 ## [0.1.2] - 2026-07-31
 
 ### Added

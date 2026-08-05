@@ -93,6 +93,7 @@ export interface NetworkPolicySnapshot {
   policyTypes: string[];
   egressRestricted: boolean;
   allowsSidecarHop: boolean;
+  allowsWideHttpsEgress: boolean;
 }
 
 export interface WebhookSnapshot {
@@ -152,7 +153,7 @@ export const DOCS_BASE = "https://app.blekline.com/docs";
 /** Relative chart path (blekline-oss / monorepo). */
 export const OSS_HELM_CHART = "packages/ingress-proxy/helm/blekline-ingress";
 /** GHCR sidecar image for NHIM pilots. */
-export const PILOT_SIDECAR_IMAGE = "ghcr.io/blekline/sidecar:0.2.0-nhim";
+export const PILOT_SIDECAR_IMAGE = "ghcr.io/blekline/sidecar:0.2.1-nhim";
 /** Public doc link for the reference Helm layout. */
 export const OSS_HELM_REPO =
   "https://github.com/Blekline/blekline-oss/tree/main/packages/ingress-proxy/helm/blekline-ingress";

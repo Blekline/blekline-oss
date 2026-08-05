@@ -9,7 +9,7 @@
       "labels": { "app": "langgraph-worker", "app.kubernetes.io/component": "agent" },
       "annotations": { "blekline.com/inject-sidecar": "enabled" },
       "containers": ["langgraph-worker", "blekline-sidecar"],
-      "envKeys": ["OPENAI_API_KEY", "BLEKLINE_SIDECAR_URL"],
+      "envKeys": ["OPENAI_API_KEY", "BLEKLINE_SIDECAR_URL", "OPENAI_BASE_URL", "BLEKLINE_AUTO_ROUTE"],
       "image": "langchain/langgraph-api:latest"
     }
   ],
@@ -22,7 +22,8 @@
       "podSelector": { "app": "langgraph-worker" },
       "policyTypes": ["Egress"],
       "egressRestricted": true,
-      "allowsSidecarHop": true
+      "allowsSidecarHop": true,
+      "allowsWideHttpsEgress": false
     }
   ],
   "mutatingWebhooks": [

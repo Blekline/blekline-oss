@@ -29,11 +29,15 @@ spec:
       ports:
         - protocol: TCP
           port: {{ .Values.service.port }}
-    # Cloud control plane (policy SSE, mask API) — tighten to CIDR in prod
+    {{- if .Values.networkPolicy.agentEgressDeny.allowHttpsEgress }}
+    {{- range .Values.networkPolicy.agentEgressDeny.controlPlaneCidrs }}
+    # Blekline control plane HTTPS (policy SSE, mask API)
     - to:
         - ipBlock:
-            cidr: 0.0.0.0/0
+            cidr: {{ . | quote }}
       ports:
         - protocol: TCP
           port: 443
+    {{- end }}
+    {{- end }}
 {{- end }}
