@@ -1,0 +1,94 @@
+{
+  "generator": "@blekline/nhim-audit@0.2.0",
+  "version": "0.2.0",
+  "schemaVersion": "2.0",
+  "profile": "generic",
+  "scoringVersion": 2,
+  "configFingerprint": "FINGERPRINT",
+  "cluster": "kind-nhim-fixed-generic",
+  "timestamp": "TIMESTAMP",
+  "mode": "static",
+  "candidates": [
+    {
+      "namespace": "default",
+      "name": "langgraph-worker",
+      "kind": "Deployment",
+      "labels": {
+        "app": "langgraph-worker",
+        "app.kubernetes.io/component": "agent"
+      },
+      "annotations": {
+        "sidecar.istio.io/status": "{\"version\":\"1.22\"}"
+      },
+      "containers": [
+        "langgraph-worker",
+        "istio-proxy"
+      ],
+      "envKeys": [
+        "OPENAI_API_KEY",
+        "OPENAI_BASE_URL",
+        "HTTP_PROXY"
+      ],
+      "image": "langchain/langgraph-api:latest",
+      "signals": [
+        "label:app.kubernetes.io/component=agent",
+        "env:OPENAI_API_KEY",
+        "image:langgraph"
+      ],
+      "confidence": "high"
+    }
+  ],
+  "findings": [
+    {
+      "id": "NHIM-012",
+      "severity": "INFO",
+      "title": "Shared responsibility reminder",
+      "resource": "cluster/policy",
+      "namespace": "*",
+      "asi": [],
+      "subtitle": "Model-layer risks (OWASP LLM Top 10) remain customer responsibility",
+      "fix": {
+        "summary": "Review shared responsibility matrix with security team",
+        "commands": [],
+        "docUrl": "https://app.blekline.com/docs/enterprise/compliance-evidence"
+      },
+      "static": true,
+      "evidence": "static"
+    }
+  ],
+  "score": {
+    "value": 100,
+    "band": "HARDENED",
+    "controlObjective": "Static clean — probe recommended for full mandatory-hop evidence",
+    "staticGateStatus": "unknown",
+    "redTeamPhase0": "unknown",
+    "scoringVersion": 2
+  },
+  "summary": {
+    "candidates": 1,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "info": 1,
+    "probed": 0
+  },
+  "assurance": {
+    "notCertification": true,
+    "staticOnly": true,
+    "probeExecuted": false,
+    "limitations": [
+      "Static scan — runtime bypass not proven without --probe",
+      "Agent candidate heuristics may produce false positives or false negatives",
+      "Kubernetes NetworkPolicy view only — CiliumNetworkPolicy / cloud SG / NACL out of scope",
+      "Service mesh enforcement (Istio AuthZ) may not be fully verified statically",
+      "Not a penetration test, SOC2, OWASP, AIUC-1, or EU AI Act certification",
+      "Trust Vault SPIFFE, contamination API, kill switch RBAC require separate validation"
+    ]
+  },
+  "probeAvailable": false,
+  "disclaimer": "Evidence enablement only — not certification. Static findings infer architectural risk.",
+  "reportIntegrity": {
+    "sha256": "SHA256"
+  }
+}

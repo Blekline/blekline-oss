@@ -2,11 +2,22 @@ export type Severity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO";
 
 export type ScoreBand = "CRITICAL" | "AT RISK" | "PARTIAL" | "HARDENED";
 
-export type RedTeamPhase0 = "pass" | "fail" | "unknown";
+export type StaticGateStatus = "pass" | "fail" | "unknown";
+
+/** @deprecated Use StaticGateStatus — kept for 0.1.x JSON readers */
+export type RedTeamPhase0 = StaticGateStatus;
+
+export type AuditProfileName = "generic" | "blekline";
 
 export type EvidenceKind = "static" | "probed";
 
 export type Confidence = "high" | "medium" | "low";
+
+export interface VendorHint {
+  vendor: string;
+  commands: string[];
+  docUrl?: string;
+}
 
 export interface DiscoveryInfo {
   signals: string[];
@@ -17,6 +28,7 @@ export interface FixInfo {
   summary: string;
   commands: string[];
   docUrl: string;
+  vendorHints?: VendorHint[];
 }
 
 export interface Finding {
@@ -32,12 +44,13 @@ export interface Finding {
   probeId?: string;
   discovery?: DiscoveryInfo;
   fix: FixInfo;
+  pentestScope?: string[];
 }
 
 export interface AgentCandidate {
   namespace: string;
   name: string;
-  kind: "Pod" | "Deployment" | "ReplicaSet" | "StatefulSet";
+  kind: "Pod" | "Deployment" | "ReplicaSet" | "StatefulSet" | "Job" | "CronJob";
   ownerRef?: string;
   labels: Record<string, string>;
   annotations: Record<string, string>;
@@ -46,6 +59,10 @@ export interface AgentCandidate {
   image: string;
   signals: string[];
   confidence: Confidence;
+  hostNetwork?: boolean;
+  privileged?: boolean;
+  hostPID?: boolean;
+  usesEnvFrom?: boolean;
 }
 
 export interface ClusterSnapshot {
@@ -55,12 +72,16 @@ export interface ClusterSnapshot {
   deployments: WorkloadSnapshot[];
   replicaSets: WorkloadSnapshot[];
   statefulSets: WorkloadSnapshot[];
+  jobs: WorkloadSnapshot[];
+  cronJobs: WorkloadSnapshot[];
   networkPolicies: NetworkPolicySnapshot[];
   mutatingWebhooks: WebhookSnapshot[];
   validatingWebhooks: WebhookSnapshot[];
   services: ServiceSnapshot[];
   secrets: SecretSnapshot[];
   hasGatekeeper: boolean;
+  hasKyverno: boolean;
+  hasIstioAuthPolicy: boolean;
   hasBleklineHelm: boolean;
 }
 
@@ -74,6 +95,10 @@ export interface PodSnapshot {
   image: string;
   ownerKind?: string;
   ownerName?: string;
+  hostNetwork?: boolean;
+  privileged?: boolean;
+  hostPID?: boolean;
+  usesEnvFrom?: boolean;
 }
 
 export interface WorkloadSnapshot {
@@ -84,6 +109,10 @@ export interface WorkloadSnapshot {
   containers: string[];
   envKeys: string[];
   image: string;
+  hostNetwork?: boolean;
+  privileged?: boolean;
+  hostPID?: boolean;
+  usesEnvFrom?: boolean;
 }
 
 export interface NetworkPolicySnapshot {
@@ -100,6 +129,7 @@ export interface WebhookSnapshot {
   name: string;
   failurePolicy: string;
   matchesBlekline: boolean;
+  matchesEnforcement: boolean;
 }
 
 export interface ServiceSnapshot {
@@ -115,21 +145,40 @@ export interface SecretSnapshot {
   name: string;
 }
 
+export interface AssuranceBlock {
+  notCertification: true;
+  staticOnly: boolean;
+  probeExecuted: boolean;
+  limitations: string[];
+}
+
+export interface ReportIntegrity {
+  sha256: string;
+}
+
 export interface ScoreResult {
   value: number;
   band: ScoreBand;
   controlObjective: string;
-  redTeamPhase0: RedTeamPhase0;
+  staticGateStatus: StaticGateStatus;
+  /** @deprecated mirror of staticGateStatus for 0.1.x consumers */
+  redTeamPhase0?: StaticGateStatus;
+  scoringVersion: number;
 }
 
 export interface AuditReport {
   generator: string;
   version: string;
+  schemaVersion: "2.0";
+  profile: AuditProfileName;
+  scoringVersion: number;
+  configFingerprint?: string;
   cluster: string;
   timestamp: string;
   mode: "static" | "static+probe";
   candidates: AgentCandidate[];
   findings: Finding[];
+  suppressedFindings?: string[];
   score: ScoreResult;
   summary: {
     candidates: number;
@@ -140,8 +189,10 @@ export interface AuditReport {
     info: number;
     probed: number;
   };
+  assurance: AssuranceBlock;
   probeAvailable: boolean;
   disclaimer: string;
+  reportIntegrity?: ReportIntegrity;
 }
 
 export const STATIC_SUBTITLE = "(STATIC — run --probe to verify)";
@@ -149,13 +200,19 @@ export const STATIC_SUBTITLE = "(STATIC — run --probe to verify)";
 export const EVIDENCE_DISCLAIMER =
   "Evidence enablement only — not certification. Static findings infer architectural risk.";
 
+export const ASSURANCE_LIMITATIONS: string[] = [
+  "Static scan — runtime bypass not proven without --probe",
+  "Agent candidate heuristics may produce false positives or false negatives",
+  "Kubernetes NetworkPolicy view only — CiliumNetworkPolicy / cloud SG / NACL out of scope",
+  "Service mesh enforcement (Istio AuthZ) may not be fully verified statically",
+  "Not a penetration test, SOC2, OWASP, AIUC-1, or EU AI Act certification",
+  "Trust Vault SPIFFE, contamination API, kill switch RBAC require separate validation",
+];
+
 export const DOCS_BASE = "https://app.blekline.com/docs";
-/** Relative chart path (blekline-oss / monorepo). */
 export const OSS_HELM_CHART = "packages/ingress-proxy/helm/blekline-ingress";
-/** GHCR sidecar image for NHIM pilots. */
 export const PILOT_SIDECAR_IMAGE = "ghcr.io/blekline/sidecar:0.2.1-nhim";
-/** Public doc link for the reference Helm layout. */
 export const OSS_HELM_REPO =
   "https://github.com/Blekline/blekline-oss/tree/main/packages/ingress-proxy/helm/blekline-ingress";
-/** @deprecated Use OSS_HELM_CHART for install commands; OSS_HELM_REPO for doc links. */
+/** @deprecated Use OSS_HELM_CHART */
 export const OSS_HELM_BASE = OSS_HELM_CHART;

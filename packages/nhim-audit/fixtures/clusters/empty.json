@@ -5,11 +5,15 @@
   "deployments": [],
   "replicaSets": [],
   "statefulSets": [],
+  "jobs": [],
+  "cronJobs": [],
   "networkPolicies": [],
   "mutatingWebhooks": [],
   "validatingWebhooks": [],
   "services": [],
   "secrets": [],
   "hasGatekeeper": false,
+  "hasKyverno": false,
+  "hasIstioAuthPolicy": false,
   "hasBleklineHelm": false
 }

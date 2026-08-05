@@ -1,17 +1,19 @@
 import * as k8s from "@kubernetes/client-node";
 import { PassThrough } from "node:stream";
+import type { AuditConfig } from "../config/profile.js";
+import { matchesContainerName, matchesSecretName } from "../config/match.js";
 import type { AgentCandidate, ClusterSnapshot, Finding } from "../types.js";
 import { DOCS_BASE } from "../types.js";
 
 const PROBE_TARGET_URL = "https://example.com";
-const SIDECAR_ENFORCE_PATH = "/v1/enforce-tool-call";
-const SIDECAR_PORT = 8787;
+const DEFAULT_SIDECAR_PORT = 8787;
 
 export interface ProbeOptions {
   fixture?: string;
   kubeconfig?: string;
   context?: string;
   token: string;
+  config?: AuditConfig;
 }
 
 function probeFinding(
@@ -36,9 +38,9 @@ function probeFinding(
     fix: {
       summary: passed
         ? "No action — probe passed"
-        : "Apply mandatory-hop NetworkPolicy and sidecar per Track 01",
-      commands: passed ? [] : ["# See app.blekline.com/docs/enterprise/k8s-deployment"],
-      docUrl: `${DOCS_BASE}/enterprise/k8s-deployment`,
+        : "Apply mandatory-hop NetworkPolicy and enforcement sidecar",
+      commands: passed ? [] : ["# See mandatory-hop NetworkPolicy examples in NHIM audit docs"],
+      docUrl: `${DOCS_BASE}/tools/nhim-audit`,
     },
   };
 }
@@ -47,23 +49,26 @@ function sidecarEnforceUrl(
   cluster: ClusterSnapshot,
   ns: string,
   podHasInjectedSidecar: boolean,
+  config?: AuditConfig,
 ): string | null {
+  const port = config?.enforcement.enforcementPorts[0] ?? DEFAULT_SIDECAR_PORT;
   if (podHasInjectedSidecar) {
-    return `http://127.0.0.1:${SIDECAR_PORT}`;
+    return `http://127.0.0.1:${port}`;
   }
-  return sidecarServiceUrl(cluster, ns);
+  return sidecarServiceUrl(cluster, ns, port);
 }
 
-function sidecarServiceUrl(cluster: ClusterSnapshot, ns: string): string | null {
+function sidecarServiceUrl(cluster: ClusterSnapshot, ns: string, port: number): string | null {
   const svc = cluster.services.find(
     (s) =>
       s.namespace === ns ||
-      s.namespace === "blekline" ||
-      s.name.includes("blekline") ||
-      s.ports.includes(SIDECAR_PORT),
+      s.ports.includes(port) ||
+      s.name.includes("sidecar") ||
+      s.name.includes("proxy"),
   );
   if (!svc) return null;
-  return `http://${svc.name}.${svc.namespace}.svc.cluster.local:${SIDECAR_PORT}`;
+  const svcPort = svc.ports.find((p) => p === port) ?? port;
+  return `http://${svc.name}.${svc.namespace}.svc.cluster.local:${svcPort}`;
 }
 
 function simulateFixtureProbes(
@@ -75,7 +80,7 @@ function simulateFixtureProbes(
   const resource = c ? `${c.namespace}/${c.kind}/${c.name}` : "cluster/none";
   const ns = c?.namespace ?? "default";
 
-  if (fixture === "broken") {
+  if (fixture === "broken" || fixture === "hostnetwork-broken") {
     return [
       probeFinding(
         "PROBE-001",
@@ -88,7 +93,7 @@ function simulateFixtureProbes(
       probeFinding(
         "PROBE-002",
         "HIGH",
-        "Probed: sidecar enforce endpoint unreachable or not deployed",
+        "Probed: enforcement endpoint unreachable or not deployed",
         resource,
         ns,
         false,
@@ -96,7 +101,7 @@ function simulateFixtureProbes(
     ];
   }
 
-  if (fixture === "fixed") {
+  if (fixture === "fixed" || fixture === "fixed-blekline" || fixture === "fixed-generic") {
     return [
       probeFinding(
         "PROBE-001",
@@ -109,7 +114,7 @@ function simulateFixtureProbes(
       probeFinding(
         "PROBE-002",
         "INFO",
-        "Probed: sidecar enforce endpoint returned 401 without auth",
+        "Probed: enforcement endpoint returned 401 without auth",
         resource,
         ns,
         true,
@@ -117,7 +122,7 @@ function simulateFixtureProbes(
       probeFinding(
         "PROBE-003",
         "INFO",
-        "Probed: sidecar enforce with auth — simulated pass (fixture mode)",
+        "Probed: enforcement with auth — simulated pass (fixture mode)",
         resource,
         ns,
         true,
@@ -172,9 +177,11 @@ async function execInPod(
 async function findRunnablePod(
   kc: k8s.KubeConfig,
   candidate: AgentCandidate,
+  config?: AuditConfig,
 ): Promise<{ podName: string; container: string; hasInjectedSidecar: boolean } | null> {
   const core = kc.makeApiClient(k8s.CoreV1Api);
   const pods = await core.listNamespacedPod({ namespace: candidate.namespace });
+  const sidecarNames = config?.enforcement.sidecarContainerNames ?? ["*-sidecar"];
   const match = (pods.items ?? []).find((p) => {
     const phase = p.status?.phase;
     if (phase !== "Running") return false;
@@ -184,29 +191,30 @@ async function findRunnablePod(
   });
   if (!match?.metadata?.name) return null;
   const containers = match.spec?.containers ?? [];
-  const hasInjectedSidecar = containers.some((c) => c.name === "blekline-sidecar");
-  const container =
-    containers.find((c) => c.name !== "blekline-sidecar")?.name ??
+  const hasInjectedSidecar = containers.some((c) =>
+    matchesContainerName(sidecarNames, c.name ?? ""),
+  );
+  const agentContainer =
+    containers.find((c) => !matchesContainerName(sidecarNames, c.name ?? ""))?.name ??
     containers[0]?.name ??
     candidate.containers[0];
-  return { podName: match.metadata.name, container: container ?? "main", hasInjectedSidecar };
+  return { podName: match.metadata.name, container: agentContainer ?? "main", hasInjectedSidecar };
 }
 
 async function readSidecarAuthToken(
   kc: k8s.KubeConfig,
   namespace: string,
+  config?: AuditConfig,
 ): Promise<string | null> {
   const core = kc.makeApiClient(k8s.CoreV1Api);
-  const secretNames = ["blekline-sidecar-auth", "blekline-sidecar-secret"];
-  for (const name of secretNames) {
-    try {
-      const secret = await core.readNamespacedSecret({ name, namespace });
-      const data = secret.data ?? {};
-      const raw = data.token ?? data.sidecarAuth;
-      if (raw) return Buffer.from(raw, "base64").toString("utf8").trim();
-    } catch {
-      /* try next secret name */
-    }
+  const patterns = config?.enforcement.authSecretNamePatterns ?? ["*-sidecar-auth", "*-sidecar-secret"];
+  const secrets = await core.listNamespacedSecret({ namespace }).catch(() => ({ items: [] }));
+  for (const secret of secrets.items ?? []) {
+    const name = secret.metadata?.name ?? "";
+    if (!matchesSecretName(patterns, name)) continue;
+    const data = secret.data ?? {};
+    const raw = data.token ?? data.sidecarAuth;
+    if (raw) return Buffer.from(raw, "base64").toString("utf8").trim();
   }
   return null;
 }
@@ -221,6 +229,11 @@ async function runLiveProbes(
   else kc.loadFromDefault();
   if (options.context) kc.setCurrentContext(options.context);
 
+  const config = options.config;
+  const enforcePath = config?.probe.enforcePath ?? "/v1/enforce-tool-call";
+  const healthPath = config?.probe.healthPath ?? "/health";
+  const port = config?.enforcement.enforcementPorts[0] ?? DEFAULT_SIDECAR_PORT;
+
   const candidate = candidates[0];
   if (!candidate) {
     return [
@@ -228,7 +241,7 @@ async function runLiveProbes(
     ];
   }
 
-  const podRef = await findRunnablePod(kc, candidate);
+  const podRef = await findRunnablePod(kc, candidate, config);
   const resource = `${candidate.namespace}/${candidate.kind}/${candidate.name}`;
   const findings: Finding[] = [];
 
@@ -248,7 +261,6 @@ async function runLiveProbes(
 
   const curlBase = ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", "--connect-timeout", "3", "-m", "5"];
 
-  // PROBE-001 — egress to external URL
   try {
     const r1 = await execInPod(kc, candidate.namespace, podRef.podName, podRef.container, [
       ...curlBase,
@@ -281,13 +293,13 @@ async function runLiveProbes(
     );
   }
 
-  const sidecarUrl = sidecarEnforceUrl(cluster, candidate.namespace, podRef.hasInjectedSidecar);
+  const sidecarUrl = sidecarEnforceUrl(cluster, candidate.namespace, podRef.hasInjectedSidecar, config);
   if (!sidecarUrl) {
     findings.push(
       probeFinding(
         "PROBE-002",
         "HIGH",
-        "Probed: Blekline sidecar service not found in cluster",
+        "Probed: enforcement sidecar service not found in cluster",
         resource,
         candidate.namespace,
         false,
@@ -296,7 +308,6 @@ async function runLiveProbes(
     return findings;
   }
 
-  // PROBE-002 — enforce without auth → 401
   try {
     const r2 = await execInPod(kc, candidate.namespace, podRef.podName, podRef.container, [
       "curl",
@@ -307,7 +318,7 @@ async function runLiveProbes(
       "%{http_code}",
       "-X",
       "POST",
-      `${sidecarUrl}${SIDECAR_ENFORCE_PATH}`,
+      `${sidecarUrl}${enforcePath}`,
       "-H",
       "Content-Type: application/json",
       "-d",
@@ -320,8 +331,8 @@ async function runLiveProbes(
         "PROBE-002",
         ok ? "INFO" : "HIGH",
         ok
-          ? "Probed: sidecar enforce returned 401 without auth"
-          : `Probed: sidecar enforce returned ${code} without auth (expected 401)`,
+          ? "Probed: enforcement endpoint returned 401 without auth"
+          : `Probed: enforcement endpoint returned ${code} without auth (expected 401)`,
         `${candidate.namespace}/Pod/${podRef.podName}`,
         candidate.namespace,
         ok,
@@ -332,7 +343,7 @@ async function runLiveProbes(
       probeFinding(
         "PROBE-002",
         "HIGH",
-        "Probed: could not reach sidecar enforce endpoint from agent pod",
+        "Probed: could not reach enforcement endpoint from agent pod",
         resource,
         candidate.namespace,
         false,
@@ -340,12 +351,11 @@ async function runLiveProbes(
     );
   }
 
-  // PROBE-004 — sidecar health from agent container (injected localhost hop)
   if (podRef.hasInjectedSidecar) {
     try {
       const r4 = await execInPod(kc, candidate.namespace, podRef.podName, podRef.container, [
         ...curlBase,
-        `http://127.0.0.1:${SIDECAR_PORT}/health`,
+        `http://127.0.0.1:${port}${healthPath}`,
       ]);
       const code = parseInt(r4.stdout.trim(), 10);
       const ok = code === 200;
@@ -354,8 +364,8 @@ async function runLiveProbes(
           "PROBE-004",
           ok ? "INFO" : "HIGH",
           ok
-            ? "Probed: injected sidecar /health reachable from agent container"
-            : `Probed: sidecar /health returned ${code} from agent container (expected 200)`,
+            ? "Probed: injected sidecar health reachable from agent container"
+            : `Probed: sidecar health returned ${code} from agent container (expected 200)`,
           `${candidate.namespace}/Pod/${podRef.podName}`,
           candidate.namespace,
           ok,
@@ -366,7 +376,7 @@ async function runLiveProbes(
         probeFinding(
           "PROBE-004",
           "HIGH",
-          "Probed: could not reach injected sidecar /health from agent container",
+          "Probed: could not reach injected sidecar health from agent container",
           resource,
           candidate.namespace,
           false,
@@ -375,9 +385,8 @@ async function runLiveProbes(
     }
   }
 
-  // PROBE-003 — with sidecar auth from namespace secret (or eval token suffix fallback)
   const sidecarAuth =
-    (await readSidecarAuthToken(kc, candidate.namespace)) ??
+    (await readSidecarAuthToken(kc, candidate.namespace, config)) ??
     (options.token.startsWith("blw_eval_") ? options.token.slice("blw_eval_".length) : "");
   if (sidecarAuth.length >= 8) {
     try {
@@ -390,7 +399,7 @@ async function runLiveProbes(
         "%{http_code}",
         "-X",
         "POST",
-        `${sidecarUrl}${SIDECAR_ENFORCE_PATH}`,
+        `${sidecarUrl}${enforcePath}`,
         "-H",
         "Content-Type: application/json",
         "-H",
@@ -405,8 +414,8 @@ async function runLiveProbes(
           "PROBE-003",
           ok ? "INFO" : "MEDIUM",
           ok
-            ? "Probed: sidecar enforce accepted authenticated request"
-            : `Probed: sidecar enforce returned ${code} with auth`,
+            ? "Probed: enforcement accepted authenticated request"
+            : `Probed: enforcement returned ${code} with auth`,
           `${candidate.namespace}/Pod/${podRef.podName}`,
           candidate.namespace,
           ok,
@@ -417,7 +426,7 @@ async function runLiveProbes(
         probeFinding(
           "PROBE-003",
           "MEDIUM",
-          "Probed: authenticated sidecar enforce check failed",
+          "Probed: authenticated enforcement check failed",
           resource,
           candidate.namespace,
           false,
