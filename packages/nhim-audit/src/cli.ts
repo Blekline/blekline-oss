@@ -45,7 +45,7 @@ program
   .option("--namespace <ns...>", "Limit to namespaces")
   .option("--fixture <name>", "Use fixture cluster (broken|fixed|empty)")
   .option("--label-selector <sel>", "Additional label selector")
-  .option("--include-kube-system", "Include kube-system namespace")
+  .option("--include-pods", "Merge live pod env into workload candidates (post-inject Auto-Route)")
   .option("--probe", "Run active probe tests (requires BLEKLINE_EVAL_TOKEN)")
   .option("--eval-token <token>", "Eval token (or env BLEKLINE_EVAL_TOKEN)")
   .option("-o, --output <path>", "Write report to path (JSON or SARIF per --format)")
@@ -69,6 +69,7 @@ program
         fixture: opts.fixture,
         namespaces: opts.namespace,
         includeKubeSystem: opts.includeKubeSystem,
+        includePods: opts.includePods,
       });
 
       let fullReport = runAudit(cluster, {

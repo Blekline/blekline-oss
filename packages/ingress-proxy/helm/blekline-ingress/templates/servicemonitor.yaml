@@ -1,0 +1,30 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "blekline-ingress.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+    {{- with .Values.monitoring.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: http
+      path: /health
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+      scheme: http
+      # Sidecar exposes JSON on /health (not Prometheus text). Pair with json_exporter or
+      # blackbox probe (see deploy/k8s/observability/alerts/blekline-sidecar.yaml).
+      metricRelabelings:
+        - sourceLabels: [__address__]
+          targetLabel: blekline_component
+          replacement: nhim-sidecar
+{{- end }}

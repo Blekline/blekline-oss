@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "blekline-ingress.fullname" . }}-test-health"
+  labels:
+    app.kubernetes.io/name: {{ include "blekline-ingress.name" . }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: health-check
+      image: curlimages/curl:8.5.0
+      command:
+        - sh
+        - -c
+        - |
+          set -e
+          SVC="{{ include "blekline-ingress.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+          PORT="{{ .Values.service.port }}"
+          echo "Probing http://${SVC}:${PORT}/health"
+          curl -sf "http://${SVC}:${PORT}/health" | grep -q '"ok":true'
+          echo "Probing http://${SVC}:${PORT}/ready"
+          curl -sf "http://${SVC}:${PORT}/ready" | grep -q '"ready"'
+          echo "Blekline sidecar health checks passed."

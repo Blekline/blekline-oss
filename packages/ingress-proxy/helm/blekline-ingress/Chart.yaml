@@ -3,4 +3,4 @@ name: blekline-ingress
 description: Blekline NHIM sidecar — Trust Vault, Lineage, ingress proxy
 type: application
 version: 0.2.0
-appVersion: "0.2.0-nhim"
+appVersion: "0.2.1-nhim"

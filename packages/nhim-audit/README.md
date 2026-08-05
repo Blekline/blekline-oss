@@ -66,6 +66,10 @@ SARIF 2.1 (GitHub Advanced Security / DefectDojo):
 npx @blekline/nhim-audit audit --format sarif -o nhim-audit.sarif
 ```
 
+**DefectDojo import:** Product type *Infrastructure*, scan type *SARIF*. Map `NHIM-*` rule IDs to findings; severity follows SARIF level. Re-import on each CI run; use `--baseline` JSON in parallel to fail only on regressions.
+
+**GitHub Advanced Security:** Upload SARIF via `github/codeql-action/upload-sarif` (requires GHAS). Rule help URI points to `app.blekline.com/docs/tools/nhim-audit`.
+
 ## CI
 
 ```yaml

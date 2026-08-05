@@ -2,8 +2,21 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/blekline/sidecar
-  tag: "0.2.0-nhim"
+  tag: "0.2.1-nhim"
   pullPolicy: IfNotPresent
+  # Pin by digest: sha256:... (see deploy/k8s/values-enforce-profile.yaml)
+  digest: ""
+
+# Startup enforcement — sets BLEKLINE_REQUIRED_IMAGE_DIGEST / BLEKLINE_IMAGE_DIGEST (server.mjs)
+imageDigestEnforcement:
+  enabled: false
+
+monitoring:
+  enabled: false
+  serviceMonitor:
+    interval: 30s
+    scrapeTimeout: 10s
+    labels: {}
 
 # Optional — set when pulling from private GHCR (create secret: kubectl create secret docker-registry ghcr-blekline ...)
 imagePullSecrets: []
@@ -47,6 +60,9 @@ networkPolicy:
   namespace: ""
   agentEgressDeny:
     enabled: true
+    # HTTPS egress to Blekline control plane — set explicit CIDRs; never 0.0.0.0/0 in prod
+    allowHttpsEgress: false
+    controlPlaneCidrs: []
 
 trustVault:
   enabled: true
@@ -89,3 +105,24 @@ persistence:
   enabled: true
   size: 1Gi
   storageClass: ""
+
+# External Secrets Operator — sync workspace token + vault master from cloud KMS
+externalSecrets:
+  enabled: false
+  refreshInterval: 1h
+  secretStoreRef:
+    name: cluster-secret-store
+    kind: ClusterSecretStore
+  remoteRefs:
+    workspaceToken:
+      key: blekline/platform
+      property: workspaceToken
+    workspaceId:
+      key: blekline/platform
+      property: workspaceId
+    sidecarAuth:
+      key: blekline/platform
+      property: sidecarAuth
+    vaultMasterKey:
+      key: blekline/platform
+      property: vaultMasterKey

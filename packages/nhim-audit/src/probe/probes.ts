@@ -43,6 +43,17 @@ function probeFinding(
   };
 }
 
+function sidecarEnforceUrl(
+  cluster: ClusterSnapshot,
+  ns: string,
+  podHasInjectedSidecar: boolean,
+): string | null {
+  if (podHasInjectedSidecar) {
+    return `http://127.0.0.1:${SIDECAR_PORT}`;
+  }
+  return sidecarServiceUrl(cluster, ns);
+}
+
 function sidecarServiceUrl(cluster: ClusterSnapshot, ns: string): string | null {
   const svc = cluster.services.find(
     (s) =>
@@ -161,7 +172,7 @@ async function execInPod(
 async function findRunnablePod(
   kc: k8s.KubeConfig,
   candidate: AgentCandidate,
-): Promise<{ podName: string; container: string } | null> {
+): Promise<{ podName: string; container: string; hasInjectedSidecar: boolean } | null> {
   const core = kc.makeApiClient(k8s.CoreV1Api);
   const pods = await core.listNamespacedPod({ namespace: candidate.namespace });
   const match = (pods.items ?? []).find((p) => {
@@ -172,11 +183,32 @@ async function findRunnablePod(
     return (p.metadata?.name ?? "").includes(candidate.name.split("-")[0] ?? candidate.name);
   });
   if (!match?.metadata?.name) return null;
+  const containers = match.spec?.containers ?? [];
+  const hasInjectedSidecar = containers.some((c) => c.name === "blekline-sidecar");
   const container =
-    match.spec?.containers?.find((c) => c.name !== "blekline-sidecar")?.name ??
-    match.spec?.containers?.[0]?.name ??
+    containers.find((c) => c.name !== "blekline-sidecar")?.name ??
+    containers[0]?.name ??
     candidate.containers[0];
-  return { podName: match.metadata.name, container: container ?? "main" };
+  return { podName: match.metadata.name, container: container ?? "main", hasInjectedSidecar };
+}
+
+async function readSidecarAuthToken(
+  kc: k8s.KubeConfig,
+  namespace: string,
+): Promise<string | null> {
+  const core = kc.makeApiClient(k8s.CoreV1Api);
+  const secretNames = ["blekline-sidecar-auth", "blekline-sidecar-secret"];
+  for (const name of secretNames) {
+    try {
+      const secret = await core.readNamespacedSecret({ name, namespace });
+      const data = secret.data ?? {};
+      const raw = data.token ?? data.sidecarAuth;
+      if (raw) return Buffer.from(raw, "base64").toString("utf8").trim();
+    } catch {
+      /* try next secret name */
+    }
+  }
+  return null;
 }
 
 async function runLiveProbes(
@@ -249,7 +281,7 @@ async function runLiveProbes(
     );
   }
 
-  const sidecarUrl = sidecarServiceUrl(cluster, candidate.namespace);
+  const sidecarUrl = sidecarEnforceUrl(cluster, candidate.namespace, podRef.hasInjectedSidecar);
   if (!sidecarUrl) {
     findings.push(
       probeFinding(
@@ -308,9 +340,46 @@ async function runLiveProbes(
     );
   }
 
-  // PROBE-003 — with auth from secret (token in eval token payload stub: use env in pod if present)
-  const authHeader = options.token.startsWith("blw_eval_") ? options.token.slice("blw_eval_".length) : "";
-  if (authHeader.length >= 8) {
+  // PROBE-004 — sidecar health from agent container (injected localhost hop)
+  if (podRef.hasInjectedSidecar) {
+    try {
+      const r4 = await execInPod(kc, candidate.namespace, podRef.podName, podRef.container, [
+        ...curlBase,
+        `http://127.0.0.1:${SIDECAR_PORT}/health`,
+      ]);
+      const code = parseInt(r4.stdout.trim(), 10);
+      const ok = code === 200;
+      findings.push(
+        probeFinding(
+          "PROBE-004",
+          ok ? "INFO" : "HIGH",
+          ok
+            ? "Probed: injected sidecar /health reachable from agent container"
+            : `Probed: sidecar /health returned ${code} from agent container (expected 200)`,
+          `${candidate.namespace}/Pod/${podRef.podName}`,
+          candidate.namespace,
+          ok,
+        ),
+      );
+    } catch {
+      findings.push(
+        probeFinding(
+          "PROBE-004",
+          "HIGH",
+          "Probed: could not reach injected sidecar /health from agent container",
+          resource,
+          candidate.namespace,
+          false,
+        ),
+      );
+    }
+  }
+
+  // PROBE-003 — with sidecar auth from namespace secret (or eval token suffix fallback)
+  const sidecarAuth =
+    (await readSidecarAuthToken(kc, candidate.namespace)) ??
+    (options.token.startsWith("blw_eval_") ? options.token.slice("blw_eval_".length) : "");
+  if (sidecarAuth.length >= 8) {
     try {
       const r3 = await execInPod(kc, candidate.namespace, podRef.podName, podRef.container, [
         "curl",
@@ -325,7 +394,7 @@ async function runLiveProbes(
         "-H",
         "Content-Type: application/json",
         "-H",
-        `Authorization: Bearer ${authHeader}`,
+        `Authorization: Bearer ${sidecarAuth}`,
         "-d",
         '{"toolName":"read_file","arguments":{}}',
       ]);

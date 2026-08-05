@@ -28,6 +28,7 @@ export interface LoadOptions {
   fixture?: string;
   namespaces?: string[];
   includeKubeSystem?: boolean;
+  includePods?: boolean;
 }
 
 export async function loadClusterSnapshot(options: LoadOptions = {}): Promise<ClusterSnapshot> {
@@ -130,9 +131,9 @@ async function loadFromApi(options: LoadOptions): Promise<ClusterSnapshot> {
       clusterName,
       namespaces,
       pods,
-      deployments,
-      replicaSets,
-      statefulSets,
+      deployments: mergePodEnvIntoWorkloads(deployments, pods, options.includePods),
+      replicaSets: mergePodEnvIntoWorkloads(replicaSets, pods, options.includePods),
+      statefulSets: mergePodEnvIntoWorkloads(statefulSets, pods, options.includePods),
       networkPolicies,
       mutatingWebhooks,
       validatingWebhooks: [],
@@ -160,6 +161,37 @@ function rbacError(resource: string, e: unknown): K8sLoadError {
     return new K8sLoadError(`Cluster unreachable: ${msg}`, 3);
   }
   return new K8sLoadError(msg, 2);
+}
+
+function mergePodEnvIntoWorkloads(
+  workloads: WorkloadSnapshot[],
+  pods: PodSnapshot[],
+  includePods?: boolean,
+): WorkloadSnapshot[] {
+  if (!includePods) return workloads;
+  return workloads.map((w) => {
+    const livePods = pods.filter(
+      (p) =>
+        p.namespace === w.namespace &&
+        (p.ownerName === w.name || p.name.startsWith(`${w.name}-`)),
+    );
+    if (livePods.length === 0) return w;
+    const mergedEnv = [
+      ...new Set(livePods.flatMap((p) => p.envKeys)),
+      ...w.envKeys,
+    ];
+    const mergedAnnotations = { ...w.annotations, ...livePods[0]?.annotations };
+    const mergedContainers = [
+      ...new Set(livePods.flatMap((p) => p.containers)),
+      ...w.containers,
+    ];
+    return {
+      ...w,
+      envKeys: [...new Set(mergedEnv)],
+      annotations: mergedAnnotations,
+      containers: [...new Set(mergedContainers)],
+    };
+  });
 }
 
 function mapPod(p: k8s.V1Pod): PodSnapshot {
@@ -197,14 +229,32 @@ function mapNetworkPolicy(np: k8s.V1NetworkPolicy, ns: string): NetworkPolicySna
   const policyTypes = np.spec?.policyTypes ?? [];
   const egress = np.spec?.egress ?? [];
   const egressRestricted = policyTypes.includes("Egress") && egress.length > 0;
+  const allowsWideHttpsEgress = detectWideHttpsEgress(np);
+  const sidecarHop = egressRestricted && detectSidecarHopInEgress(np);
   return {
     namespace: ns,
     name: np.metadata?.name ?? "",
     podSelector: np.spec?.podSelector?.matchLabels ?? {},
     policyTypes,
     egressRestricted,
-    allowsSidecarHop: egressRestricted && detectSidecarHopInEgress(np),
+    allowsSidecarHop: sidecarHop && !allowsWideHttpsEgress,
+    allowsWideHttpsEgress,
   };
+}
+
+function detectWideHttpsEgress(np: k8s.V1NetworkPolicy): boolean {
+  for (const rule of np.spec?.egress ?? []) {
+    for (const target of rule.to ?? []) {
+      const cidr = target.ipBlock?.cidr ?? "";
+      if (
+        (cidr === "0.0.0.0/0" || cidr === "::/0") &&
+        (rule.ports ?? []).some((p) => p.port === 443 || String(p.port) === "443")
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /** True when egress rules allow traffic to blekline sidecar (mandatory-hop semantics). */
