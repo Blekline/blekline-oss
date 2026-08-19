@@ -93,12 +93,17 @@ See [docs/RBAC.md](./docs/RBAC.md).
 
 ## Probe mode
 
+Issue token in [Deployment hub](https://app.blekline.com/operations/posture) after uploading nhim-audit JSON (self-serve eval), or use a welcome-pack token for paid sandbox partners.
+
 ```bash
+BLEKLINE_EVAL_ONLINE=1 \
 NHIM_PROBE_TOKEN=blw_eval_… nhim-audit audit \
   --probe \
   --probe-allow-namespaces nhim-eval \
   --profile generic
 ```
+
+When online validation succeeds, reports include `assurance.probeTokenValidatedOnline: true`.
 
 `BLEKLINE_EVAL_TOKEN` accepted for compatibility. `--probe-allow-namespaces` is **required** with `--probe`.
 

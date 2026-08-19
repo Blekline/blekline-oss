@@ -149,6 +149,8 @@ export interface AssuranceBlock {
   notCertification: true;
   staticOnly: boolean;
   probeExecuted: boolean;
+  /** Set when BLEKLINE_EVAL_ONLINE=1 and validate endpoint confirms the token. */
+  probeTokenValidatedOnline?: boolean;
   limitations: string[];
 }
 

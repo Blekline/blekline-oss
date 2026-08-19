@@ -144,6 +144,7 @@ program
           kubeconfig: opts.kubeconfig,
           context: opts.context,
           config,
+          validatedOnline: v.validatedOnline === true,
         });
       }
 

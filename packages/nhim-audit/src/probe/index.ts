@@ -25,7 +25,7 @@ export function resolveProbeToken(cliToken?: string): string | undefined {
 export async function validateEvalToken(
   token: string,
   options: ValidateOptions = {},
-): Promise<{ valid: boolean; reason?: string }> {
+): Promise<{ valid: boolean; reason?: string; validatedOnline?: boolean }> {
   if (!token || token.trim().length === 0) {
     return {
       valid: false,
@@ -53,7 +53,7 @@ export async function validateEvalToken(
     process.env.BLEKLINE_EVAL_ONLINE === "true";
 
   if (!useOnline) {
-    return { valid: true };
+    return { valid: true, validatedOnline: false };
   }
 
   const url = options.validateUrl ?? process.env.BLEKLINE_EVAL_VALIDATE_URL ?? DEFAULT_VALIDATE_URL;
@@ -64,7 +64,7 @@ export async function validateEvalToken(
       body: JSON.stringify({ token: t }),
     });
     const body = (await res.json()) as { valid?: boolean; reason?: string };
-    if (body.valid) return { valid: true };
+    if (body.valid) return { valid: true, validatedOnline: true };
     return { valid: false, reason: body.reason ?? "Online token validation failed" };
   } catch {
     return {
@@ -78,7 +78,8 @@ export function probeSkippedMessage(profile: "generic" | "blekline" = "generic")
   const lines = [
     "◈ PROBE … skipped — requires NHIM_PROBE_TOKEN",
     "► Static findings above are architectural inference only.",
-    "► Request probe token: https://app.blekline.com/docs/tools/nhim-audit#probe-access",
+    "► Issue probe token in Deployment Hub: https://app.blekline.com/operations/posture",
+    "► Docs: https://app.blekline.com/docs/tools/nhim-audit#probe-access",
   ];
   if (profile === "blekline") {
     lines.push("► Blekline eval: attach nhim-audit.json when requesting token");
@@ -86,11 +87,12 @@ export function probeSkippedMessage(profile: "generic" | "blekline" = "generic")
   return lines.join("\n");
 }
 
-function buildAssurance(probeExecuted: boolean) {
+function buildAssurance(probeExecuted: boolean, probeTokenValidatedOnline = false) {
   return {
     notCertification: true as const,
     staticOnly: !probeExecuted,
     probeExecuted,
+    ...(probeTokenValidatedOnline ? { probeTokenValidatedOnline: true } : {}),
     limitations: [...ASSURANCE_LIMITATIONS],
   };
 }
@@ -99,7 +101,10 @@ export async function runProbes(
   report: AuditReport,
   cluster: ClusterSnapshot,
   token: string,
-  options: Omit<ProbeOptions, "token"> & { config?: AuditConfig } = {},
+  options: Omit<ProbeOptions, "token"> & {
+    config?: AuditConfig;
+    validatedOnline?: boolean;
+  } = {},
 ): Promise<AuditReport> {
   const config = options.config;
   const probeFindings = await runProbeSuite(cluster, report.candidates, {
@@ -117,7 +122,7 @@ export async function runProbes(
     findings,
     score,
     summary: { candidates: report.candidates.length, ...summary },
-    assurance: buildAssurance(true),
+    assurance: buildAssurance(true, options.validatedOnline === true),
     disclaimer: EVIDENCE_DISCLAIMER,
   };
 }

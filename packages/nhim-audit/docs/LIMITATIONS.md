@@ -7,7 +7,7 @@
 | Static (default) | Architectural misconfiguration | Runtime bypass |
 | `--probe` | Egress block + enforcement API reachability | Full red-team coverage |
 
-Generic profile sets `score.staticGateStatus` to `unknown` until `--probe` runs.
+Generic profile sets `score.staticGateStatus` to `unknown` until `--probe` runs. Set `BLEKLINE_EVAL_ONLINE=1` to attest token validation against Blekline before probing.
 
 ## Blind spots
 

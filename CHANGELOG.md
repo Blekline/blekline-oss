@@ -6,6 +6,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `@blekline/nhim-audit@0.2.2` — `assurance.probeTokenValidatedOnline` when `BLEKLINE_EVAL_ONLINE=1`; Deployment hub self-serve probe docs in skip message
+
 ## [0.2.1-nhim-audit] - 2026-08-05
 
 ### Fixed
