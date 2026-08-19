@@ -1,5 +1,12 @@
 # Changelog — @blekline/nhim-audit
 
+## 0.2.2 — Online probe token attestation
+
+**Added**
+
+- `assurance.probeTokenValidatedOnline: true` when `--probe` runs with `BLEKLINE_EVAL_ONLINE=1` and validate succeeds
+- Skip message points to Deployment hub self-serve issue flow
+
 ## 0.2.1 — Terminal header + probe health fix
 
 **Fixed**

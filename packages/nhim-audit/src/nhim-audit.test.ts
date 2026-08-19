@@ -137,6 +137,23 @@ describe("eval token", () => {
   it("accepts blw_eval prefix", async () => {
     const r = await validateEvalToken("blw_eval_test_token_12345");
     assert.equal(r.valid, true);
+    assert.equal(r.validatedOnline, false);
+  });
+
+  it("sets validatedOnline when online check succeeds", async () => {
+    const prevFetch = globalThis.fetch;
+    globalThis.fetch = async () =>
+      ({
+        ok: true,
+        json: async () => ({ valid: true }),
+      }) as Response;
+    try {
+      const r = await validateEvalToken("blw_eval_test_token_12345", { online: true });
+      assert.equal(r.valid, true);
+      assert.equal(r.validatedOnline, true);
+    } finally {
+      globalThis.fetch = prevFetch;
+    }
   });
 
   it("resolveProbeToken prefers NHIM_PROBE_TOKEN", () => {
@@ -162,6 +179,19 @@ describe("probe mode", () => {
     assert.ok(probed.summary.probed >= 1);
     assert.equal(probed.score.staticGateStatus, "fail");
     assert.ok(probed.findings.some((f) => f.evidence === "probed" && f.probeId === "PROBE-001"));
+  });
+
+  it("records probeTokenValidatedOnline when validatedOnline is true", async () => {
+    const { runProbes } = await import("./probe/index.js");
+    const cluster = loadFixture("broken");
+    const config = buildAuditConfig({ profile: "generic" });
+    const report = runAudit(cluster, { config });
+    const probed = await runProbes(report, cluster, "blw_eval_test_token_12345", {
+      fixture: "broken",
+      config,
+      validatedOnline: true,
+    });
+    assert.equal(probed.assurance.probeTokenValidatedOnline, true);
   });
 
   it("simulates pass probes on fixed-generic fixture", async () => {

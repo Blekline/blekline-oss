@@ -25,7 +25,7 @@ inputs:
     required: false
     default: ""
   eval-token:
-    description: Optional NHIM_PROBE_TOKEN / BLEKLINE_EVAL_TOKEN for --probe
+    description: Optional NHIM_PROBE_TOKEN / BLEKLINE_EVAL_TOKEN for --probe (store in secrets; pair with BLEKLINE_EVAL_ONLINE=1 for online attestation)
     required: false
     default: ""
   profile:
@@ -66,6 +66,7 @@ runs:
             echo "probe-allow-namespaces is required when eval-token is set" >&2
             exit 2
           fi
+          export BLEKLINE_EVAL_ONLINE=1
           ARGS+=(--probe --probe-allow-namespaces ${{ inputs.probe-allow-namespaces }})
         fi
-        npx --yes @blekline/nhim-audit@0.2.1 "${ARGS[@]}"
+        npx --yes @blekline/nhim-audit@0.2.2 "${ARGS[@]}"
