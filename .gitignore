@@ -8,7 +8,6 @@ dist/
 .cursor/hooks.json
 .cursor/blekline/
 .cursor/rules/blekline-chat-guard.mdc
-.blekline/
 .blekline/mcp.env
 .blekline/cursor.json
 .blekline/codex.json

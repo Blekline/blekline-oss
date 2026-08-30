@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "maskBackend": "local",
+  "apiUrl": "https://app.blekline.com",
+  "workspaceToken": "blw_replace_with_workspace_token",
+  "promptPolicy": "auto_mask",
+  "surfaces": {
+    "cursor": {
+      "nativeChat": "block_and_clipboard",
+      "silentAutoSend": false
+    },
+    "codex": {
+      "nativeChat": "block",
+      "silentAutoSend": "ingress_responses"
+    },
+    "claude": {
+      "nativeChat": "mcp_mask",
+      "silentAutoSend": "ingress_responses"
+    }
+  }
+}
