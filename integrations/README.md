@@ -30,7 +30,16 @@ Also: [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-pro
 
 ## Cloud-only
 
-Requires [app.blekline.com](https://app.blekline.com): Claude OAuth connector, Azure authoritative PII mask, workspace fleet policy (SSE).
+Requires [app.blekline.com](https://app.blekline.com): Claude Desktop OAuth connector (directory listing pending), VS Code extension Marketplace listing, Azure authoritative PII mask, workspace fleet policy (SSE).
+
+## Integration depth (honesty)
+
+| Tier | Surfaces | What OSS ships |
+|------|----------|----------------|
+| **A — hooks + package + plugin** | Cursor, Codex | MCP config, `@blekline/*-hooks`, `plugins/*`, hook smoke tests |
+| **B — MCP + SDK** | Claude Code, Claude Desktop | `.claude/` or Desktop stdio config, `@blekline/claude-sdk` for ingress |
+| **C — MCP fallback** | Copilot, Continue | `.vscode/` MCP examples only |
+| **Cloud** | VS Code `@blekline` participant | Extension source ships in private monorepo until Marketplace publish |
 
 ## Verify
 

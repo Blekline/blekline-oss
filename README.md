@@ -89,6 +89,8 @@ OpenAPI: [packages/contracts/openapi.yaml](packages/contracts/openapi.yaml)
 
 Full matrix: [integrations/README.md](integrations/README.md) · `pnpm generate:mcp-configs` · `pnpm verify:integrations`
 
+**Depth:** Cursor and Codex ship hooks + plugins in this repo. Claude Code ships MCP + `@blekline/claude-sdk`. VS Code Copilot is MCP-only here — the `@blekline` extension is cloud/Marketplace (see [integrations/README.md](integrations/README.md)).
+
 ## NHIM audit (cluster scan)
 
 No Blekline account required. Use this when you are evaluating Kubernetes posture — not as step 1 for IDE governance.

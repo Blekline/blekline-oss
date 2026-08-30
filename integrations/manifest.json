@@ -102,21 +102,9 @@
       "BLEKLINE_CLIENT_SURFACE": "codex",
       "headless": true,
       "docSlug": "mcp/codex",
-      "verify": ["tools/list"],
+      "verify": ["tools/list", "demo:codex-hook-smoke"],
       "includesProxy": true,
       "configFormat": "codex-toml"
-    },
-    {
-      "id": "vscode-extension",
-      "tier": "verified",
-      "repoPath": "vscode-extension/",
-      "configPathHuman": "vscode-extension/ (Marketplace pending)",
-      "BLEKLINE_CLIENT_SURFACE": "github-copilot",
-      "headless": true,
-      "docSlug": "mcp/vscode",
-      "verify": ["demo:vscode-extension-smoke"],
-      "includesProxy": true,
-      "configFormat": null
     }
   ]
 }

@@ -29,6 +29,10 @@ jobs:
 
       - run: pnpm demo:mcp-smoke
 
+      - run: pnpm demo:cursor-hook-smoke
+
+      - run: pnpm demo:codex-hook-smoke
+
       - run: pnpm --filter @blekline/mcp-proxy test
 
       - run: pnpm --filter @blekline/nhim-audit test
