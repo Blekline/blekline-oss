@@ -61,6 +61,9 @@ function assuranceFooter(report: AuditReport): string[] {
   }
   lines.push(`  ${EVIDENCE_DISCLAIMER}`);
   lines.push(`  Rule reference: ${DOCS_BASE}/tools/nhim-audit`);
+  lines.push(
+    "  ► Upload audit → https://app.blekline.com/auth/signup?intent=platform&utm_source=nhim-cli&utm_medium=cli&utm_campaign=nhim-audit",
+  );
   lines.push("  run with --probe (token) · --plain for CI · --json for automation");
   return lines;
 }

@@ -1,0 +1,39 @@
+{
+  "name": "blekline",
+  "displayName": "Blekline",
+  "version": "0.1.0",
+  "description": "Mask prompts, guard shell/tools/MCP, and audit agent actions in Cursor. Native chat is block plus clipboard paste — not silent auto-send.",
+  "author": {
+    "name": "Blekline",
+    "url": "https://blekline.com"
+  },
+  "homepage": "https://app.blekline.com/docs/mcp/cursor",
+  "repository": "https://github.com/Blekline/blekline-oss",
+  "license": "Apache-2.0",
+  "logo": "assets/logo.svg",
+  "keywords": ["blekline", "governance", "masking", "mcp", "hooks"],
+  "category": "developer-tools",
+  "tags": ["security", "governance", "mcp"],
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "rules": "./rules/",
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./mcp.json",
+  "variables": {
+    "type": "object",
+    "properties": {
+      "BLEKLINE_WORKSPACE_TOKEN": {
+        "type": "string",
+        "title": "Workspace token",
+        "description": "Blekline workspace API key (blw_...) from Admin → API keys at app.blekline.com"
+      },
+      "BLEKLINE_API_URL": {
+        "type": "string",
+        "title": "Control plane URL",
+        "description": "Blekline API base URL",
+        "default": "https://app.blekline.com"
+      }
+    },
+    "required": ["BLEKLINE_WORKSPACE_TOKEN"]
+  }
+}

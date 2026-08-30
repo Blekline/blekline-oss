@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "blekline": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@blekline/mcp-server"
+      ],
+      "env": {
+        "BLEKLINE_API_URL": "https://app.blekline.com",
+        "BLEKLINE_WORKSPACE_TOKEN": "blw_replace_with_workspace_token",
+        "BLEKLINE_CLIENT_SURFACE": "codex"
+      }
+    },
+    "blekline-proxy": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@blekline/mcp-proxy"
+      ],
+      "env": {
+        "BLEKLINE_API_URL": "https://app.blekline.com",
+        "BLEKLINE_WORKSPACE_TOKEN": "blw_replace_with_workspace_token",
+        "BLEKLINE_CLIENT_SURFACE": "codex",
+        "BLEKLINE_MCP_PROXY_MOCK": "1"
+      }
+    }
+  }
+}

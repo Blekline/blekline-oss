@@ -1,0 +1,38 @@
+{
+  "name": "@blekline/client-hooks",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "description": "Shared mask helpers and operator-facing notice strings for Blekline IDE hooks",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Blekline/blekline-oss.git",
+    "directory": "packages/client-hooks"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./local-mask": "./lib/local-mask.mjs",
+    "./notices": "./lib/notices.mjs",
+    "./mask-backend": "./lib/mask-backend.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "lib",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@blekline/contracts": "workspace:*"
+  },
+  "scripts": {
+    "build": "node -e \"console.log('@blekline/client-hooks: no compile step')\"",
+    "test": "node --test tests/*.test.mjs"
+  }
+}

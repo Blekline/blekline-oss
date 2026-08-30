@@ -1,0 +1,27 @@
+{
+  "name": "blekline",
+  "version": "0.1.0",
+  "description": "Mask prompts and guard tools in Codex. Silent auto-send requires Blekline ingress on the OpenAI Responses API.",
+  "author": {
+    "name": "Blekline",
+    "url": "https://blekline.com"
+  },
+  "homepage": "https://app.blekline.com/docs",
+  "repository": "https://github.com/Blekline/blekline-oss",
+  "license": "Apache-2.0",
+  "keywords": ["blekline", "governance", "hooks", "mcp"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "Blekline",
+    "shortDescription": "Prompt mask and tool guards for Codex",
+    "longDescription": "Bundles Blekline skills, MCP servers, and lifecycle hooks. Native Codex hooks block or add context; silent auto-send uses ingress on the OpenAI Responses API.",
+    "developerName": "Blekline",
+    "category": "Developer Tools",
+    "websiteURL": "https://blekline.com",
+    "privacyPolicyURL": "https://blekline.com/privacy",
+    "logo": "./assets/logo.png",
+    "composerIcon": "./assets/logo.png"
+  }
+}

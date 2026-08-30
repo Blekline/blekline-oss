@@ -76,6 +76,9 @@ trustVault:
 lineage:
   enabled: true
 
+# Single stage drives sidecar behavior — see deriveSidecarHelmValues in webapp/lib/enforcement-stage.ts
+enforcementStage: audit
+
 failureMode: block
 
 env:

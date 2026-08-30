@@ -1,0 +1,21 @@
+{
+  "name": "blekline",
+  "interface": {
+    "displayName": "Blekline"
+  },
+  "plugins": [
+    {
+      "name": "blekline",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools",
+      "description": "Blekline governance for Codex. Silent auto-send is ingress Responses, not native hooks."
+    }
+  ]
+}

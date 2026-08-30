@@ -10,13 +10,24 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const TRACKED_LIVE_CONFIGS = [
   ".cursor/mcp.json",
   ".cursor/hooks.json",
+  ".cursor/blekline",
   ".blekline/cursor.json",
+  ".blekline/codex.json",
+  ".blekline/policy.json",
+  ".blekline/mcp.env",
   ".claude/settings.json",
   ".codex/config.toml",
+  ".codex/hooks.json",
   ".vscode/mcp.json",
+  ".vscode/continue.config.json",
   "config/claude_desktop_config.generated.json",
   "config/claude-desktop.generated.json",
 ];
+
+const PLACEHOLDER_TOKEN = "blw_replace_with_workspace_token";
+const LIVE_TOKEN = /\bblw_live_[A-Za-z0-9]+\b/;
+const LIVE_HEX_TOKEN = /\bblw_[a-f0-9]{24,}\b/i;
+const HOME_PATH = /\/Users\/[^\s"'`]+/;
 
 /** OSS clone checks repo root; private monorepo checks synced oss/ staging */
 function liveConfigCheckRoot() {
@@ -26,7 +37,6 @@ function liveConfigCheckRoot() {
 }
 const manifest = JSON.parse(readFileSync(join(ROOT, "integrations/manifest.json"), "utf8"));
 
-const LIVE_TOKEN = /\bblw_live_[A-Za-z0-9]+\b/;
 const errors = [];
 
 const liveRoot = liveConfigCheckRoot();
@@ -46,6 +56,12 @@ for (const entry of manifest.entries) {
   const text = readFileSync(full, "utf8");
   if (LIVE_TOKEN.test(text)) {
     errors.push(`LIVE TOKEN in ${entry.repoPath}`);
+  }
+  if (LIVE_HEX_TOKEN.test(text) && !entry.repoPath.endsWith(".example")) {
+    errors.push(`LIVE HEX TOKEN in ${entry.repoPath}`);
+  }
+  if (HOME_PATH.test(text) && !entry.repoPath.endsWith(".example")) {
+    errors.push(`HOME PATH in ${entry.repoPath}`);
   }
   if (entry.repoPath.endsWith(".json") || entry.repoPath.endsWith(".json.example")) {
     try {
@@ -70,6 +86,53 @@ for (const entry of manifest.entries) {
     }
   }
 }
+
+function assertPluginMcp(rel, opts) {
+  const full = join(ROOT, rel);
+  if (!existsSync(full)) {
+    errors.push(`MISSING ${rel}`);
+    return;
+  }
+  const text = readFileSync(full, "utf8");
+  if (LIVE_HEX_TOKEN.test(text)) errors.push(`LIVE HEX TOKEN in ${rel}`);
+  if (HOME_PATH.test(text)) errors.push(`HOME PATH in ${rel}`);
+  const j = JSON.parse(text);
+  const blekline = j.mcpServers?.blekline;
+  if (!blekline) {
+    errors.push(`MISSING mcpServers.blekline in ${rel}`);
+    return;
+  }
+  if (opts.command && blekline.command !== opts.command) {
+    errors.push(`${rel} blekline.command must be ${opts.command}`);
+  }
+  if (opts.token === "variable" && blekline.env?.BLEKLINE_WORKSPACE_TOKEN !== "${BLEKLINE_WORKSPACE_TOKEN}") {
+    errors.push(`${rel} must use \${BLEKLINE_WORKSPACE_TOKEN}`);
+  }
+  if (opts.token === "placeholder" && blekline.env?.BLEKLINE_WORKSPACE_TOKEN !== PLACEHOLDER_TOKEN) {
+    errors.push(`${rel} must use ${PLACEHOLDER_TOKEN}`);
+  }
+  if (opts.envFile && blekline.envFile !== opts.envFile) {
+    errors.push(`${rel} envFile must be ${opts.envFile}`);
+  }
+  if (opts.launcher && !blekline.args?.[0]?.includes(opts.launcher)) {
+    errors.push(`${rel} must use ${opts.launcher}`);
+  }
+  if (opts.forbidLauncher && blekline.args?.some((a) => a.includes(opts.forbidLauncher))) {
+    errors.push(`${rel} must not use ${opts.forbidLauncher}`);
+  }
+}
+
+assertPluginMcp("plugins/cursor/mcp.json", {
+  command: "node",
+  token: "variable",
+  envFile: ".blekline/mcp.env",
+  launcher: ".cursor/blekline/run-mcp-server.mjs",
+});
+assertPluginMcp("plugins/codex/.mcp.json", {
+  command: "npx",
+  token: "placeholder",
+  forbidLauncher: ".cursor/blekline",
+});
 
 const hooksExample = join(ROOT, ".cursor/hooks.json.example");
 if (!existsSync(hooksExample)) {
@@ -98,6 +161,41 @@ for (const sh of [
 const cursorCfgExample = join(ROOT, "config/blekline/cursor.json.example");
 if (!existsSync(cursorCfgExample)) {
   errors.push("MISSING config/blekline/cursor.json.example");
+}
+
+const policyExample = join(ROOT, ".blekline/policy.json.example");
+if (!existsSync(policyExample)) {
+  errors.push("MISSING .blekline/policy.json.example");
+}
+
+const mcpEnvExample = join(ROOT, ".blekline/mcp.env.example");
+if (!existsSync(mcpEnvExample)) {
+  errors.push("MISSING .blekline/mcp.env.example");
+} else {
+  const text = readFileSync(mcpEnvExample, "utf8");
+  if (LIVE_HEX_TOKEN.test(text)) errors.push("LIVE HEX TOKEN in .blekline/mcp.env.example");
+  if (/^BLEKLINE_WORKSPACE_ROOT=\/[^\s]+/m.test(text)) {
+    errors.push(".blekline/mcp.env.example must leave BLEKLINE_WORKSPACE_ROOT empty");
+  }
+}
+
+const chatGuardExample = join(ROOT, ".cursor/rules/blekline-chat-guard.mdc.example");
+const chatGuardPlugin = join(ROOT, "plugins/cursor/rules/blekline-chat-guard.mdc");
+if (!existsSync(chatGuardExample)) {
+  errors.push("MISSING .cursor/rules/blekline-chat-guard.mdc.example");
+} else if (existsSync(chatGuardPlugin)) {
+  const example = readFileSync(chatGuardExample, "utf8");
+  const plugin = readFileSync(chatGuardPlugin, "utf8");
+  if (!/block \+ clipboard|clipboard.*block/i.test(example)) {
+    errors.push("blekline-chat-guard.mdc.example must document block + clipboard behavior");
+  }
+  if (example.replace(/^---[\s\S]*?---\n/, "") !== plugin.replace(/^---[\s\S]*?---\n/, "")) {
+    errors.push("blekline-chat-guard.mdc.example body must match plugins/cursor/rules/blekline-chat-guard.mdc");
+  }
+}
+
+if (existsSync(join(liveRoot, ".cursor/rules/git-and-public-safety.mdc"))) {
+  errors.push("git-and-public-safety.mdc present in public tree (private operator rule only)");
 }
 
 if (errors.length) {

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "./hooks/blekline-session-start.sh"
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "./hooks/blekline-mask-prompt.sh",
+        "timeout": 5
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "./hooks/blekline-before-read-file.sh",
+        "failClosed": true
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "./hooks/blekline-before-shell-execution.sh",
+        "matcher": "curl|wget|cat|grep|type|head|tail",
+        "failClosed": true
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "./hooks/blekline-pre-tool-use.sh",
+        "matcher": "Read|Write|Shell|Grep|Delete|edit|write_file|run_terminal_cmd"
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": "./hooks/blekline-before-mcp-execution.sh",
+        "failClosed": true
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "./hooks/blekline-after-shell-execution.sh"
+      }
+    ]
+  }
+}

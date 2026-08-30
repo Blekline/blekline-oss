@@ -1,0 +1,50 @@
+{
+  "description": "Blekline Codex governance (adapter over @blekline/cursor-hooks)",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/blekline-session-start.sh",
+            "commandWindows": "${PLUGIN_ROOT}/hooks/blekline-session-start.cmd"
+          }
+        ],
+        "matcher": "startup|resume"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/blekline-user-prompt-submit.sh",
+            "commandWindows": "${PLUGIN_ROOT}/hooks/blekline-user-prompt-submit.cmd"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/blekline-pre-tool-use.sh",
+            "commandWindows": "${PLUGIN_ROOT}/hooks/blekline-pre-tool-use.cmd"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/blekline-post-tool-use.sh",
+            "commandWindows": "${PLUGIN_ROOT}/hooks/blekline-post-tool-use.cmd"
+          }
+        ]
+      }
+    ]
+  }
+}

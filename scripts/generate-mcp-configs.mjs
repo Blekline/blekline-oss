@@ -6,6 +6,8 @@
  *   node scripts/generate-mcp-configs.mjs           # monorepo *.example paths
  *   node scripts/generate-mcp-configs.mjs --local   # live gitignored configs
  *   node scripts/generate-mcp-configs.mjs --oss     # npx @blekline/* paths (blekline-oss)
+ *   node scripts/generate-mcp-configs.mjs --plugin cursor
+ *   node scripts/generate-mcp-configs.mjs --plugin codex
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -20,6 +22,19 @@ const envPath = resolve(root, ".env");
 const isLocal = process.argv.includes("--local");
 const isOss = process.argv.includes("--oss");
 const useExampleSuffix = !isLocal;
+
+function pluginFlags() {
+  const names = [];
+  for (let i = 0; i < process.argv.length; i += 1) {
+    if (process.argv[i] === "--plugin" && process.argv[i + 1] && !process.argv[i + 1].startsWith("-")) {
+      names.push(process.argv[i + 1]);
+    }
+  }
+  return names;
+}
+
+const requestedPlugins = pluginFlags();
+const pluginOnly = requestedPlugins.length > 0;
 
 function parseEnvFile(path) {
   const out = {};
@@ -211,6 +226,78 @@ function buildContinueJson(surface) {
   };
 }
 
+function buildPluginMcpJson(surface) {
+  const env = {
+    BLEKLINE_API_URL: apiUrl,
+    BLEKLINE_WORKSPACE_TOKEN: "${BLEKLINE_WORKSPACE_TOKEN}",
+    BLEKLINE_CLIENT_SURFACE: surface,
+  };
+  const envFile = ".blekline/mcp.env";
+  return {
+    mcpServers: {
+      blekline: {
+        command: "node",
+        args: [".cursor/blekline/run-mcp-server.mjs"],
+        envFile,
+        env,
+      },
+      "blekline-proxy": {
+        command: "node",
+        args: [".cursor/blekline/run-mcp-proxy.mjs"],
+        envFile,
+        env: { ...env, BLEKLINE_MCP_PROXY_MOCK: "1" },
+      },
+    },
+  };
+}
+
+function writePluginFile(rel, content) {
+  const full = resolve(root, rel);
+  mkdirSync(dirname(full), { recursive: true });
+  writeFileSync(full, `${JSON.stringify(content, null, 2)}\n`);
+  return rel;
+}
+
+function buildCodexPluginMcpJson(surface) {
+  const env = {
+    BLEKLINE_API_URL: apiUrl,
+    BLEKLINE_WORKSPACE_TOKEN: PLACEHOLDER_TOKEN,
+    BLEKLINE_CLIENT_SURFACE: surface,
+  };
+  return {
+    mcpServers: {
+      blekline: {
+        command: "npx",
+        args: ["-y", "@blekline/mcp-server"],
+        env,
+      },
+      "blekline-proxy": {
+        command: "npx",
+        args: ["-y", "@blekline/mcp-proxy"],
+        env: { ...env, BLEKLINE_MCP_PROXY_MOCK: "1" },
+      },
+    },
+  };
+}
+
+function writePluginMcpExamples(names) {
+  const out = [];
+  const want = new Set(names);
+  const writeCursor = names.length === 0 || want.has("cursor");
+  const writeCodex = names.length === 0 || want.has("codex");
+  if (writeCursor && (want.has("cursor") || existsSync(join(root, "plugins", "cursor")))) {
+    const cfg = buildPluginMcpJson("cursor");
+    out.push(writePluginFile("plugins/cursor/mcp.json", cfg));
+    out.push(writePluginFile("plugins/cursor/mcp.json.example", cfg));
+  }
+  if (writeCodex && (want.has("codex") || existsSync(join(root, "plugins", "codex")))) {
+    const cfg = buildCodexPluginMcpJson("codex");
+    out.push(writePluginFile("plugins/codex/.mcp.json", cfg));
+    out.push(writePluginFile("plugins/codex/.mcp.json.example", cfg));
+  }
+  return out;
+}
+
 function buildCodexToml(surface) {
   const srvCmd = isOss ? 'command = "npx"\nargs = ["-y", "@blekline/mcp-server"]' : 'command = "node"\nargs = ["packages/mcp-server/dist/index.js"]';
   const prxCmd = isOss
@@ -267,59 +354,63 @@ function writeToml(repoPath, content) {
 const manifest = JSON.parse(readFileSync(join(root, "integrations/manifest.json"), "utf8"));
 const written = [];
 
-for (const entry of manifest.entries) {
-  if (!entry.configFormat) continue;
-  const surface = entry.BLEKLINE_CLIENT_SURFACE;
-  switch (entry.configFormat) {
-    case "mcp-json": {
-      const cfg = buildMcpJson(surface, {
-        includeProxy: entry.includesProxy,
-      });
-      written.push(writeConfig(entry.repoPath, cfg));
-      break;
+if (!pluginOnly) {
+  for (const entry of manifest.entries) {
+    if (!entry.configFormat) continue;
+    const surface = entry.BLEKLINE_CLIENT_SURFACE;
+    switch (entry.configFormat) {
+      case "mcp-json": {
+        const cfg = buildMcpJson(surface, {
+          includeProxy: entry.includesProxy,
+        });
+        written.push(writeConfig(entry.repoPath, cfg));
+        break;
+      }
+      case "claude-desktop": {
+        const cfg = buildClaudeDesktop(surface);
+        const path =
+          isLocal && !useExampleSuffix
+            ? "config/claude_desktop_config.generated.json"
+            : entry.repoPath;
+        written.push(writeConfig(path, cfg));
+        break;
+      }
+      case "claude-code-settings": {
+        const cfg = buildClaudeCodeSettings(surface);
+        written.push(writeConfig(entry.repoPath, cfg));
+        break;
+      }
+      case "continue-json": {
+        const cfg = buildContinueJson(surface);
+        written.push(writeConfig(entry.repoPath, cfg));
+        break;
+      }
+      case "codex-toml": {
+        written.push(writeToml(entry.repoPath, buildCodexToml(surface)));
+        break;
+      }
+      default:
+        break;
     }
-    case "claude-desktop": {
-      const cfg = buildClaudeDesktop(surface);
-      const path =
-        isLocal && !useExampleSuffix
-          ? "config/claude_desktop_config.generated.json"
-          : entry.repoPath;
-      written.push(writeConfig(path, cfg));
-      break;
+  }
+
+  if (isLocal) {
+    written.push(writeConfig(".cursor/hooks.json", buildCursorHooksJson()));
+    written.push(writeConfig(".blekline/cursor.json", buildCursorBleklineJson({ enterprise: true })));
+    const ruleExample = join(root, ".cursor/rules/blekline-chat-guard.mdc.example");
+    const ruleLive = join(root, ".cursor/rules/blekline-chat-guard.mdc");
+    if (existsSync(ruleExample)) {
+      mkdirSync(dirname(ruleLive), { recursive: true });
+      copyFileSync(ruleExample, ruleLive);
+      written.push(".cursor/rules/blekline-chat-guard.mdc");
     }
-    case "claude-code-settings": {
-      const cfg = buildClaudeCodeSettings(surface);
-      written.push(writeConfig(entry.repoPath, cfg));
-      break;
-    }
-    case "continue-json": {
-      const cfg = buildContinueJson(surface);
-      written.push(writeConfig(entry.repoPath, cfg));
-      break;
-    }
-    case "codex-toml": {
-      written.push(writeToml(entry.repoPath, buildCodexToml(surface)));
-      break;
-    }
-    default:
-      break;
+  } else {
+    written.push(writeConfig(".cursor/hooks.json.example", buildCursorHooksJson()));
+    written.push(writeConfig("config/blekline/cursor.json.example", buildCursorBleklineJson({ enterprise: true, forExample: true })));
   }
 }
 
-if (isLocal) {
-  written.push(writeConfig(".cursor/hooks.json", buildCursorHooksJson()));
-  written.push(writeConfig(".blekline/cursor.json", buildCursorBleklineJson({ enterprise: true })));
-  const ruleExample = join(root, ".cursor/rules/blekline-chat-guard.mdc.example");
-  const ruleLive = join(root, ".cursor/rules/blekline-chat-guard.mdc");
-  if (existsSync(ruleExample)) {
-    mkdirSync(dirname(ruleLive), { recursive: true });
-    copyFileSync(ruleExample, ruleLive);
-    written.push(".cursor/rules/blekline-chat-guard.mdc");
-  }
-} else {
-  written.push(writeConfig(".cursor/hooks.json.example", buildCursorHooksJson()));
-  written.push(writeConfig("config/blekline/cursor.json.example", buildCursorBleklineJson({ enterprise: true, forExample: true })));
-}
+written.push(...writePluginMcpExamples(requestedPlugins));
 
-console.log(`Generated (${isLocal ? "local" : isOss ? "oss" : "example"}):`);
+console.log(`Generated (${pluginOnly ? `plugin ${requestedPlugins.join(",")}` : isLocal ? "local" : isOss ? "oss" : "example"}):`);
 for (const p of written) console.log(`  ${p}`);

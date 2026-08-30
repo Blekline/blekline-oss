@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { scanTextForSecrets } from "@blekline/contracts";
+import { buildBlockUserMessage } from "@blekline/client-hooks/notices";
 import { scanPromptAttachments } from "./attachment-guard.mjs";
 import { emitGovernanceEvent } from "./emit-governance.mjs";
 import { localMaskRequestId, maskPromptLocally } from "./local-mask.mjs";
@@ -143,37 +144,7 @@ export function copyToClipboard(text) {
   }
 }
 
-/**
- * @param {object} params
- * @param {number} params.entitiesMasked
- * @param {string | undefined} params.requestId
- * @param {boolean} params.copied
- * @param {boolean} params.showMaskedInUi
- * @param {string} params.maskedText
- */
-export function buildBlockUserMessage({ entitiesMasked, requestId, copied, showMaskedInUi, maskedText }) {
-  const entityLabel = `${entitiesMasked} entit${entitiesMasked === 1 ? "y" : "ies"}`;
-  const trace = requestId ? ` Trace ID: ${requestId.slice(0, 8)}… (Activity log).` : " See workspace Activity for audit metadata.";
-
-  if (showMaskedInUi) {
-    const pasteHint = copied
-      ? " Safe version copied to clipboard — Cmd+V then Enter."
-      : " Replace your message with the safe version below, then send.";
-    return `Blekline masked ${entityLabel}.${pasteHint}${trace}\n\n${maskedText}`;
-  }
-
-  if (copied) {
-    return (
-      `Blekline masked ${entityLabel} and blocked the raw prompt.${trace} ` +
-      "Safe version is on your clipboard — press Cmd+V (Mac) or Ctrl+V, then Enter to send."
-    );
-  }
-
-  return (
-    `Blekline masked ${entityLabel} and blocked the raw prompt.${trace} ` +
-    "Paste the safe version from your Blekline mask result, then send."
-  );
-}
+export { buildBlockUserMessage };
 
 /**
  * @param {object} input

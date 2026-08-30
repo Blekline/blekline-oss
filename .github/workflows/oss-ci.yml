@@ -27,7 +27,19 @@ jobs:
 
       - run: pnpm verify:integrations
 
+      - run: pnpm audit:oss-public
+
+      - run: pnpm demo:cursor-plugin-submission-audit
+
+      - run: pnpm demo:codex-plugin-submission-audit
+
       - run: pnpm demo:mcp-smoke
+
+      - run: pnpm demo:cursor-hook-smoke
+
+      - run: pnpm demo:codex-hook-smoke
+
+      - run: pnpm demo:vscode-extension-smoke
 
       - run: pnpm --filter @blekline/mcp-proxy test
 

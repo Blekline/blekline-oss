@@ -1,3 +1,4 @@
+import { NOTICE_CURSOR_NO_SILENT_AUTO_SEND, NOTICE_SESSION_GUARD_LINES } from "@blekline/client-hooks/notices";
 import { isConfigured, loadCursorHookConfig } from "./config.mjs";
 
 /**
@@ -16,15 +17,8 @@ export function runSessionStartHook(_input, config) {
   }
 
   out.additional_context = [
-    "# Blekline chat guard (active)",
-    "",
-    "This workspace uses Blekline Cursor hooks:",
-    "- User prompts are cloud-masked before the model when policy is auto_mask/block.",
-    "- Sensitive file attachments (.env, keys) are blocked on Send.",
-    "- Shell commands and tool arguments are guarded locally; MCP calls are policy-checked.",
-    "- If a prompt is blocked, paste the masked version Blekline provides.",
-    "- Always call `blekline_mask_prompt` before forwarding user-supplied text with PII/secrets to tools or subagents.",
-    "- Use `blekline-proxy` for downstream MCP tool governance.",
+    ...NOTICE_SESSION_GUARD_LINES,
+    NOTICE_CURSOR_NO_SILENT_AUTO_SEND,
     "",
     isConfigured(config)
       ? `Control plane: ${config.apiUrl} · policy: ${config.promptPolicy}`

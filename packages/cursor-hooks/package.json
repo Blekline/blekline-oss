@@ -19,7 +19,8 @@
     "blekline-cursor-before-shell": "./before-shell-execution.mjs",
     "blekline-cursor-pre-tool-use": "./pre-tool-use.mjs",
     "blekline-cursor-before-mcp": "./before-mcp-execution.mjs",
-    "blekline-cursor-after-shell": "./after-shell-execution.mjs"
+    "blekline-cursor-after-shell": "./after-shell-execution.mjs",
+    "blekline-cursor-hooks-init": "./init.mjs"
   },
   "exports": {
     "./mask-prompt": "./lib/mask-prompt-hook.mjs",
@@ -29,7 +30,8 @@
     "./tool-guard": "./lib/tool-guard.mjs",
     "./mcp-guard": "./lib/mcp-guard.mjs",
     "./after-shell": "./lib/after-shell-hook.mjs",
-    "./config": "./lib/config.mjs"
+    "./config": "./lib/config.mjs",
+    "./init": "./init.mjs"
   },
   "files": [
     "*.mjs",
@@ -39,6 +41,7 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@blekline/client-hooks": "workspace:*",
     "@blekline/contracts": "workspace:*"
   },
   "scripts": {

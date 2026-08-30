@@ -1,0 +1,14 @@
+{
+  "name": "blekline",
+  "owner": {
+    "name": "Blekline",
+    "url": "https://blekline.com"
+  },
+  "plugins": [
+    {
+      "name": "blekline",
+      "source": "./plugins/cursor",
+      "description": "Mask prompts, guard shell/tools/MCP, and audit agent actions in Cursor. Native chat is block plus clipboard paste — not silent auto-send."
+    }
+  ]
+}

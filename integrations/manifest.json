@@ -1,5 +1,14 @@
 {
   "version": 1,
+  "feeds": {
+    "llmsMarketing": "https://blekline.com/llms.txt",
+    "llmsApp": "https://app.blekline.com/llms.txt",
+    "threatsCatalog": "https://app.blekline.com/marketing/threats/catalog.json",
+    "threatsRss": "https://app.blekline.com/marketing/threats/feed.rss",
+    "arenaLatest": "https://app.blekline.com/marketing/arena/latest.json",
+    "benchmarksLatest": "https://app.blekline.com/marketing/benchmarks/latest.json",
+    "cyberModelArena": "https://blekline.com/cyber-model-arena"
+  },
   "entries": [
     {
       "id": "cli",
@@ -62,6 +71,18 @@
       "configFormat": "mcp-json"
     },
     {
+      "id": "vscode-extension",
+      "tier": "verified",
+      "repoPath": "vscode-extension/",
+      "configPathHuman": "VS Code extension (Marketplace or VSIX)",
+      "BLEKLINE_CLIENT_SURFACE": "github-copilot",
+      "headless": true,
+      "docSlug": "mcp/github-copilot",
+      "verify": ["demo:vscode-extension-smoke"],
+      "includesProxy": false,
+      "configFormat": null
+    },
+    {
       "id": "continue",
       "tier": "verified",
       "repoPath": ".vscode/continue.config.json.example",
@@ -93,7 +114,7 @@
       "BLEKLINE_CLIENT_SURFACE": "codex",
       "headless": true,
       "docSlug": "mcp/codex",
-      "verify": ["tools/list"],
+      "verify": ["tools/list", "demo:codex-hook-smoke"],
       "includesProxy": true,
       "configFormat": "codex-toml"
     }

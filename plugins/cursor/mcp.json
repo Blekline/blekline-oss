@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "blekline": {
+      "command": "node",
+      "args": [".cursor/blekline/run-mcp-server.mjs"],
+      "envFile": ".blekline/mcp.env",
+      "env": {
+        "BLEKLINE_API_URL": "${BLEKLINE_API_URL}",
+        "BLEKLINE_WORKSPACE_TOKEN": "${BLEKLINE_WORKSPACE_TOKEN}",
+        "BLEKLINE_CLIENT_SURFACE": "cursor"
+      }
+    },
+    "blekline-proxy": {
+      "command": "node",
+      "args": [".cursor/blekline/run-mcp-proxy.mjs"],
+      "envFile": ".blekline/mcp.env",
+      "env": {
+        "BLEKLINE_API_URL": "${BLEKLINE_API_URL}",
+        "BLEKLINE_WORKSPACE_TOKEN": "${BLEKLINE_WORKSPACE_TOKEN}",
+        "BLEKLINE_CLIENT_SURFACE": "cursor",
+        "BLEKLINE_MCP_PROXY_MOCK": "1"
+      }
+    }
+  }
+}
