@@ -1,20 +1,20 @@
 <!-- GitHub repo About field: Non-Human Identity & Runtime Enforcement for AI agents — open-core MCP/SDK to mask, enforce, and audit agent calls. -->
 <!-- Social preview / Open Graph: assets/images/blekline-oss-og.png — also upload in GitHub Settings → General → Social preview -->
-
 <div align="center">
-  <a href="https://app.blekline.com">
-    <img
-      src="assets/images/blekline-oss-og.png"
-      alt="Blekline — Mask, enforce, and audit AI agents at the MCP boundary"
-      width="1200"
-    />
-  </a>
+<table cellpadding="0" cellspacing="0" border="0">
+<tr>
+<td align="center" valign="middle" style="padding-right:20px;">
+<picture>
+<source media="(prefers-color-scheme: light)" srcset="assets/images/blekline-logo-light.svg"/>
+<img alt="Blekline" src="assets/images/blekline-logo-dark.svg" width="168"/>
+</picture>
+</td>
+<td align="center" valign="middle">
+<a href="https://app.blekline.com"><img src="assets/images/blekline-oss-og.png" alt="Blekline — Mask, enforce, and audit AI agents at the MCP boundary" width="840"/></a>
+</td>
+</tr>
+</table>
 </div>
-
-<h3 align="center">
-  Mask, enforce, and audit AI agents at the execution boundary.
-</h3>
-
 <p align="center">
   <a href="https://app.blekline.com/docs/get-started/paths">Choose your path</a> ·
   <a href="https://app.blekline.com/docs">Quick start</a> ·
