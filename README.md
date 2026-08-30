@@ -4,7 +4,7 @@
 <a href="https://app.blekline.com"><img src="assets/images/blekline-oss-og.png" alt="Blekline — Mask, enforce, and audit AI agents at the MCP boundary" width="100%"/></a>
 <picture>
 <source media="(prefers-color-scheme: light)" srcset="assets/images/blekline-logo-light.svg"/>
-<img alt="Blekline" src="assets/images/blekline-logo-dark.svg" width="320"/>
+<img alt="Blekline" src="assets/images/blekline-logo-dark.svg" width="210"/>
 </picture>
 </div>
 <p align="center">
