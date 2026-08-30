@@ -1,0 +1,82 @@
+{
+  "name": "blekline",
+  "displayName": "Blekline",
+  "description": "Mask PII and secrets before they reach a model. Use @blekline in Copilot Chat — this does not intercept native @copilot.",
+  "version": "0.1.0",
+  "publisher": "blekline",
+  "license": "Apache-2.0",
+  "homepage": "https://blekline.com",
+  "bugs": {
+    "url": "https://github.com/Blekline/blekline-oss/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Blekline/blekline-oss.git"
+  },
+  "engines": {
+    "vscode": "^1.101.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Other"
+  ],
+  "keywords": [
+    "blekline",
+    "mcp",
+    "prompt",
+    "masking",
+    "pii",
+    "governance"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "icon": "assets/icon.png",
+  "contributes": {
+    "chatParticipants": [
+      {
+        "id": "blekline.blekline",
+        "name": "blekline",
+        "fullName": "Blekline",
+        "description": "Redact PII and secrets, then send the masked prompt to the selected model. @blekline path only — not native @copilot.",
+        "isSticky": true
+      }
+    ],
+    "commands": [
+      {
+        "command": "blekline.setup",
+        "title": "Setup",
+        "category": "Blekline"
+      },
+      {
+        "command": "blekline.verify",
+        "title": "Verify",
+        "category": "Blekline"
+      },
+      {
+        "command": "blekline.openActivity",
+        "title": "Open Activity",
+        "category": "Blekline"
+      }
+    ],
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "blekline",
+        "label": "Blekline"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "pnpm run compile",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/vscode": "^1.101.0",
+    "typescript": "^5.7.3"
+  }
+}

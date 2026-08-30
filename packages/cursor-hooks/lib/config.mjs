@@ -3,7 +3,7 @@ import { dirname, join, resolve } from "node:path";
 import {
   cursorHookFieldsForMaskBackend,
   parseMaskBackend,
-} from "../../client-hooks/lib/mask-backend.mjs";
+} from "@blekline/client-hooks/mask-backend";
 
 const PLACEHOLDER_TOKEN = "blw_replace_with_workspace_token";
 const DEFAULT_API_URL = "https://app.blekline.com";

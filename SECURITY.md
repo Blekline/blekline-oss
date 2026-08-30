@@ -66,9 +66,13 @@ We run CI on every push to `main` and review dependency updates before OSS relea
 
 ## Config hygiene
 
-- Commit only `*.example` integration configs — never `blw_live_*` tokens or `.env` files.
-- Live paths (gitignored): `.cursor/mcp.json`, `.claude/settings.json`, `.codex/config.toml`, `config/claude_desktop_config.generated.json`.
-- Run `pnpm verify:integrations` before opening a PR.
+- Commit only `*.example` integration configs — never `blw_live_*` tokens, live `blw_[hex…]` keys, or `.env` files.
+- Live paths (gitignored): `.cursor/mcp.json`, `.cursor/hooks.json`, `.cursor/blekline/`, `.blekline/mcp.env`, `.claude/settings.json`, `.codex/config.toml`, `.codex/hooks.json`, `.vscode/continue.config.json`, `config/claude_desktop_config.generated.json`.
+- Plugin MCP exceptions (committed placeholders only):
+  - **Cursor plugin** — `plugins/cursor/mcp.json` uses `${BLEKLINE_WORKSPACE_TOKEN}` + `envFile: .blekline/mcp.env` (generated locally by `@blekline/cursor-hooks init`).
+  - **Codex plugin** — `plugins/codex/.mcp.json` uses `blw_replace_with_workspace_token` + `npx -y @blekline/*` (never workspace-local launchers).
+- Never commit `.cursor/rules/git-and-public-safety.mdc` (private monorepo operator rule).
+- Run `pnpm verify:integrations`, `pnpm audit:oss-public`, and plugin submission audits before opening a PR.
 
 ## Safe harbor
 

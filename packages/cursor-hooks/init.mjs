@@ -7,15 +7,58 @@
  *   node packages/cursor-hooks/init.mjs --force
  *   node packages/cursor-hooks/init.mjs --hooks-dir plugins/cursor/hooks --hooks-json plugins/cursor/hooks/hooks.json --skip-cursor-json --command-prefix ./hooks/
  */
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   applyMaskBackendToCursorJson,
   parseMaskBackend,
-} from "../../client-hooks/lib/mask-backend.mjs";
+} from "@blekline/client-hooks/mask-backend";
 import { buildCursorHooksJson, CURSOR_HOOKS, defaultCursorJson } from "./lib/hook-catalog.mjs";
 import { renderPosixWrapper, renderWindowsWrapper } from "./lib/hook-wrappers.mjs";
+
+const PLACEHOLDER_TOKEN = "blw_replace_with_workspace_token";
+
+function syncMcpEnv(workspaceRoot, cursorJsonPath) {
+  const cfg = existsSync(cursorJsonPath) ? JSON.parse(readFileSync(cursorJsonPath, "utf8")) : null;
+  const token =
+    typeof cfg?.workspaceToken === "string" && cfg.workspaceToken.trim()
+      ? cfg.workspaceToken.trim()
+      : PLACEHOLDER_TOKEN;
+  const apiUrl =
+    typeof cfg?.apiUrl === "string" && cfg.apiUrl.trim() ? cfg.apiUrl.trim() : "https://app.blekline.com";
+  const mcpEnvPath = join(workspaceRoot, ".blekline", "mcp.env");
+  mkdirSync(dirname(mcpEnvPath), { recursive: true });
+  writeFileSync(
+    mcpEnvPath,
+    `# Blekline MCP env for Cursor plugin — auto-synced from .blekline/cursor.json\nBLEKLINE_WORKSPACE_TOKEN=${token}\nBLEKLINE_API_URL=${apiUrl}\nBLEKLINE_WORKSPACE_ROOT=${workspaceRoot}\n`,
+  );
+  return mcpEnvPath;
+}
+
+const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)));
+const MCP_TEMPLATE_DIR = join(PACKAGE_ROOT, "templates", "blekline-mcp");
+const MCP_LAUNCHER_FILES = ["resolve-workspace.mjs", "run-mcp-server.mjs", "run-mcp-proxy.mjs"];
+
+function installMcpLaunchers(workspaceRoot) {
+  const destDir = join(workspaceRoot, ".cursor", "blekline");
+  mkdirSync(destDir, { recursive: true });
+  const written = [];
+  for (const name of MCP_LAUNCHER_FILES) {
+    const src = join(MCP_TEMPLATE_DIR, name);
+    const dest = join(destDir, name);
+    cpSync(src, dest);
+    if (name.endsWith(".mjs")) {
+      try {
+        chmodSync(dest, 0o755);
+      } catch {
+        /* ignore */
+      }
+    }
+    written.push(dest);
+  }
+  return written;
+}
 
 const FORCE = process.argv.includes("--force");
 const SKIP_CURSOR_JSON = process.argv.includes("--skip-cursor-json");
@@ -84,6 +127,8 @@ export function writeCursorHookFiles(opts) {
   writeFileSync(hooksJsonPath, `${JSON.stringify(hooksJson, null, 2)}\n`);
   written.push(hooksJsonPath);
 
+  written.push(...installMcpLaunchers(workspaceRoot));
+
   if (!opts.skipCursorJson) {
     mkdirSync(dirname(cursorJsonPath), { recursive: true });
     if (!existsSync(cursorJsonPath) || force) {
@@ -93,12 +138,16 @@ export function writeCursorHookFiles(opts) {
       writeFileSync(cursorJsonPath, `${JSON.stringify(payload, null, 2)}\n`);
       written.push(cursorJsonPath);
     }
+    written.push(syncMcpEnv(workspaceRoot, cursorJsonPath));
+  } else {
+    written.push(syncMcpEnv(workspaceRoot, cursorJsonPath));
   }
 
   if (!opts.quiet) {
     console.log("Wrote Blekline Cursor hooks:");
     for (const p of written) console.log(`  ${p}`);
     console.log("Replace workspaceToken blw_replace_with_workspace_token in .blekline/cursor.json");
+    console.log("Plugin MCP reads .blekline/mcp.env (auto-synced on init).");
     console.log("Native Cursor chat is block+clipboard paste — not silent auto-send.");
   }
   return written;

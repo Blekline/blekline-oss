@@ -229,6 +229,38 @@ function buildContinueJson(surface) {
 function buildPluginMcpJson(surface) {
   const env = {
     BLEKLINE_API_URL: apiUrl,
+    BLEKLINE_WORKSPACE_TOKEN: "${BLEKLINE_WORKSPACE_TOKEN}",
+    BLEKLINE_CLIENT_SURFACE: surface,
+  };
+  const envFile = ".blekline/mcp.env";
+  return {
+    mcpServers: {
+      blekline: {
+        command: "node",
+        args: [".cursor/blekline/run-mcp-server.mjs"],
+        envFile,
+        env,
+      },
+      "blekline-proxy": {
+        command: "node",
+        args: [".cursor/blekline/run-mcp-proxy.mjs"],
+        envFile,
+        env: { ...env, BLEKLINE_MCP_PROXY_MOCK: "1" },
+      },
+    },
+  };
+}
+
+function writePluginFile(rel, content) {
+  const full = resolve(root, rel);
+  mkdirSync(dirname(full), { recursive: true });
+  writeFileSync(full, `${JSON.stringify(content, null, 2)}\n`);
+  return rel;
+}
+
+function buildCodexPluginMcpJson(surface) {
+  const env = {
+    BLEKLINE_API_URL: apiUrl,
     BLEKLINE_WORKSPACE_TOKEN: PLACEHOLDER_TOKEN,
     BLEKLINE_CLIENT_SURFACE: surface,
   };
@@ -248,13 +280,6 @@ function buildPluginMcpJson(surface) {
   };
 }
 
-function writePluginFile(rel, content) {
-  const full = resolve(root, rel);
-  mkdirSync(dirname(full), { recursive: true });
-  writeFileSync(full, `${JSON.stringify(content, null, 2)}\n`);
-  return rel;
-}
-
 function writePluginMcpExamples(names) {
   const out = [];
   const want = new Set(names);
@@ -266,7 +291,7 @@ function writePluginMcpExamples(names) {
     out.push(writePluginFile("plugins/cursor/mcp.json.example", cfg));
   }
   if (writeCodex && (want.has("codex") || existsSync(join(root, "plugins", "codex")))) {
-    const cfg = buildPluginMcpJson("codex");
+    const cfg = buildCodexPluginMcpJson("codex");
     out.push(writePluginFile("plugins/codex/.mcp.json", cfg));
     out.push(writePluginFile("plugins/codex/.mcp.json.example", cfg));
   }

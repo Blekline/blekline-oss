@@ -9,7 +9,7 @@ This project uses Blekline Cursor hooks for chat ingress. When hooks allow a pro
 
 1. Call `blekline_mask_prompt` on any user text that may contain emails, phone numbers, credentials, API keys, or customer data **before** using it in reasoning or downstream tools.
 2. Route sandbox/tool MCP servers through `blekline-proxy` when enforcing tool policy.
-3. If a prompt was blocked by Blekline, ask the user to paste the masked version Blekline provided (clipboard) — do not reconstruct secrets from memory.
+3. If a prompt was blocked by Blekline, ask the user to paste the masked version Blekline provided (clipboard) — do not reconstruct secrets from memory. Native Cursor chat is block + clipboard, not silent auto-send.
 4. Never read `.env` or key files directly; use masked excerpts from the user or `blekline_mask_prompt`.
 
 Control plane: https://app.blekline.com · Docs: /docs/mcp/cursor

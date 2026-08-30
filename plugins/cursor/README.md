@@ -8,8 +8,13 @@ Governance for Cursor: chat mask, file/shell/tool/MCP guards, and MCP servers (`
 
 1. Cursor Settings → Plugins → add local plugin from `plugins/cursor/`
 2. Or copy this folder to `~/.cursor/plugins/local/blekline`
-3. Run `npx @blekline/cursor-hooks init` in the workspace (writes `.cursor/hooks/*.sh` and `.cmd` wrappers)
-4. Set `workspaceToken` in `.blekline/cursor.json` to your token (placeholder `blw_...` only in git)
+3. Run `npx @blekline/cursor-hooks init` — writes hooks, **`.cursor/blekline/run-mcp-*.mjs`** (plugin MCP entrypoints), and **`.blekline/mcp.env`**
+4. Set `workspaceToken` in `.blekline/cursor.json` (`blw_...`) then re-run init to refresh `mcp.env`
+5. Reload Cursor → plugin MCP should connect green; listing icon from `assets/logo.svg`
+
+**Avoid duplicate MCP entries:** Disable workspace `.cursor/mcp.json` blekline servers when using the plugin MCP — keep only one set enabled.
+
+**Monorepo dev:** Launchers prefer `packages/mcp-server` / `mcp-proxy` dist when present; otherwise `~/.cache/blekline/`. Do not use bare `npx @blekline/mcp-server` (broken Homebrew shim on some machines).
 
 **npm:**
 
@@ -39,4 +44,4 @@ Seven wrappers over `@blekline/cursor-hooks` (shell/`.cmd`, not bare `node`):
 
 ## Logo
 
-See `assets/` — source `webapp/public/branding/blekline_webclip.png`.
+Plugin listing uses `assets/logo.svg` (from `webapp/public/branding/blekline-icon.svg`). PNG webclip copy optional for marketplace screenshots — see `assets/README.md`.

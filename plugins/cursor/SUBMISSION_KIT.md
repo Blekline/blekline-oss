@@ -1,45 +1,89 @@
 # Cursor marketplace submission kit
 
-QA before submitting this plugin. Logo: copy of `webapp/public/branding/blekline_webclip.png` in `assets/logo.png`.
+Last audited: **2026-08-30** · Headless: `pnpm demo:cursor-plugin-submission-audit`
+
+## Status summary
+
+| Area | Status |
+|------|--------|
+| Manifest + marketplace.json | Pass |
+| Skills (4) + commands (3) + rules | Pass |
+| Hooks (7 events, `.sh` + `.cmd`) | Pass |
+| MCP (workspace-relative paths) | Pass |
+| Honest claims (block + clipboard) | Pass |
+| Headless smokes | Pass |
+| OSS sync (`.cursor-plugin/` included) | Pass after `pnpm sync:oss` |
+| Listing screenshot 1280×800 | **You** — not in repo |
+| Cursor publisher submit | **You** — after OSS push |
 
 ## Manifest
 
-- [ ] `.cursor-plugin/plugin.json` has `name` `blekline` and `displayName` `Blekline`
-- [ ] Paths are relative (`./skills/`, `./hooks/hooks.json`, `./assets/logo.png`) — no `..` or absolute paths
-- [ ] `logo` file exists
-- [ ] Skills ≤ 4, commands ≤ 3, each with YAML `name` + `description`
-- [ ] Rules have YAML frontmatter
+- [x] `.cursor-plugin/plugin.json` — `name` `blekline`, `displayName` `Blekline`
+- [x] `marketplace.json` at plugin root (`source: "./"`)
+- [x] Paths relative — no `..` or absolute paths
+- [x] `logo`: `assets/logo.svg` (+ optional `logo.png` for screenshots)
+- [x] Skills ≤ 4, commands ≤ 3, YAML `name` + `description`
+- [x] Rules have YAML frontmatter
+- [x] Plugin `variables`: `BLEKLINE_WORKSPACE_TOKEN` (required), `BLEKLINE_API_URL`
 
 ## Honest claims
 
-- [ ] README states native chat is **block + clipboard**, not silent auto-send
-- [ ] No screenshot or listing copy that shows auto-rewritten compose-box send
-- [ ] Token examples are `blw_...` only
+- [x] README: native chat is **block + clipboard**, not silent auto-send
+- [x] No listing copy implying auto-rewritten compose box
+- [x] Token examples are `blw_...` placeholders only
 
 ## Hooks
 
-- [ ] `hooks/hooks.json` points at `./hooks/blekline-*.sh` (shell wrappers, not bare `node`)
-- [ ] Windows `.cmd` wrappers exist next to `.sh`
-- [ ] Local install: send a prompt with `AKIAIOSFODNN7EXAMPLE` → block + clipboard
-- [ ] Read `.env` via agent → deny
-- [ ] `cat .env` in shell → deny
+- [x] `hooks/hooks.json` → `./hooks/blekline-*.sh` (not bare `node`)
+- [x] Windows `.cmd` wrappers paired with every `.sh`
+- [x] Smoke: `AKIAIOSFODNN7EXAMPLE` → block; `.env` read/shell → deny
 
-## MCP
+## MCP (critical for plugin MCP)
 
-- [ ] `mcp.json` uses placeholder `blw_replace_with_workspace_token`
-- [ ] `blekline` and `blekline-proxy` servers start (`npx -y @blekline/mcp-server`)
+Plugin MCP **does not expand** `${workspaceFolder}`. Use workspace-relative paths only.
+
+- [x] `args`: `.cursor/blekline/run-mcp-server.mjs` (written by `npx @blekline/cursor-hooks init`)
+- [x] `envFile`: `.blekline/mcp.env` (synced from `.blekline/cursor.json` on init)
+- [x] Env placeholders: `${BLEKLINE_WORKSPACE_TOKEN}`, `${BLEKLINE_API_URL}`
+- [x] Do **not** ship `plugins/cursor/scripts/` launchers — init installs to workspace
+
+**User flow after install:**
+
+```bash
+npx @blekline/cursor-hooks init   # .cursor/blekline/* + .blekline/mcp.env
+# set workspaceToken in .blekline/cursor.json, re-run init
+# Developer: Reload Window in Cursor
+```
 
 ## Assets
 
 ```bash
-cp webapp/public/branding/blekline_webclip.png plugins/cursor/assets/logo.png
+cp webapp/public/branding/blekline-icon.svg plugins/cursor/assets/logo.svg
+cp webapp/public/branding/blekline_webclip.png plugins/cursor/assets/logo.png  # optional screenshot
 ```
 
-Square webclip; listing may also need a 1280×800 screenshot (not committed here).
+## Headless QA (run before submit)
 
-## Install smoke
+```bash
+pnpm demo:cursor-hook-smoke
+pnpm demo:cursor-plugin-install-smoke
+pnpm demo:cursor-plugin-submission-audit
+pnpm audit:oss-public && pnpm sync:oss
+```
 
-1. Copy plugin to `~/.cursor/plugins/local/blekline`
-2. Reload Cursor → plugin appears as **Blekline**
-3. Enable MCP servers and trust hooks
-4. Run `/init-hooks` (or `npx @blekline/cursor-hooks init`)
+## Manual submit checklist
+
+1. Push **`blekline-oss`** with `plugins/cursor/` (includes `.cursor-plugin/`, `marketplace.json`)
+2. Cursor → **Settings → Plugins → Publish** (or current publisher flow)
+3. Connect **github.com/Blekline/blekline-oss** path `plugins/cursor` if Git-based
+4. Listing name: **Blekline**
+5. Screenshot **1280×800**: MCP green + block notice (not fake auto-send UI)
+6. Submit → wait review
+
+## Local reference install
+
+```bash
+cp -R plugins/cursor ~/.cursor/plugins/local/blekline
+npx @blekline/cursor-hooks init
+# Reload Cursor → enable plugin MCP → trust hooks
+```

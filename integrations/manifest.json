@@ -71,6 +71,18 @@
       "configFormat": "mcp-json"
     },
     {
+      "id": "vscode-extension",
+      "tier": "verified",
+      "repoPath": "vscode-extension/",
+      "configPathHuman": "VS Code extension (Marketplace or VSIX)",
+      "BLEKLINE_CLIENT_SURFACE": "github-copilot",
+      "headless": true,
+      "docSlug": "mcp/github-copilot",
+      "verify": ["demo:vscode-extension-smoke"],
+      "includesProxy": false,
+      "configFormat": null
+    },
+    {
       "id": "continue",
       "tier": "verified",
       "repoPath": ".vscode/continue.config.json.example",
