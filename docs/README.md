@@ -4,7 +4,9 @@ All Blekline documentation lives at **[app.blekline.com/docs](https://app.blekli
 
 | Topic | Link |
 |-------|------|
-| **Eval journey** | [app.blekline.com/docs/get-started/eval-journey](https://app.blekline.com/docs/get-started/eval-journey) |
+| **Choose your path** | [app.blekline.com/docs/get-started/paths](https://app.blekline.com/docs/get-started/paths) |
+| Quick start | [app.blekline.com/docs](https://app.blekline.com/docs) |
+| Eval journey | [app.blekline.com/docs/get-started/eval-journey](https://app.blekline.com/docs/get-started/eval-journey) |
 | NHIM audit quickstart | [app.blekline.com/docs/get-started/nhim-audit-quickstart](https://app.blekline.com/docs/get-started/nhim-audit-quickstart) |
 | NHIM audit tool reference | [app.blekline.com/docs/tools/nhim-audit](https://app.blekline.com/docs/tools/nhim-audit) |
 | Glossary (A–Z) | [app.blekline.com/docs/definitions](https://app.blekline.com/docs/definitions) |

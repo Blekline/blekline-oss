@@ -169,7 +169,7 @@ export async function runScenario(scenarioId) {
         evidence: {
           brokenScore: brokenReport.score.value,
           fixedScore: fixedReport.score.value,
-          redTeamPhase0: brokenReport.redTeamPhase0,
+          redTeamPhase0: brokenReport.score?.staticGateStatus ?? brokenReport.score?.redTeamPhase0,
         },
       };
     }

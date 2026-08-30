@@ -1,0 +1,36 @@
+{
+  "name": "@blekline/init",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "description": "Detect Claude/Cursor/Codex workspaces and write a Blekline policy stub",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Blekline/blekline-oss.git",
+    "directory": "packages/init"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "bin": {
+    "blekline-init": "./init.mjs"
+  },
+  "exports": {
+    ".": "./init.mjs",
+    "./detect": "./lib/detect.mjs",
+    "./policy": "./lib/policy.mjs"
+  },
+  "files": [
+    "*.mjs",
+    "lib",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node -e \"console.log('@blekline/init: no compile step')\"",
+    "test": "node --test tests/*.test.mjs"
+  }
+}

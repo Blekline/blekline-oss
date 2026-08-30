@@ -1,5 +1,14 @@
 {
   "version": 1,
+  "feeds": {
+    "llmsMarketing": "https://blekline.com/llms.txt",
+    "llmsApp": "https://app.blekline.com/llms.txt",
+    "threatsCatalog": "https://app.blekline.com/marketing/threats/catalog.json",
+    "threatsRss": "https://app.blekline.com/marketing/threats/feed.rss",
+    "arenaLatest": "https://app.blekline.com/marketing/arena/latest.json",
+    "benchmarksLatest": "https://app.blekline.com/marketing/benchmarks/latest.json",
+    "cyberModelArena": "https://blekline.com/cyber-model-arena"
+  },
   "entries": [
     {
       "id": "cli",
@@ -96,6 +105,18 @@
       "verify": ["tools/list"],
       "includesProxy": true,
       "configFormat": "codex-toml"
+    },
+    {
+      "id": "vscode-extension",
+      "tier": "verified",
+      "repoPath": "vscode-extension/",
+      "configPathHuman": "vscode-extension/ (Marketplace pending)",
+      "BLEKLINE_CLIENT_SURFACE": "github-copilot",
+      "headless": true,
+      "docSlug": "mcp/vscode",
+      "verify": ["demo:vscode-extension-smoke"],
+      "includesProxy": true,
+      "configFormat": null
     }
   ]
 }

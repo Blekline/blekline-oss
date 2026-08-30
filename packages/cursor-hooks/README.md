@@ -14,7 +14,16 @@ Cursor IDE hooks for Blekline enterprise governance (chat, shell, tools, MCP, re
 | `afterShellExecution` | `after-shell-execution.mjs` | Metadata audit on command output patterns |
 | `sessionStart` | `session-start.mjs` | Inject session env + governance context |
 
-Use **shell wrappers** in `.cursor/hooks/blekline-*.sh` — never bare `node` + `args` in `hooks.json`.
+Use **shell wrappers** in `.cursor/hooks/blekline-*.sh` (and `.cmd` on Windows) — never bare `node` + `args` in `hooks.json`.
+
+## Init
+
+```bash
+npx @blekline/cursor-hooks init
+# or: blekline-cursor-hooks-init
+```
+
+Writes `.cursor/hooks.json`, POSIX `.sh` + Windows `.cmd` wrappers under `.cursor/hooks/`, and `.blekline/cursor.json` (placeholder `blw_...` only; existing file is kept unless `--force`).
 
 ## Config (`.blekline/cursor.json`)
 
@@ -49,4 +58,4 @@ node ../../scripts/cursor-hook-smoke.mjs
 - Cloud Agents: no chat-submit or MCP-exec hooks (Cursor platform)
 - Production agents: use ingress proxy + MCP proxy
 
-See [Cursor enterprise governance](https://app.blekline.com/docs/enterprise/cursor-enterprise).
+See [Cursor governance](https://app.blekline.com/docs/mcp/cursor).

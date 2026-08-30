@@ -2,6 +2,7 @@ import type { BleklineClient } from "@blekline/client";
 import type { ClientSurface } from "@blekline/contracts";
 import { BLEKLINE_MCP_TOOLS, resolveToolName } from "./registry.js";
 import { formatToolError, toolErrorResult, toolTextResult } from "./errors.js";
+import { handleThreatSearch, handleArenaLookup } from "./public-intel.js";
 
 export type ToolHandlerContext = {
   client: BleklineClient;
@@ -68,6 +69,16 @@ export async function executeBleklineMcpTool(
         clientSurface: ctx.clientSurface,
       });
       return toolTextResult({ ok: true, ...result });
+    }
+
+    if (name === BLEKLINE_MCP_TOOLS.threatSearch) {
+      const matches = await handleThreatSearch(args);
+      return toolTextResult({ ok: true, matches, catalogUrl: "https://blekline.com/threats" });
+    }
+
+    if (name === BLEKLINE_MCP_TOOLS.arenaLookup) {
+      const rows = await handleArenaLookup(args);
+      return toolTextResult({ ok: true, rows, arenaUrl: "https://blekline.com/cyber-model-arena" });
     }
 
     return toolErrorResult({

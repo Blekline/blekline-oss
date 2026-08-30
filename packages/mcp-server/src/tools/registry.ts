@@ -4,7 +4,14 @@ export const BLEKLINE_MCP_TOOLS = {
   simulatePolicy: "blekline_simulate_policy",
   logGovernanceEvent: "blekline_log_governance_event",
   evaluateToolCall: "blekline_evaluate_tool_call",
+  threatSearch: "blekline_threat_search",
+  arenaLookup: "blekline_arena_lookup",
 } as const;
+
+const MARKETING_ORIGIN =
+  process.env.BLEKLINE_MARKETING_JSON_ORIGIN?.trim() || "https://app.blekline.com";
+export const THREAT_CATALOG_URL = `${MARKETING_ORIGIN}/marketing/threats/catalog.json`;
+export const ARENA_LATEST_URL = `${MARKETING_ORIGIN}/marketing/arena/latest.json`;
 
 /** Deprecated aliases — kept for Cursor/Codex configs until 0.5.0. */
 export const BLEKLINE_MCP_TOOL_ALIASES: Record<string, string> = {
@@ -99,6 +106,43 @@ const TOOL_DEFS: BleklineMcpToolDef[] = [
         platform: { type: "string" },
       },
       required: ["toolName", "arguments"],
+    },
+  },
+  {
+    name: BLEKLINE_MCP_TOOLS.threatSearch,
+    title: "Search agent threat catalog",
+    description:
+      "Read-only search of the public Agent Threat Landscape (blekline.com/threats). Filter by stack tag, tier, or ASI tag.",
+    readOnlyHint: true,
+    destructiveHint: false,
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Free-text search in title/summary" },
+        stackTag: { type: "string", description: "e.g. kubernetes, mcp, cursor" },
+        tier: { type: "string", enum: ["S", "A", "B", "C"] },
+        asiTag: { type: "string", description: "e.g. ASI02" },
+        limit: { type: "number", description: "Max results (default 5)" },
+      },
+    },
+  },
+  {
+    name: BLEKLINE_MCP_TOOLS.arenaLookup,
+    title: "Lookup Agent Security Arena scores",
+    description:
+      "Read-only lookup of agent×model scores from the public Agent Security Arena leaderboard (blekline.com/cyber-model-arena).",
+    readOnlyHint: true,
+    destructiveHint: false,
+    inputSchema: {
+      type: "object",
+      properties: {
+        agent: { type: "string", description: "e.g. cursor, claude_code" },
+        model: { type: "string", description: "e.g. gpt-5-2, kimi-k2" },
+        category: {
+          type: "string",
+          enum: ["agent_boundary", "code_vulns", "api_security", "web_security", "cloud_k8s"],
+        },
+      },
     },
   },
 ];

@@ -25,7 +25,7 @@ pnpm verify:integrations  # config + manifest checks
 pnpm --filter @blekline/mcp-proxy test
 ```
 
-**Pitch:** Blekline = **Layer 4** governance. Pick an **Layer 1** sandbox — [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers). [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
+**Pitch:** Blekline = **Layer 4** governance. Pick an **Layer 1** sandbox — [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers). [Architecture](https://app.blekline.com/docs/introduction/architecture)
 
 **Docs:** [app.blekline.com/docs](https://app.blekline.com/docs) · [Eval journey](https://app.blekline.com/docs/get-started/eval-journey)
 

@@ -1,5 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import {
+  cursorHookFieldsForMaskBackend,
+  parseMaskBackend,
+} from "../../client-hooks/lib/mask-backend.mjs";
 
 const PLACEHOLDER_TOKEN = "blw_replace_with_workspace_token";
 const DEFAULT_API_URL = "https://app.blekline.com";
@@ -25,6 +29,8 @@ const DEFAULT_API_URL = "https://app.blekline.com";
  * @property {boolean} copyMaskedToClipboard
  * @property {boolean} emitAuditEvents
  * @property {boolean} showMaskedInUi
+ * @property {'local' | 'hosted' | 'sidecar'} maskBackend
+ * @property {string} [sidecarUrl]
  * @property {number} maskTimeoutMs
  */
 
@@ -42,6 +48,8 @@ export function findWorkspaceRoot(startDir = process.cwd()) {
   for (let i = 0; i < 12; i += 1) {
     if (
       existsSync(join(dir, ".cursor")) ||
+      existsSync(join(dir, ".codex")) ||
+      existsSync(join(dir, ".blekline")) ||
       existsSync(join(dir, "integrations", "manifest.json")) ||
       existsSync(join(dir, "pnpm-workspace.yaml"))
     ) {
@@ -128,7 +136,23 @@ export function loadCursorHookConfig(cwd = process.cwd()) {
   const promptMaskSourceRaw = String(
     fileCfg.promptMaskSource ?? process.env.BLEKLINE_CURSOR_PROMPT_MASK_SOURCE ?? "local"
   ).trim();
-  const promptMaskSource = promptMaskSourceRaw === "cloud" ? "cloud" : "local";
+  let promptMaskSource = promptMaskSourceRaw === "cloud" ? "cloud" : "local";
+
+  const policyJson = readJsonFile(join(root, ".blekline", "policy.json"));
+  const policyBackend = parseMaskBackend(
+    policyJson?.maskBackend ?? process.env.BLEKLINE_MASK_BACKEND
+  );
+  const maskBackend =
+    policyBackend ?? (promptMaskSource === "cloud" ? "hosted" : "local");
+  const backendFields = cursorHookFieldsForMaskBackend(maskBackend, {
+    apiUrl,
+    sidecarUrl:
+      typeof fileCfg.sidecarUrl === "string"
+        ? fileCfg.sidecarUrl
+        : process.env.BLEKLINE_SIDECAR_URL,
+  });
+  promptMaskSource = backendFields.promptMaskSource;
+  const resolvedApiUrl = backendFields.apiUrl ?? apiUrl;
 
   const enterprisePreset =
     fileCfg.enterprisePreset === true || process.env.BLEKLINE_CURSOR_ENTERPRISE_PRESET === "1";
@@ -181,12 +205,14 @@ export function loadCursorHookConfig(cwd = process.cwd()) {
   );
 
   return {
-    apiUrl,
+    apiUrl: resolvedApiUrl,
     workspaceToken,
     platform: String(fileCfg.platform ?? "cursor"),
     promptPolicy,
     promptGuardMode,
     promptMaskSource,
+    maskBackend,
+    sidecarUrl: backendFields.sidecarUrl,
     failClosed,
     readGuard,
     shellGuard,

@@ -15,6 +15,7 @@ Full docs: [app.blekline.com/docs](https://app.blekline.com/docs).
 | Continue | [`.vscode/continue.config.json.example`](../.vscode/continue.config.json.example) | `continue` | [Continue](https://app.blekline.com/docs/mcp/continue) |
 | Claude Desktop | [`config/claude_desktop_config.json.example`](../config/claude_desktop_config.json.example) | `claude-desktop` | [Claude Desktop](https://app.blekline.com/docs/mcp/claude-desktop) |
 | Codex | [`.codex/config.toml.example`](../.codex/config.toml.example) | `codex` | [Codex](https://app.blekline.com/docs/mcp/codex) |
+| Init (all clients) | `npx @blekline/init` | per client | [Quick start](https://app.blekline.com/docs) |
 
 ## Pattern guides (app docs only)
 
@@ -25,7 +26,7 @@ Stack wiring via MCP proxy or SDK — no dedicated config in this repo:
 | OpenHands | `openhands` | [OpenHands](https://app.blekline.com/docs/mcp/openhands) |
 | Sourcegraph Cody | `sourcegraph-cody` | [Cody](https://app.blekline.com/docs/mcp/sourcegraph-cody) |
 
-Also: [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers) · [Agent clients](https://app.blekline.com/docs/integrations/agent-clients) · [AI enablement stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
+Also: [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers) · [Agent clients](https://app.blekline.com/docs/integrations/agent-clients) · [Architecture](https://app.blekline.com/docs/introduction/architecture)
 
 ## Cloud-only
 

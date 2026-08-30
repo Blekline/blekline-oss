@@ -52,3 +52,9 @@ https://app.blekline.com/docs
 - `@blekline/nhim-audit` — static K8s NHIM audit CLI (AGPL)
 - `@blekline/client` — TypeScript SDK (Apache-2.0)
 - `@blekline/contracts` — schemas + local enforce (Apache-2.0)
+- `@blekline/init` — one-shot client wiring (`npx @blekline/init`)
+- `@blekline/cursor-hooks` / `@blekline/codex-hooks` — IDE hook packages (Apache-2.0)
+- `@blekline/claude-sdk` — Claude ingress SDK (Apache-2.0)
+- `@blekline/client-hooks` — shared hook utilities (Apache-2.0)
+
+Private moat (never OSS): `runtime-engine`, `k8s-admission`, `kernel-plane`.

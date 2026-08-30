@@ -11,8 +11,11 @@ const TRACKED_LIVE_CONFIGS = [
   ".cursor/mcp.json",
   ".cursor/hooks.json",
   ".blekline/cursor.json",
+  ".blekline/codex.json",
+  ".blekline/policy.json",
   ".claude/settings.json",
   ".codex/config.toml",
+  ".codex/hooks.json",
   ".vscode/mcp.json",
   "config/claude_desktop_config.generated.json",
   "config/claude-desktop.generated.json",
@@ -98,6 +101,11 @@ for (const sh of [
 const cursorCfgExample = join(ROOT, "config/blekline/cursor.json.example");
 if (!existsSync(cursorCfgExample)) {
   errors.push("MISSING config/blekline/cursor.json.example");
+}
+
+const policyExample = join(ROOT, ".blekline/policy.json.example");
+if (!existsSync(policyExample)) {
+  errors.push("MISSING .blekline/policy.json.example");
 }
 
 if (errors.length) {

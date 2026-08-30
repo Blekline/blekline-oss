@@ -1,0 +1,41 @@
+{
+  "name": "@blekline/codex-hooks",
+  "version": "0.1.0",
+  "license": "AGPL-3.0-or-later",
+  "description": "Thin Codex hook adapter over @blekline/cursor-hooks (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Blekline/blekline-oss.git",
+    "directory": "packages/codex-hooks"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "bin": {
+    "blekline-codex-hooks": "./adapter.mjs",
+    "blekline-codex-hooks-init": "./init.mjs"
+  },
+  "exports": {
+    ".": "./lib/adapter.mjs",
+    "./adapter": "./lib/adapter.mjs",
+    "./init": "./init.mjs"
+  },
+  "files": [
+    "*.mjs",
+    "lib",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@blekline/client-hooks": "workspace:*",
+    "@blekline/cursor-hooks": "workspace:*"
+  },
+  "scripts": {
+    "build": "node -e \"console.log('@blekline/codex-hooks: no compile step')\"",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
