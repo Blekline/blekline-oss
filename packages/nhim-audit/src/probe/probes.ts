@@ -59,13 +59,16 @@ function sidecarEnforceUrl(
 }
 
 function sidecarServiceUrl(cluster: ClusterSnapshot, ns: string, port: number): string | null {
-  const svc = cluster.services.find(
+  const inNamespace = cluster.services.filter((s) => s.namespace === ns);
+  const sidecarLike = inNamespace.filter(
     (s) =>
-      s.namespace === ns ||
       s.ports.includes(port) ||
-      s.name.includes("sidecar") ||
-      s.name.includes("proxy"),
+      /sidecar|blekline|ingress-proxy|proxy/i.test(s.name),
   );
+  const svc =
+    sidecarLike.find((s) => /sidecar|blekline/i.test(s.name)) ??
+    sidecarLike.find((s) => s.ports.includes(port)) ??
+    sidecarLike[0];
   if (!svc) return null;
   const svcPort = svc.ports.find((p) => p === port) ?? port;
   return `http://${svc.name}.${svc.namespace}.svc.cluster.local:${svcPort}`;
@@ -392,22 +395,22 @@ async function runLiveProbes(
     (options.token.startsWith("blw_eval_") ? options.token.slice("blw_eval_".length) : "");
   if (sidecarAuth.length >= 8) {
     try {
+      const authEscaped = sidecarAuth.replace(/'/g, `'\\''`);
+      const probeScript = `
+AUTH_FILE=$(mktemp 2>/dev/null || mktemp -t blekline-probe)
+chmod 600 "$AUTH_FILE" 2>/dev/null || true
+printf '%s' '${authEscaped}' > "$AUTH_FILE"
+CODE=$(curl -s -o /dev/null -w '%{http_code}' -X POST '${sidecarUrl}${enforcePath}' \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $(cat "$AUTH_FILE")" \
+  -d '{"toolName":"read_file","arguments":{}}')
+rm -f "$AUTH_FILE"
+printf '%s' "$CODE"
+`.trim();
       const r3 = await execInPod(kc, candidate.namespace, podRef.podName, podRef.container, [
-        "curl",
-        "-s",
-        "-o",
-        "/dev/null",
-        "-w",
-        "%{http_code}",
-        "-X",
-        "POST",
-        `${sidecarUrl}${enforcePath}`,
-        "-H",
-        "Content-Type: application/json",
-        "-H",
-        `Authorization: Bearer ${sidecarAuth}`,
-        "-d",
-        '{"toolName":"read_file","arguments":{}}',
+        "sh",
+        "-c",
+        probeScript,
       ]);
       const code = parseInt(r3.stdout.trim(), 10);
       const ok = code >= 200 && code < 300;

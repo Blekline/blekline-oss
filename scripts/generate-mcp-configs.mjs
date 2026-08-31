@@ -77,7 +77,7 @@ const absRoot = root.replace(/\\/g, "/");
 
 function serverCommand() {
   if (isOss) {
-    return { command: "npx", args: ["-y", "@blekline/mcp-server"] };
+    return { command: "npx", args: ["-y", "@blekline/mcp-server@0.4.2"] };
   }
   if (isLocal) {
     return {
@@ -93,7 +93,7 @@ function serverCommand() {
 
 function proxyCommand() {
   if (isOss) {
-    return { command: "npx", args: ["-y", "@blekline/mcp-proxy"] };
+    return { command: "npx", args: ["-y", "@blekline/mcp-proxy@0.4.2"] };
   }
   return {
     command: "node",

@@ -4,7 +4,11 @@
 import http from "node:http";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { performance } from "node:perf_hooks";
-import { scanTextForSecrets, enforceToolCallLocally } from "@blekline/contracts";
+import {
+  scanTextForSecrets,
+  enforceToolCallLocally,
+  normalizeMcpToolPolicy,
+} from "@blekline/contracts";
 
 const log = {
   info(msg, detail) {
@@ -49,6 +53,15 @@ const metrics = {
   upstreamMs: [],
   enforceCalls: 0,
 };
+
+const RESPONSE_HEADER_ALLOWLIST = new Set([
+  "content-type",
+  "cache-control",
+  "x-request-id",
+  "x-ratelimit-limit",
+  "x-ratelimit-remaining",
+  "x-ratelimit-reset",
+]);
 
 const FORWARD_HEADER_ALLOWLIST = new Set([
   "authorization",
@@ -241,7 +254,7 @@ async function connectPolicyStream() {
           try {
             const payload = JSON.parse(dataLine.slice(6));
             if (payload.mcpToolPolicy) {
-              policyCache.mcpToolPolicy = payload.mcpToolPolicy;
+              policyCache.mcpToolPolicy = normalizeMcpToolPolicy(payload.mcpToolPolicy);
               policyCache.revision = payload.revision ?? policyCache.revision;
             }
           } catch {
@@ -263,19 +276,28 @@ const server = http.createServer(async (req, res) => {
   const path = req.url?.split("?")[0] ?? "/";
 
   if (req.method === "GET" && path === "/health") {
+    if (sidecarAuth && !authOk(req)) {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Unauthorized", code: "SIDECAR_AUTH_FAILED" }));
+      return;
+    }
     const local = [...metrics.localMaskMs].sort((a, b) => a - b);
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
         ok: true,
         region,
-        target,
-        localMask,
-        listenHost,
-        oss: true,
-        trustVault: false,
-        lineage: false,
-        policyRevision: policyCache.revision,
+        ...(sidecarAuth
+          ? {}
+          : {
+              target,
+              localMask,
+              listenHost,
+              oss: true,
+              trustVault: false,
+              lineage: false,
+              policyRevision: policyCache.revision,
+            }),
         latency: {
           localMaskP50Ms: percentile(local, 50).toFixed(2),
           localMaskP95Ms: percentile(local, 95).toFixed(2),
@@ -307,12 +329,20 @@ const server = http.createServer(async (req, res) => {
     metrics.enforceCalls += 1;
     const t0 = performance.now();
 
-    const result = enforceToolCallLocally({
-      toolName: validated.toolName,
-      arguments: validated.arguments,
-      requestId: `edge-${Date.now()}`,
-      mcpToolPolicy: policyCache.mcpToolPolicy ?? undefined,
-    });
+    let result;
+    try {
+      result = enforceToolCallLocally({
+        toolName: validated.toolName,
+        arguments: validated.arguments,
+        requestId: `edge-${Date.now()}`,
+        mcpToolPolicy: policyCache.mcpToolPolicy ?? undefined,
+      });
+    } catch (err) {
+      log.error("enforce_failed", { err: String(err) });
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Enforcement failed", code: "ENFORCE_ERROR" }));
+      return;
+    }
     res.writeHead(200, {
       "Content-Type": "application/json",
       "x-blekline-ingress-region": region,
@@ -334,6 +364,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   const upstreamPath = routeMap[path];
+  if (upstreamPath && req.method === "POST") {
+    if (!requireAuth(req, res)) return;
+  }
   if (!upstreamPath || req.method !== "POST") {
     res.writeHead(404, { "Content-Type": "application/json" });
     res.end(
@@ -422,11 +455,16 @@ const server = http.createServer(async (req, res) => {
         /* pass through */
       }
     }
-    res.writeHead(upstream.status, {
-      ...Object.fromEntries(upstream.headers.entries()),
+    const responseHeaders = {
       "x-blekline-ingress-region": region,
       "x-blekline-edge-upstream-ms": String(Math.round(ms)),
-    });
+    };
+    for (const [k, v] of upstream.headers.entries()) {
+      if (RESPONSE_HEADER_ALLOWLIST.has(k.toLowerCase())) {
+        responseHeaders[k] = v;
+      }
+    }
+    res.writeHead(upstream.status, responseHeaders);
     res.end(outText);
   } catch (err) {
     log.error("upstream_failed", { errorId, err: String(err) });

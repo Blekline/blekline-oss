@@ -2,15 +2,37 @@ import { randomUUID } from "node:crypto";
 import { enforceToolCallLocally } from "@blekline/contracts";
 import { emitGovernanceEvent } from "./emit-governance.mjs";
 
+const DEFAULT_PROXY_SERVER_NAMES = ["blekline-proxy", "blekline-mcp-proxy"];
+
+function configuredProxyServerNames() {
+  const raw = process.env.BLEKLINE_CURSOR_PROXY_SERVER_NAMES?.trim();
+  if (!raw) return DEFAULT_PROXY_SERVER_NAMES;
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 /**
+ * Exact match for Blekline MCP proxy — substring bypass is rejected.
  * @param {object} input
  * @returns {boolean}
  */
 function isBleklineProxyServer(input) {
+  const serverName = typeof input?.server === "string" ? input.server.trim() : "";
+  if (serverName && configuredProxyServerNames().includes(serverName)) {
+    return true;
+  }
+
   const command = typeof input?.command === "string" ? input.command : "";
-  const url = typeof input?.url === "string" ? input.url : "";
-  const blob = `${command} ${url}`.toLowerCase();
-  return blob.includes("blekline-proxy") || blob.includes("mcp-proxy");
+  if (/\bnpx\b.*@blekline\/mcp-proxy(?:@\d|@|\s|$)/.test(command)) return true;
+  if (/\bnode\b.*[/\\]mcp-proxy[/\\]/.test(command)) return true;
+  if (/\bnode\b.*[/\\]packages[/\\]mcp-proxy[/\\]/.test(command)) return true;
+  if (command.endsWith("blekline-mcp-proxy") || command.endsWith("@blekline/mcp-proxy")) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -80,19 +102,22 @@ export async function runBeforeMcpExecutionHook(input, config) {
   });
 
   if (config.workspaceToken && config.mcpGuardMode === "auto") {
-    const needsCloud =
-      result.action === "block" || result.action === "mask" || result.entitiesMasked > 0;
-    if (needsCloud) {
-      const cloud = await enforceViaCloud(config, toolName, toolInput);
-      if (cloud && typeof cloud.action === "string") {
-        result = {
-          ...result,
-          action: cloud.action,
-          entitiesMasked: typeof cloud.entitiesMasked === "number" ? cloud.entitiesMasked : result.entitiesMasked,
-          riskTier: cloud.riskTier ?? result.riskTier,
-          findings: cloud.findings ?? result.findings,
-        };
-      }
+    const cloud = await enforceViaCloud(config, toolName, toolInput);
+    if (cloud && typeof cloud.action === "string") {
+      result = {
+        ...result,
+        action: cloud.action,
+        entitiesMasked: typeof cloud.entitiesMasked === "number" ? cloud.entitiesMasked : result.entitiesMasked,
+        riskTier: cloud.riskTier ?? result.riskTier,
+        findings: cloud.findings ?? result.findings,
+      };
+    } else if (config.failClosed || config.enterprisePreset) {
+      return {
+        permission: "deny",
+        user_message: "Blekline could not verify MCP policy (cloud unavailable).",
+        agent_message:
+          "MCP tool call blocked — cloud policy check failed. Retry when online or route through blekline-proxy.",
+      };
     }
   }
 

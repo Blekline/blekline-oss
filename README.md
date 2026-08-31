@@ -4,7 +4,7 @@
 <a href="https://app.blekline.com"><img src="assets/images/blekline-oss-og.png" alt="Blekline — Mask, enforce, and audit AI agents at the MCP boundary" width="100%"/></a>
 <picture>
 <source media="(prefers-color-scheme: light)" srcset="assets/images/blekline-logo-light.svg"/>
-<img alt="Blekline" src="assets/images/blekline-logo-dark.svg" width="210"/>
+<img alt="Blekline" src="assets/images/blekline-logo-dark.svg" width="320"/>
 </picture>
 </div>
 <p align="center">
@@ -55,8 +55,8 @@ CLI: [cli/README.md](cli/README.md) · CI: [ci/](ci/) · 3-minute product path: 
 | `@blekline/contracts` | workspace / embed | Apache-2.0 |
 | `@blekline/init` | `npx @blekline/init` | Apache-2.0 |
 | `@blekline/claude-sdk` | `npm i @blekline/claude-sdk` | Apache-2.0 |
-| `@blekline/cursor-hooks` | `npm i @blekline/cursor-hooks` | Apache-2.0 |
-| `@blekline/codex-hooks` | `npm i @blekline/codex-hooks` | Apache-2.0 |
+| `@blekline/cursor-hooks` | `npm i @blekline/cursor-hooks` | AGPL-3.0 |
+| `@blekline/codex-hooks` | `npm i @blekline/codex-hooks` | AGPL-3.0 |
 | `@blekline/client-hooks` | workspace / hooks | Apache-2.0 |
 | `@blekline/nhim-audit` | `npx @blekline/nhim-audit audit` | AGPL-3.0 |
 
@@ -163,7 +163,7 @@ Private team: develop in the `blekline` monorepo → `pnpm audit:oss-public && p
 
 | Component | License |
 | --------- | ------- |
-| `mcp-server`, `mcp-proxy`, `ingress-proxy`, `nhim-audit` | [AGPL-3.0](LICENSE) |
-| `contracts`, `client`, `client-python`, `client-hooks`, `claude-sdk`, `cursor-hooks`, `codex-hooks`, `init` | [Apache-2.0](LICENSE-APACHE) |
+| `mcp-server`, `mcp-proxy`, `ingress-proxy`, `nhim-audit`, `cursor-hooks`, `codex-hooks` | [AGPL-3.0](LICENSE) |
+| `contracts`, `client`, `client-python`, `client-hooks`, `claude-sdk`, `init` | [Apache-2.0](LICENSE-APACHE) |
 
 Managed SaaS and the NHIM sidecar image are offered separately at [app.blekline.com](https://app.blekline.com) — not under the licenses in this repository.

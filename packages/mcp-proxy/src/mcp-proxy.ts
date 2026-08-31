@@ -1,11 +1,20 @@
 import { randomUUID } from "node:crypto";
 import { BleklineClient } from "@blekline/client";
-import { enforceToolCallLocally, parseClientSurfaceFromEnv, type ClientSurface } from "@blekline/contracts";
+import {
+  enforceToolCallLocally,
+  parseClientSurfaceFromEnv,
+  type ClientSurface,
+  type FleetMode,
+  type McpToolPolicy,
+} from "@blekline/contracts";
 
 export type ProxyEnforcementContext = {
   client: BleklineClient;
   clientSurface: ClientSurface;
   useCloudEnforcement: boolean;
+  mcpToolPolicy?: McpToolPolicy;
+  fleetMode?: FleetMode;
+  failClosed: boolean;
 };
 
 export type InterceptResult =
@@ -17,9 +26,16 @@ function envClientSurface(): ClientSurface {
   return parseClientSurfaceFromEnv(process.env.BLEKLINE_CLIENT_SURFACE);
 }
 
-export function createProxyContext(): ProxyEnforcementContext {
+export function createProxyContext(options?: {
+  mcpToolPolicy?: McpToolPolicy;
+  fleetMode?: FleetMode;
+}): ProxyEnforcementContext {
   const token = process.env.BLEKLINE_WORKSPACE_TOKEN?.trim();
   if (!token) throw new Error("BLEKLINE_WORKSPACE_TOKEN is required");
+  const failClosed =
+    process.env.BLEKLINE_PROXY_FAIL_CLOSED === "1" ||
+    process.env.BLEKLINE_PROXY_FAIL_CLOSED === "true" ||
+    process.env.BLEKLINE_CURSOR_ENTERPRISE_PRESET === "1";
   return {
     client: new BleklineClient({
       baseUrl: process.env.BLEKLINE_API_URL?.trim(),
@@ -29,6 +45,9 @@ export function createProxyContext(): ProxyEnforcementContext {
     }),
     clientSurface: envClientSurface(),
     useCloudEnforcement: process.env.BLEKLINE_PROXY_LOCAL_ONLY !== "1",
+    mcpToolPolicy: options?.mcpToolPolicy,
+    fleetMode: options?.fleetMode,
+    failClosed,
   };
 }
 
@@ -38,7 +57,13 @@ export async function interceptToolCall(
   toolArgs: Record<string, unknown>
 ): Promise<InterceptResult> {
   const requestId = randomUUID();
-  let result = enforceToolCallLocally({ toolName, arguments: toolArgs, requestId });
+  let result = enforceToolCallLocally({
+    toolName,
+    arguments: toolArgs,
+    requestId,
+    mcpToolPolicy: ctx.mcpToolPolicy,
+    fleetMode: ctx.fleetMode,
+  });
 
   if (ctx.useCloudEnforcement) {
     try {
@@ -49,7 +74,14 @@ export async function interceptToolCall(
         clientSurface: ctx.clientSurface,
       });
     } catch {
-      /* fall back to local result */
+      if (ctx.failClosed) {
+        return {
+          ok: false,
+          action: "block",
+          message: "Cloud enforcement unavailable (fail-closed)",
+          findings: result.findings,
+        };
+      }
     }
   }
 
@@ -73,7 +105,7 @@ export async function interceptToolCall(
     return {
       ok: false,
       action: "block",
-      message: "Blekline policy: block_and_review",
+      message: "Blekline policy: block",
       findings: result.findings,
     };
   }

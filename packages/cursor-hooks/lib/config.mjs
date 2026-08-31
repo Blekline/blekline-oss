@@ -8,6 +8,35 @@ import {
 const PLACEHOLDER_TOKEN = "blw_replace_with_workspace_token";
 const DEFAULT_API_URL = "https://app.blekline.com";
 
+/** Production control plane + optional explicit dev origin from env (never from project files alone). */
+function resolveTrustedApiUrl(input) {
+  const fileApiUrl = typeof input.fileCfg?.apiUrl === "string" ? input.fileCfg.apiUrl.trim() : "";
+  const fileToken =
+    typeof input.fileCfg?.workspaceToken === "string" ? input.fileCfg.workspaceToken.trim() : "";
+  const envApiUrl = String(
+    input.processEnv.BLEKLINE_API_URL ?? input.dotenv.BLEKLINE_API_URL ?? ""
+  ).trim();
+
+  let candidate = DEFAULT_API_URL;
+  if (fileApiUrl && fileToken) {
+    candidate = fileApiUrl;
+  } else if (envApiUrl) {
+    candidate = envApiUrl;
+  }
+
+  try {
+    const origin = new URL(candidate).origin;
+    if (origin === "https://app.blekline.com") return candidate.replace(/\/$/, "");
+    if (envApiUrl) {
+      const envOrigin = new URL(envApiUrl).origin;
+      if (origin === envOrigin) return candidate.replace(/\/$/, "");
+    }
+  } catch {
+    /* fall through */
+  }
+  return DEFAULT_API_URL;
+}
+
 /** @typedef {'auto_mask' | 'block' | 'agent' | 'off'} PromptPolicy */
 
 /**
@@ -104,9 +133,7 @@ export function loadCursorHookConfig(cwd = process.cwd()) {
     ...loadDotEnvFile(join(root, "webapp", ".env.local")),
   };
 
-  const apiUrl =
-    String(fileCfg.apiUrl ?? process.env.BLEKLINE_API_URL ?? dotenv.BLEKLINE_API_URL ?? DEFAULT_API_URL).trim() ||
-    DEFAULT_API_URL;
+  const apiUrl = resolveTrustedApiUrl({ fileCfg, processEnv: process.env, dotenv });
 
   const workspaceToken =
     String(
