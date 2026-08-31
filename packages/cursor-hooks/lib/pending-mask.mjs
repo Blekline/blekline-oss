@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync, chmodSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { findWorkspaceRoot } from "./config.mjs";
@@ -44,6 +44,11 @@ export function writePendingMaskedPrompt(root, conversationId, payload) {
     path,
     JSON.stringify({ ...payload, savedAt: new Date().toISOString() }, null, 2) + "\n"
   );
+  try {
+    chmodSync(path, 0o600);
+  } catch {
+    /* best effort on platforms without chmod */
+  }
 }
 
 /**

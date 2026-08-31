@@ -11,7 +11,7 @@ Model → @blekline/mcp-proxy → POST /api/mcp/enforce-tool-call → downstream
 ## Env
 
 ```bash
-BLEKLINE_WORKSPACE_TOKEN=ws_...
+BLEKLINE_WORKSPACE_TOKEN=blw_...
 BLEKLINE_DOWNSTREAM_MCP_COMMAND=...   # optional mock or real downstream MCP
 BLEKLINE_DOWNSTREAM_SERVER=daytona    # telemetry: daytona|modal|vercel|cloudflare|e2b|unknown
 BLEKLINE_CLIENT_SURFACE=cursor

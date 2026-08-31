@@ -40,8 +40,4 @@ export function buildHeaders(input: {
   return headers;
 }
 
-export const DEFAULT_BASE_URLS = [
-  "https://app.blekline.com",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-];
+export const DEFAULT_BASE_URLS = ["https://app.blekline.com"];

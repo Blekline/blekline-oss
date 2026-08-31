@@ -24,6 +24,10 @@ Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/item
 
 Optional: set `BLEKLINE_API_URL` if you use a private control plane (default `https://app.blekline.com`).
 
+## Plans
+
+**Local** covers laptop hooks and stdio MCP. **`@blekline`** in Copilot Chat calls the hosted mask API and requires **Mark** or higher — upgrade in [Billing](https://app.blekline.com/admin/settings/billing) if Verify reports a plan limit.
+
 ## Use `@blekline`
 
 In Copilot Chat:

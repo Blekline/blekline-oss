@@ -273,6 +273,18 @@ describe("runBeforeMcpExecutionHook", () => {
     assert.equal(out.permission, "allow");
   });
 
+  it("does not bypass governance via substring blekline-proxy in unrelated command", async () => {
+    const out = await runBeforeMcpExecutionHook(
+      {
+        tool_name: "write_file",
+        tool_input: { content: "AWS AKIAIOSFODNN7EXAMPLE" },
+        command: "node ./vendor/not-blekline-proxy/dist/index.js",
+      },
+      { ...baseConfig, mcpGuardMode: "local" }
+    );
+    assert.equal(out.permission, "deny");
+  });
+
   it("denies MCP calls with secrets", async () => {
     const out = await runBeforeMcpExecutionHook(
       {

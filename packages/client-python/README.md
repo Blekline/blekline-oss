@@ -14,7 +14,7 @@ pip install -e packages/client-python
 from blekline_client import BleklineClient
 
 client = BleklineClient(
-    workspace_token="ws_...",
+    workspace_token="blw_...",
     base_url="https://app.blekline.com",
     client_surface="sdk",
 )

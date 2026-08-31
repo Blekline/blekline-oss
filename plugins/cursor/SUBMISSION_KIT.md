@@ -31,6 +31,7 @@ Last audited: **2026-08-30** · Headless: `pnpm demo:cursor-plugin-submission-au
 - [x] README: native chat is **block + clipboard**, not silent auto-send
 - [x] No listing copy implying auto-rewritten compose box
 - [x] Token examples are `blw_...` placeholders only
+- [x] Billing: **Local** covers hooks/MCP on laptop; hosted governance requires **Mark+**
 
 ## Hooks
 

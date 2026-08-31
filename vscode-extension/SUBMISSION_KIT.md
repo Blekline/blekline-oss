@@ -15,6 +15,10 @@ Mask PII and secrets in Copilot Chat via @blekline. Does not intercept native @c
 **Long description**  
 Use the README.md marketplace copy. Do not claim silent auto-send on native `@copilot`.
 
+**Billing honesty**  
+**Local** covers Cursor / Claude Code hooks and stdio MCP on the laptop — not VS Code hosted mask.  
+`@blekline` and MCP tools call the hosted control plane and require **Mark** or higher. List upgrade path to Mark in QA step 6 when plan-gated.
+
 ## 10-step QA (before submit)
 
 1. **Contract smoke (headless CI)**  
@@ -32,10 +36,10 @@ Use the README.md marketplace copy. Do not claim silent auto-send on native `@co
    Run **Blekline: Setup**. Browser opens `app.blekline.com/auth/extension-link` (same handoff as the browser extension). After sign-in, paste a workspace token. Confirm it is **not** written to `settings.json`.
 
 5. **Verify**  
-   **Blekline: Verify** against production (or `BLEKLINE_API_URL`). Expect success, or a clear 401/plan-limit message — never a hang.
+   **Blekline: Verify** against production (or `BLEKLINE_API_URL`). Expect success on Mark+, or a clear 401/plan-limit message on Local — never a hang.
 
 6. **`@blekline` mask path**  
-   In Copilot Chat, send `@blekline Contact alice@corp.com`. Expect “Redacting before send…”, then a model reply. Prompt reaching the model must not contain the raw email.
+   In Copilot Chat, send `@blekline Contact alice@corp.com`. Expect “Redacting before send…”, then a model reply. Prompt reaching the model must not contain the raw email. On Local workspace, expect plan upgrade messaging — not silent failure.
 
 7. **Honesty: native `@copilot` is not covered**  
    Send the same sensitive prompt with `@copilot` only (no `@blekline`). Confirm Blekline does **not** intercept or rewrite it. README and listing must say this.

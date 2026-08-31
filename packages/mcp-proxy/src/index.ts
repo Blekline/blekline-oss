@@ -3,8 +3,9 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { callDownstreamTool, listDownstreamTools } from "./downstream/mcp-client.js";
 import { assertDownstreamInRegistry, hashDownstreamCommand } from "./downstream/registry.js";
+import { resolveDownstreamSpawnSpec } from "./downstream/command.js";
 import { createProxyContext, interceptToolCall } from "./mcp-proxy.js";
-import { normalizeMcpToolPolicy } from "@blekline/contracts";
+import { normalizeMcpToolPolicy, type McpToolPolicy } from "@blekline/contracts";
 
 const server = new Server(
   { name: "blekline-mcp-proxy", version: "0.1.0" },
@@ -12,9 +13,10 @@ const server = new Server(
 );
 
 let ctx: ReturnType<typeof createProxyContext> | null = null;
+let registryPolicy: McpToolPolicy | undefined;
 
 function getCtx() {
-  if (!ctx) ctx = createProxyContext();
+  if (!ctx) ctx = createProxyContext({ mcpToolPolicy: registryPolicy });
   return ctx;
 }
 
@@ -74,14 +76,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  const downstreamCommand = process.env.BLEKLINE_DOWNSTREAM_COMMAND?.trim() || "node";
-  const downstreamArgs = (process.env.BLEKLINE_DOWNSTREAM_ARGS ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const commandHash = hashDownstreamCommand(downstreamCommand, downstreamArgs);
+  const spawnSpec = resolveDownstreamSpawnSpec();
+  const commandHash = hashDownstreamCommand(spawnSpec.command, spawnSpec.args);
   const registryJson = process.env.BLEKLINE_MCP_REGISTRY_JSON?.trim();
-  let registryPolicy = normalizeMcpToolPolicy(undefined);
+  registryPolicy = normalizeMcpToolPolicy(undefined);
   if (registryJson) {
     try {
       registryPolicy = normalizeMcpToolPolicy(JSON.parse(registryJson));
