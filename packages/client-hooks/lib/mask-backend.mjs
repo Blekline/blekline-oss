@@ -41,12 +41,14 @@ export function cursorHookFieldsForMaskBackend(backend, opts = {}) {
       return {
         maskBackend: "hosted",
         promptMaskSource: "cloud",
+        promptGuardMode: "always",
         apiUrl: opts.apiUrl ?? "https://app.blekline.com",
       };
     case "sidecar":
       return {
         maskBackend: "sidecar",
-        promptMaskSource: "local",
+        promptMaskSource: "sidecar",
+        promptGuardMode: "always",
         ...(sidecarUrl ? { sidecarUrl, apiUrl: sidecarUrl } : {}),
       };
     default:

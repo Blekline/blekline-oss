@@ -33,9 +33,53 @@ export function findHardSecrets(text) {
 }
 
 /**
+ * @param {string} sidecarUrl
  * @param {string} text
  * @param {import('./config.mjs').CursorHookConfig} config
- * @returns {Promise<{ ok: true, maskedText: string, entitiesMasked: number, provider?: string, requestId?: string } | { ok: false, code: string, message: string }>}
+ */
+async function maskViaSidecar(sidecarUrl, text, config) {
+  const base = sidecarUrl.replace(/\/$/, "");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), config.maskTimeoutMs);
+  /** @type {Record<string, string>} */
+  const headers = { "Content-Type": "application/json" };
+  if (config.sidecarAuth) {
+    headers.Authorization = `Bearer ${config.sidecarAuth}`;
+  }
+  try {
+    const res = await fetch(`${base}/v1/mask`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ text, platform: "Cursor-Hook" }),
+      signal: controller.signal,
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return {
+        ok: false,
+        code: typeof body.code === "string" ? body.code : `http_${res.status}`,
+        message: typeof body.error === "string" ? body.error : `Sidecar mask HTTP ${res.status}`,
+      };
+    }
+    return {
+      ok: true,
+      maskedText: String(body.maskedText ?? text),
+      entitiesMasked: typeof body.entitiesMasked === "number" ? body.entitiesMasked : 0,
+      provider: typeof body.provider === "string" ? body.provider : "azure",
+      requestId: typeof body.requestId === "string" ? body.requestId : undefined,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Sidecar mask request failed";
+    const code = err instanceof Error && err.name === "AbortError" ? "timeout" : "network_error";
+    return { ok: false, code, message };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * @param {string} text
+ * @param {import('./config.mjs').CursorHookConfig} config
  */
 export async function maskViaApi(text, config) {
   if (!config.workspaceToken) {
@@ -44,6 +88,8 @@ export async function maskViaApi(text, config) {
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.maskTimeoutMs);
+  const fastPath =
+    config.maskBackend === "hosted" || config.promptGuardMode === "always" ? "azure_first" : "local_first";
 
   try {
     const res = await fetch(`${config.apiUrl.replace(/\/$/, "")}/api/mask`, {
@@ -52,7 +98,7 @@ export async function maskViaApi(text, config) {
         "Content-Type": "application/json",
         "x-blekline-workspace-token": config.workspaceToken,
         "x-blekline-client-surface": config.platform || "cursor",
-        "x-blekline-mask-fast-path": "local_first",
+        "x-blekline-mask-fast-path": fastPath,
       },
       body: JSON.stringify({ text, platform: "Cursor-Hook" }),
       signal: controller.signal,
@@ -88,11 +134,6 @@ export async function maskViaApi(text, config) {
  * @param {import('./config.mjs').CursorHookConfig} config
  */
 async function resolveMaskResult(prompt, config) {
-  const localFindings = scanTextForSecrets(prompt);
-  if (localFindings.length === 0) {
-    return { maskedText: prompt, entitiesMasked: 0, requestId: undefined, provider: "none" };
-  }
-
   if (config.promptMaskSource === "local") {
     const local = maskPromptLocally(prompt);
     return {
@@ -103,13 +144,53 @@ async function resolveMaskResult(prompt, config) {
     };
   }
 
-  const cloud = await maskViaApi(prompt, config);
-  if (cloud.ok) {
+  if (config.promptMaskSource === "sidecar" && config.sidecarUrl) {
+    const sidecar = await maskViaSidecar(config.sidecarUrl, prompt, config);
+    if (sidecar.ok) {
+      return {
+        maskedText: sidecar.maskedText,
+        entitiesMasked: sidecar.entitiesMasked,
+        requestId: sidecar.requestId,
+        provider: sidecar.provider ?? "azure",
+      };
+    }
+    if (config.maskBackend === "sidecar") {
+      return {
+        maskedText: prompt,
+        entitiesMasked: 0,
+        requestId: undefined,
+        provider: "fallback_local",
+        cloudError: sidecar.code,
+      };
+    }
+  }
+
+  if (config.promptMaskSource === "cloud" || config.promptMaskSource === "sidecar") {
+    const cloud = await maskViaApi(prompt, config);
+    if (cloud.ok) {
+      return {
+        maskedText: cloud.maskedText,
+        entitiesMasked: cloud.entitiesMasked,
+        requestId: cloud.requestId,
+        provider: cloud.provider ?? "azure",
+      };
+    }
+    if (config.maskBackend === "hosted" || config.maskBackend === "sidecar") {
+      return {
+        maskedText: prompt,
+        entitiesMasked: 0,
+        requestId: undefined,
+        provider: "fallback_local",
+        cloudError: cloud.code,
+      };
+    }
+    const local = maskPromptLocally(prompt);
     return {
-      maskedText: cloud.maskedText,
-      entitiesMasked: cloud.entitiesMasked,
-      requestId: cloud.requestId,
-      provider: cloud.provider ?? "azure",
+      maskedText: local.maskedText,
+      entitiesMasked: local.entitiesMasked,
+      requestId: localMaskRequestId(),
+      provider: "fallback_local",
+      cloudError: cloud.code,
     };
   }
 
@@ -118,8 +199,7 @@ async function resolveMaskResult(prompt, config) {
     maskedText: local.maskedText,
     entitiesMasked: local.entitiesMasked,
     requestId: localMaskRequestId(),
-    provider: "fallback_local",
-    cloudError: cloud.code,
+    provider: "fast_local",
   };
 }
 
@@ -214,12 +294,27 @@ export async function runMaskPromptHook(input, config) {
     };
   }
 
+  const bankingPath =
+    config.maskBackend === "sidecar" ||
+    config.maskBackend === "hosted" ||
+    config.promptGuardMode === "always" ||
+    config.promptGuardMode === "always_cloud";
+
   const localFindings = scanTextForSecrets(prompt);
-  if (config.promptGuardMode === "local_first" && localFindings.length === 0) {
+  if (!bankingPath && config.promptGuardMode === "local_first" && localFindings.length === 0) {
     return { continue: true };
   }
 
   const maskResult = await resolveMaskResult(prompt, config);
+
+  if (maskResult.cloudError && (config.maskBackend === "sidecar" || config.maskBackend === "hosted")) {
+    return {
+      continue: false,
+      user_message:
+        `Blekline could not mask this prompt (${maskResult.cloudError}). ` +
+        "Sidecar or hosted mask is required for this tier — fix connectivity or Azure config before retrying.",
+    };
+  }
 
   if (maskResult.entitiesMasked <= 0 && hardSecrets.length === 0) {
     return { continue: true };
