@@ -7,9 +7,11 @@ import { execSync } from "node:child_process";
 const FILTERS = [
   "@blekline/contracts",
   "@blekline/client",
+  "@blekline/client-hooks",
   "@blekline/mcp-server",
   "@blekline/mcp-proxy",
   "@blekline/cursor-hooks",
+  "@blekline/init",
   "@blekline/nhim-audit",
 ];
 

@@ -45,8 +45,8 @@ function resolveTrustedApiUrl(input) {
  * @property {string} workspaceToken
  * @property {string} platform
  * @property {PromptPolicy} promptPolicy
- * @property {'local_first' | 'always_cloud'} promptGuardMode
- * @property {'local' | 'cloud'} promptMaskSource
+ * @property {'local_first' | 'always_cloud' | 'always'} promptGuardMode
+ * @property {'local' | 'cloud' | 'sidecar'} promptMaskSource
  * @property {boolean} failClosed
  * @property {boolean} readGuard
  * @property {boolean} shellGuard
@@ -60,6 +60,7 @@ function resolveTrustedApiUrl(input) {
  * @property {boolean} showMaskedInUi
  * @property {'local' | 'hosted' | 'sidecar'} maskBackend
  * @property {string} [sidecarUrl]
+ * @property {string} [sidecarAuth]
  * @property {number} maskTimeoutMs
  */
 
@@ -158,12 +159,20 @@ export function loadCursorHookConfig(cwd = process.cwd()) {
   const promptGuardModeRaw = String(
     fileCfg.promptGuardMode ?? process.env.BLEKLINE_CURSOR_PROMPT_GUARD_MODE ?? "local_first"
   ).trim();
-  const promptGuardMode = promptGuardModeRaw === "always_cloud" ? "always_cloud" : "local_first";
+  let promptGuardMode =
+    promptGuardModeRaw === "always" || promptGuardModeRaw === "always_cloud"
+      ? promptGuardModeRaw
+      : "local_first";
 
   const promptMaskSourceRaw = String(
     fileCfg.promptMaskSource ?? process.env.BLEKLINE_CURSOR_PROMPT_MASK_SOURCE ?? "local"
   ).trim();
-  let promptMaskSource = promptMaskSourceRaw === "cloud" ? "cloud" : "local";
+  let promptMaskSource =
+    promptMaskSourceRaw === "cloud"
+      ? "cloud"
+      : promptMaskSourceRaw === "sidecar"
+        ? "sidecar"
+        : "local";
 
   const policyJson = readJsonFile(join(root, ".blekline", "policy.json"));
   const policyBackend = parseMaskBackend(
@@ -179,7 +188,14 @@ export function loadCursorHookConfig(cwd = process.cwd()) {
         : process.env.BLEKLINE_SIDECAR_URL,
   });
   promptMaskSource = backendFields.promptMaskSource;
+  if (backendFields.promptGuardMode) {
+    promptGuardMode = backendFields.promptGuardMode;
+  }
   const resolvedApiUrl = backendFields.apiUrl ?? apiUrl;
+  const sidecarAuth =
+    typeof fileCfg.sidecarAuth === "string"
+      ? fileCfg.sidecarAuth
+      : process.env.BLEKLINE_SIDECAR_AUTH?.trim() || undefined;
 
   const enterprisePreset =
     fileCfg.enterprisePreset === true || process.env.BLEKLINE_CURSOR_ENTERPRISE_PRESET === "1";
@@ -240,6 +256,7 @@ export function loadCursorHookConfig(cwd = process.cwd()) {
     promptMaskSource,
     maskBackend,
     sidecarUrl: backendFields.sidecarUrl,
+    sidecarAuth,
     failClosed,
     readGuard,
     shellGuard,

@@ -6,7 +6,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-09-03
+
 ### Added
+
+- `@blekline/contracts` — shared local mask pipeline (`runLocalMaskPipeline`), Azure PII filter helpers, IBAN checksum, enterprise regional patterns (en/de/sl/hr)
+- `ingress-proxy` — `POST /v1/mask` contracts-only endpoint in OSS; full Azure pipeline in NHIM image
+- `@blekline/client-hooks` / `@blekline/cursor-hooks@0.1.1` — sidecar mask backend (`promptMaskSource: sidecar`), Mark/Redact `promptGuardMode: always`
+
+### Changed
+
+- Default Azure fallback locales: `en,de,sl,hr`
+- Hook smoke + mask regression scripts in OSS sync
+
+### Security
+
+- Cross-surface parity: hosted `/api/mask`, sidecar, and hooks share contracts pre-Azure path
+
+### Added (prior unreleased)
 
 - `@blekline/nhim-audit@0.2.2` — `assurance.probeTokenValidatedOnline` when `BLEKLINE_EVAL_ONLINE=1`; Deployment hub self-serve probe docs in skip message
 
@@ -157,7 +174,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ingress-proxy` — Docker image and Helm chart
 - Docs: Cursor, Claude Desktop, Codex, trust boundaries, latency SLO
 
-[Unreleased]: https://github.com/Blekline/blekline-oss/compare/v0.4.2...main
+[Unreleased]: https://github.com/Blekline/blekline-oss/compare/v0.4.3...main
+[0.4.3]: https://github.com/Blekline/blekline-oss/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/Blekline/blekline-oss/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/Blekline/blekline-oss/releases/tag/v0.4.1
 [0.1.1]: https://github.com/Blekline/blekline-oss/compare/v0.1.0-nhim-audit...v0.1.1

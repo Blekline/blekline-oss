@@ -1,6 +1,6 @@
 {
   "name": "@blekline/cursor-hooks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "AGPL-3.0-or-later",
   "description": "Cursor IDE hooks for Blekline chat prompt masking, shell/tool/MCP guards, and file read guard",
   "repository": {

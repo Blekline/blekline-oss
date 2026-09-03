@@ -2,12 +2,14 @@
  * OSS sidecar — contracts-only. Trust Vault and lineage ship in the NHIM Docker image.
  */
 import http from "node:http";
+import { warnClockSkewIfNeeded } from "./clock-skew.mjs";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import {
   scanTextForSecrets,
   enforceToolCallLocally,
   normalizeMcpToolPolicy,
+  runLocalMaskPipeline,
 } from "@blekline/contracts";
 
 const log = {
@@ -87,15 +89,27 @@ function percentile(sorted, p) {
 
 function maskInline(text) {
   const t0 = performance.now();
-  const findings = scanTextForSecrets(text);
-  let out = text;
-  for (const f of [...findings].sort((a, b) => b.start - a.start)) {
-    out = out.slice(0, f.start) + `[${f.label}]` + out.slice(f.end);
-  }
+  const validateIban = process.env.BLEKLINE_MASK_VALIDATE_IBAN === "true";
+  const blockOnHighRiskMiss = process.env.BLEKLINE_MASK_BLOCK_HIGH_RISK !== "false";
+  const result = runLocalMaskPipeline({
+    text,
+    validateIbanChecksum: validateIban,
+    validateFinanceRegional: true,
+    blockOnHighRiskMiss,
+  });
   const ms = performance.now() - t0;
   metrics.localMaskMs.push(ms);
   if (metrics.localMaskMs.length > 500) metrics.localMaskMs.shift();
-  return { text: out, entitiesMasked: findings.length, ms };
+  if (blockOnHighRiskMiss && result.highRiskMiss.length > 0) {
+    return {
+      text: result.maskedText,
+      entitiesMasked: result.entitiesMasked,
+      ms,
+      blocked: true,
+      blockReason: "high_risk_literal_remaining",
+    };
+  }
+  return { text: result.maskedText, entitiesMasked: result.entitiesMasked, ms, blocked: false };
 }
 
 function maskResponsePayload(path, payload) {
@@ -473,7 +487,9 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(port, listenHost, () => {
+server.listen(port, listenHost, async () => {
+  await warnClockSkewIfNeeded({ target, log });
+
   log.info("sidecar_listening", {
     region,
     port,

@@ -187,6 +187,47 @@ describe("runMaskPromptHook", () => {
     }
   });
 
+  it("masks via sidecar /v1/mask when promptMaskSource is sidecar", async () => {
+    let sidecarCalled = false;
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (url, init) => {
+      const href = String(url);
+      if (href.includes("/v1/mask")) {
+        sidecarCalled = true;
+        assert.equal(init?.method, "POST");
+        return /** @type {Response} */ ({
+          ok: true,
+          json: async () => ({
+            maskedText: "Contact [PERSON_001]",
+            entitiesMasked: 1,
+            provider: "azure",
+            requestId: "sidecar-req-1",
+          }),
+        });
+      }
+      throw new Error(`unexpected fetch: ${href}`);
+    };
+
+    try {
+      const out = await runMaskPromptHook(
+        { prompt: "Contact Ana Novak from Ljubljana", conversation_id: "sidecar-mask-1" },
+        {
+          ...baseConfig,
+          promptMaskSource: "sidecar",
+          promptGuardMode: "always",
+          maskBackend: "sidecar",
+          sidecarUrl: "http://127.0.0.1:8787",
+          copyMaskedToClipboard: false,
+        }
+      );
+      assert.equal(sidecarCalled, true);
+      assert.equal(out.continue, false);
+      assert.match(out.user_message ?? "", /1 entit/);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("falls back to local mask when cloud fails", async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async () =>

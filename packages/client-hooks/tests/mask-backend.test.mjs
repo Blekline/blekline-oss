@@ -28,12 +28,24 @@ describe("mask-backend", () => {
     assert.equal(fields.maskBackend, "hosted");
   });
 
-  it("sidecar never uses cloud mask", () => {
+  it("sidecar uses sidecar mask with always guard", () => {
     const fields = cursorHookFieldsForMaskBackend("sidecar", {
       sidecarUrl: "http://127.0.0.1:8787",
     });
-    assert.equal(fields.promptMaskSource, "local");
+    assert.equal(fields.promptMaskSource, "sidecar");
+    assert.equal(fields.promptGuardMode, "always");
     assert.equal(fields.sidecarUrl, "http://127.0.0.1:8787");
+  });
+
+  it("applyMaskBackendToCursorJson sidecar preserves sidecarUrl", () => {
+    const out = applyMaskBackendToCursorJson(
+      { workspaceToken: "blw_test", apiUrl: "https://app.blekline.com" },
+      "sidecar",
+      { sidecarUrl: "http://127.0.0.1:8787" }
+    );
+    assert.equal(out.promptMaskSource, "sidecar");
+    assert.equal(out.promptGuardMode, "always");
+    assert.equal(out.sidecarUrl, "http://127.0.0.1:8787");
   });
 
   it("applyMaskBackendToCursorJson preserves token", () => {

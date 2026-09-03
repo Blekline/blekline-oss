@@ -1,6 +1,6 @@
 {
   "name": "@blekline/claude-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "Apache-2.0",
   "description": "Point Claude Code / Anthropic SDK traffic at Blekline ingress and mask prompts via the control plane",
   "repository": {
