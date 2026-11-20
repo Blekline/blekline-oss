@@ -51,7 +51,7 @@ Use the README.md marketplace copy. Do not claim silent auto-send on native `@co
    VS Code MCP view lists **blekline** as `npx -y @blekline/mcp-server`. After Setup, tools work with `BLEKLINE_WORKSPACE_TOKEN` from Secret Storage. `BLEKLINE_CLIENT_SURFACE=github-copilot`.
 
 10. **Activity + icon**  
-    **Blekline: Open Activity** opens `https://app.blekline.com/operations/activity` (or `$BLEKLINE_API_URL/...`). Marketplace icon: generate 128×128 PNG from `blekline-icon.svg` (see `assets/README.md`) and set `package.json` `"icon"` before the store upload. Do not submit without the PNG.
+    **Blekline: Open Activity** opens `https://app.blekline.com/audit-log` (or `$BLEKLINE_API_URL/...`). Marketplace icon: generate 128×128 PNG from `blekline-icon.svg` (see `assets/README.md`) and set `package.json` `"icon"` before the store upload. Do not submit without the PNG.
 
 ## Package
 

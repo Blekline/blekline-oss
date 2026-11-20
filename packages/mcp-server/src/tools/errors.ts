@@ -7,7 +7,7 @@ export type McpToolErrorBody = {
   upgradeUrl?: string;
 };
 
-const DEFAULT_UPGRADE = "https://app.blekline.com/admin/settings/billing";
+const DEFAULT_UPGRADE = "https://app.blekline.com/workspace/billing";
 
 export function mcpToolError(
   code: string,

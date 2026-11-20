@@ -4,12 +4,12 @@
  * Optionally spawn cursor-hooks / codex-hooks init.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { detectClients } from "./lib/detect.mjs";
-import { defaultPolicyJson } from "./lib/policy.mjs";
+import { bankingAgentImportHint, defaultPolicyJson } from "./lib/policy.mjs";
 import { maskBackendFromEntryPath, parseMaskBackend } from "../client-hooks/lib/mask-backend.mjs";
 
 const require = createRequire(import.meta.url);
@@ -46,6 +46,7 @@ export function writePolicyStub(opts) {
         defaultPolicyJson({
           entryPath: opts.entryPath,
           maskBackend: opts.maskBackend,
+          preset: opts.preset,
         }),
         null,
         2
@@ -56,8 +57,22 @@ export function writePolicyStub(opts) {
   return null;
 }
 
-export function printNextSteps(detected) {
+export function printNextSteps(detected, opts = {}) {
   const lines = ["Blekline init — next steps", ""];
+  lines.push("Platform path (cells):");
+  lines.push("  1. Sign up + API key: https://app.blekline.com/auth/signup");
+  lines.push("     https://app.blekline.com/docs/api-keys");
+  lines.push("  2. Publish runtime policy: https://app.blekline.com/docs/runtime-policy");
+  lines.push("  3. First act run: https://app.blekline.com/docs/workflows-and-runs");
+  lines.push("     node examples/cells/first-act-run/index.mjs (set BLEKLINE_WORKSPACE_TOKEN, BLEKLINE_WORKFLOW_ID)");
+  lines.push("");
+  if (opts.preset === "banking-agent") {
+    lines.push("Banking-agent preset:");
+    lines.push("  Sidecar mask backend + fleet entry path configured in .blekline/policy.json");
+    lines.push("");
+    lines.push(bankingAgentImportHint());
+    lines.push("");
+  }
   if (detected.cursor) {
     lines.push("Cursor detected:");
     lines.push("  npx @blekline/cursor-hooks init");
@@ -82,6 +97,27 @@ export function printNextSteps(detected) {
   return lines.join("\n");
 }
 
+export function printExampleSteps(exampleId) {
+  const manifestPath = join(dirname(fileURLToPath(import.meta.url)), "../../integrations/manifest.json");
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  const id = exampleId.startsWith("example-") ? exampleId : `example-${exampleId}`;
+  const entry = manifest.entries.find((e) => e.id === id || e.id === exampleId);
+  if (!entry?.examplePath) {
+    return `Unknown example "${exampleId}". Run from repo root and see integrations/manifest.json (tier: example).`;
+  }
+  const lines = [`Blekline example — ${entry.id}`, ""];
+  lines.push(`Path: ${entry.examplePath}`);
+  lines.push(`Docs: https://app.blekline.com/docs/${entry.docSlug}`);
+  lines.push("");
+  lines.push("Platform path:");
+  lines.push("  1. API key: https://app.blekline.com/docs/api-keys");
+  lines.push("  2. Publish policy: https://app.blekline.com/docs/runtime-policy");
+  lines.push("  3. Act runs: https://app.blekline.com/docs/workflows-and-runs");
+  lines.push("");
+  lines.push(`Open README: ${entry.examplePath}/README.md`);
+  return lines.join("\n");
+}
+
 function runOptionalInit(pkgName, binFile, cwd) {
   const bin = resolveBin(pkgName, binFile);
   if (bin) {
@@ -95,16 +131,30 @@ function runOptionalInit(pkgName, binFile, cwd) {
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isMain) {
+  const exampleId = argValue("--example");
+  if (exampleId) {
+    console.log(printExampleSteps(exampleId));
+    process.exit(0);
+  }
   const root = resolve(argValue("--cwd") ?? process.cwd());
   const detected = detectClients(root);
+  const presetArg = argValue("--preset");
+  const preset = presetArg === "banking-agent" ? "banking-agent" : undefined;
+  const entryPath =
+    preset === "banking-agent" ? argValue("--path") ?? "fleet" : argValue("--path") ?? undefined;
+  const maskBackend =
+    preset === "banking-agent"
+      ? parseMaskBackend(argValue("--mask-backend")) ?? "sidecar"
+      : parseMaskBackend(argValue("--mask-backend")) ?? undefined;
   const written = writePolicyStub({
     workspaceRoot: root,
     force: process.argv.includes("--force"),
-    entryPath: argValue("--path") ?? undefined,
-    maskBackend: parseMaskBackend(argValue("--mask-backend")) ?? undefined,
+    entryPath,
+    maskBackend,
+    preset,
   });
   if (written) console.log(`Wrote ${written}`);
-  console.log(printNextSteps(detected));
+  console.log(printNextSteps(detected, { preset }));
 
   if (process.argv.includes("--cursor-hooks")) {
     const code = runOptionalInit("@blekline/cursor-hooks", "init.mjs", root);

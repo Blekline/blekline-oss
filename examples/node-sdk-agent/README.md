@@ -1,10 +1,5 @@
-# Node SDK agent example
+# Moved
 
-```bash
-cd examples/node-sdk-agent
-export BLEKLINE_WORKSPACE_TOKEN="blw_..."
-export BLEKLINE_API_URL="https://app.blekline.com"
-node index.mjs
-```
+This example lives at **[../ingress/node-sdk-agent](../ingress/node-sdk-agent/README.md)**.
 
-Uses `@blekline/client` with `BLEKLINE_CLIENT_SURFACE=sdk`.
+**Platform path:** [runtime policy](https://app.blekline.com/docs/runtime-policy) → [workflows and runs](https://app.blekline.com/docs/workflows-and-runs).

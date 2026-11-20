@@ -1,10 +1,12 @@
 import type {
+  CreateCellRunRequest,
   EnforceToolCallRequest,
   EnforceToolCallResult,
   EventIngest,
   MaskRequest,
   MaskResponse,
   PolicySimulateRequest,
+  WorkspaceExecutionPolicyWire,
 } from "@blekline/contracts";
 import { buildHeaders, DEFAULT_BASE_URLS, type ClientMetadata } from "./headers.js";
 import { BleklineApiError, parseJsonError } from "./errors.js";
@@ -113,6 +115,20 @@ export class BleklineClient {
     });
   }
 
+  async getExecutionPolicy(): Promise<{
+    policy: WorkspaceExecutionPolicyWire | null;
+    enforcementStage: string;
+    fleetMode: string;
+  }> {
+    const headers = buildHeaders({
+      workspaceToken: this.workspaceToken,
+      workspaceId: this.workspaceId,
+      bearer: this.bearer,
+      metadata: this.metadata,
+    });
+    return this.request("/api/workspace/execution-policy", { method: "GET", headers });
+  }
+
   async enforceToolCall(input: EnforceToolCallRequest): Promise<EnforceToolCallResult> {
     const headers = buildHeaders({
       workspaceToken: this.workspaceToken,
@@ -124,6 +140,47 @@ export class BleklineClient {
       method: "POST",
       headers,
       body: JSON.stringify(input),
+    });
+  }
+
+  async createCellRun(body: CreateCellRunRequest & { workflowId: string }): Promise<{
+    ok: true;
+    run: { id: string; compileHash: string | null; status: string; workflowId: string | null };
+    requiresCell: boolean;
+  }> {
+    const headers = buildHeaders({
+      workspaceToken: this.workspaceToken,
+      workspaceId: this.workspaceId,
+      bearer: this.bearer,
+      metadata: this.metadata,
+    });
+    return this.request("/api/workspace/cell-runs", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+  }
+
+  async listCellRuns(): Promise<{ ok: true; runs: unknown[] }> {
+    const headers = buildHeaders({
+      workspaceToken: this.workspaceToken,
+      workspaceId: this.workspaceId,
+      bearer: this.bearer,
+      metadata: this.metadata,
+    });
+    return this.request("/api/workspace/cell-runs", { method: "GET", headers });
+  }
+
+  async getCellRun(runId: string): Promise<{ ok: true; run: unknown }> {
+    const headers = buildHeaders({
+      workspaceToken: this.workspaceToken,
+      workspaceId: this.workspaceId,
+      bearer: this.bearer,
+      metadata: this.metadata,
+    });
+    return this.request(`/api/workspace/cell-runs/${encodeURIComponent(runId)}`, {
+      method: "GET",
+      headers,
     });
   }
 }

@@ -34,7 +34,7 @@ In scope:
 - This repository (`blekline-oss`) and published npm packages under `@blekline/*`
 - `blekline-client` on PyPI when published
 - Ingress sidecar (`packages/ingress-proxy`) — including auth misconfiguration if `BLEKLINE_SIDECAR_AUTH` unset in production
-- `@blekline/nhim-audit` — kubeconfig handling, false negatives hiding bypass, accidental secret logging in JSON reports
+- `@blekline/cluster-posture` — kubeconfig handling, false negatives hiding bypass, accidental secret logging in JSON reports
 
 Out of scope:
 
@@ -58,7 +58,7 @@ Published npm packages use a small, auditable dependency tree:
 | [zod](https://www.npmjs.com/package/zod) | `@blekline/contracts` (and via MCP SDK) | Runtime schema validation for API and MCP payloads — not used to evaluate user-supplied code strings |
 | [@modelcontextprotocol/sdk](https://www.npmjs.com/package/@modelcontextprotocol/sdk) | `@blekline/mcp-server`, `@blekline/mcp-proxy` | Official MCP protocol transport and tooling |
 
-**License mix (intentional):** AGPL packages (`mcp-server`, `mcp-proxy`, `ingress-proxy`, `cursor-hooks`, `codex-hooks`, `nhim-audit`) depend on Apache-2.0 `@blekline/contracts` and MIT-licensed MCP SDK transitives. This matches the open-core split documented in the README.
+**License mix (intentional):** AGPL packages (`mcp-server`, `mcp-proxy`, `ingress-proxy`, `cursor-hooks`, `codex-hooks`, `cluster-posture`) depend on Apache-2.0 `@blekline/contracts` and MIT-licensed MCP SDK transitives. This matches the open-core split documented in the README.
 
 **Supply-chain scanners (e.g. Socket.dev):** Automated tools may flag Zod v4 internals that use dynamic code generation for schema documentation. That behavior is in upstream Zod, shared by the MCP ecosystem, and is not Blekline-specific. Report issues to **security@blekline.com** if you believe Blekline passes untrusted input into those code paths.
 

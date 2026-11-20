@@ -9,13 +9,16 @@ Licensed components in this repository:
 | packages/client-python | Apache-2.0 — see LICENSE-APACHE |
 | packages/client-hooks | Apache-2.0 — see LICENSE-APACHE |
 | packages/claude-sdk | Apache-2.0 — see LICENSE-APACHE |
+| packages/langchain | Apache-2.0 — see LICENSE-APACHE |
+| packages/llamaindex | Apache-2.0 — see LICENSE-APACHE |
 | packages/init | Apache-2.0 — see LICENSE-APACHE |
+| examples/ (sample code) | Apache-2.0 — see LICENSE-APACHE |
 | packages/mcp-server | AGPL-3.0 — see LICENSE |
 | packages/mcp-proxy | AGPL-3.0 — see LICENSE |
 | packages/ingress-proxy | AGPL-3.0 — see LICENSE |
 | packages/cursor-hooks | AGPL-3.0 — see LICENSE |
 | packages/codex-hooks | AGPL-3.0 — see LICENSE |
-| packages/nhim-audit | AGPL-3.0 — see LICENSE |
+| packages/cluster-posture | AGPL-3.0 — see LICENSE |
 
 Default license for files not listed in a package LICENSE: AGPL-3.0 (LICENSE).
 

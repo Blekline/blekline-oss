@@ -275,6 +275,44 @@ paths:
       responses:
         "200":
           description: Connector configuration summary
+  /api/workspace/cell-runs:
+    get:
+      summary: List workflow act runs (session or runs:read token)
+      operationId: listCellRuns
+      security:
+        - workspaceToken: []
+      responses:
+        "200":
+          description: Runs for workspace
+    post:
+      summary: Create act run (session or runs:write token)
+      operationId: createCellRun
+      security:
+        - workspaceToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workflowId:
+                  type: string
+                displayName:
+                  type: string
+                executionTier:
+                  type: string
+                  enum: [infer, decide, act]
+                toolCall:
+                  type: boolean
+                cellProfileId:
+                  type: string
+                clusterId:
+                  type: string
+                region:
+                  type: string
+      responses:
+        "200":
+          description: Run created
   /api/workspace/policy-stream:
     get:
       summary: SSE policy revision stream for sidecars

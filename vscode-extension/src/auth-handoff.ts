@@ -74,7 +74,7 @@ export async function promptAndStoreWorkspaceToken(secrets: vscode.SecretStorage
   const existing = await getWorkspaceToken(secrets);
   const value = await vscode.window.showInputBox({
     title: "Blekline workspace token",
-    prompt: "Paste a workspace token from app.blekline.com (Admin → API keys). Stored in VS Code Secret Storage.",
+    prompt: "Paste a workspace token from app.blekline.com (**API keys**). Stored in VS Code Secret Storage.",
     placeHolder: "blw_…",
     password: true,
     ignoreFocusOut: true,

@@ -7,4 +7,6 @@ pnpm install
 pnpm build:packages
 node scripts/generate-mcp-configs.mjs
 Write-Host "==> Done. Next: `$env:BLEKLINE_WORKSPACE_TOKEN='blw_...'; pnpm demo:mcp-smoke"
-Write-Host "    Docs: https://app.blekline.com/docs/get-started/eval-journey"
+Write-Host "    Policy: https://app.blekline.com/docs/runtime-policy"
+Write-Host "    Act runs: https://app.blekline.com/docs/workflows-and-runs"
+Write-Host "    Connect: https://app.blekline.com/docs/connect-clients"

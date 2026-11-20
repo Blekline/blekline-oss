@@ -17,7 +17,10 @@ function ruleIdToTokenLabel(ruleId: string): string {
   return `DETECTOR_${ruleId.replace(/[^a-zA-Z0-9]+/g, "_").toUpperCase()}`;
 }
 
-export function applyDiscoveryRegexMasks(text: string): {
+export function applyDiscoveryRegexMasks(
+  text: string,
+  opts?: { enabledRuleIds?: string[] }
+): {
   maskedText: string;
   tokenMap: Record<string, string>;
   entitiesMasked: number;
@@ -25,7 +28,11 @@ export function applyDiscoveryRegexMasks(text: string): {
   type Span = { start: number; end: number; ruleId: string };
   const findings: Span[] = [];
 
+  const enabledSet =
+    opts?.enabledRuleIds != null ? new Set(opts.enabledRuleIds) : null;
+
   for (const rule of DISCOVERY_REGEX_RULES) {
+    if (enabledSet && !enabledSet.has(rule.id)) continue;
     const re = new RegExp(rule.pattern.source, rule.pattern.flags.includes("g") ? rule.pattern.flags : `${rule.pattern.flags}g`);
     re.lastIndex = 0;
     let m: RegExpExecArray | null;

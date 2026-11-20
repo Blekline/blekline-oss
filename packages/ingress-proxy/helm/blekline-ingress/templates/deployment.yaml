@@ -61,6 +61,23 @@ spec:
               value: {{ .Values.trustVault.enabled | quote }}
             - name: BLEKLINE_LINEAGE
               value: {{ .Values.lineage.enabled | quote }}
+            {{- if .Values.contextLoop.enabled }}
+            - name: BLEKLINE_CONTEXT_LOOP
+              value: "true"
+            - name: BLEKLINE_CONTEXT_STORE_PATH
+              value: {{ .Values.contextLoop.contextStorePath | quote }}
+            - name: BLEKLINE_FEDERATED_PULL_INTERVAL
+              value: {{ .Values.contextLoop.federatedPullIntervalMs | quote }}
+            - name: BLEKLINE_FEDERATED_STALE_MS
+              value: {{ .Values.contextLoop.federatedStaleMs | quote }}
+            - name: BLEKLINE_FEDERATED_CONTRIBUTION_MODE
+              value: {{ .Values.contextLoop.contributionMode | quote }}
+            - name: BLEKLINE_ANOMALY_THRESHOLD
+              value: {{ .Values.contextLoop.anomalyThreshold | quote }}
+            {{- else }}
+            - name: BLEKLINE_CONTEXT_LOOP
+              value: "false"
+            {{- end }}
             - name: BLEKLINE_VAULT_DATA_DIR
               value: {{ .Values.trustVault.dataDir | quote }}
             - name: BLEKLINE_WORKSPACE_TOKEN

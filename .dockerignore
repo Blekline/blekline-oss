@@ -3,6 +3,7 @@
 **/.next
 **/dist
 !packages/contracts/dist
+!packages/mask-pipeline/dist
 !packages/runtime-engine/dist
 !packages/k8s-admission/dist
 webapp

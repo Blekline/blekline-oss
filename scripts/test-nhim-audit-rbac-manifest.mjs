@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const RBAC_DIR = join(dirname(fileURLToPath(import.meta.url)), "../packages/nhim-audit/deploy/rbac");
+const RBAC_DIR = join(dirname(fileURLToPath(import.meta.url)), "../packages/cluster-posture/deploy/rbac");
 
 function loadYaml(path) {
   return readFileSync(path, "utf8");

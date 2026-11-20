@@ -1,15 +1,5 @@
-# Proxy + downstream MCP
+# Moved
 
-Run `@blekline/mcp-proxy` in front of a downstream MCP server (L1 sandbox or custom tools).
+This example lives at **[../ingress/proxy-downstream-mcp](../ingress/proxy-downstream-mcp/README.md)**.
 
-```bash
-export BLEKLINE_WORKSPACE_TOKEN="blw_..."
-export BLEKLINE_API_URL="https://app.blekline.com"
-export BLEKLINE_CLIENT_SURFACE="cursor"
-export BLEKLINE_MCP_PROXY_MOCK=1
-npx -y @blekline/mcp-proxy
-```
-
-See [`.cursor/mcp.json.example`](../../.cursor/mcp.json.example) for the `blekline-proxy` block.
-
-Docs: [MCP proxy](https://app.blekline.com/docs/mcp/proxy) · [Sandbox providers](https://app.blekline.com/docs/integrations/sandbox-providers)
+**Platform path:** [runtime policy](https://app.blekline.com/docs/runtime-policy) → [workflows and runs](https://app.blekline.com/docs/workflows-and-runs).

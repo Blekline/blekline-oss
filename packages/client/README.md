@@ -1,6 +1,6 @@
 # @blekline/client
 
-TypeScript SDK for the Blekline ingress control plane.
+TypeScript SDK for the Blekline execution platform (policy, runs, mask, enforce).
 
 ## Install
 
@@ -8,9 +8,7 @@ TypeScript SDK for the Blekline ingress control plane.
 pnpm add @blekline/client
 ```
 
-Monorepo: `"@blekline/client": "workspace:*"`
-
-## Usage
+## Usage — act run
 
 ```ts
 import { BleklineClient } from "@blekline/client";
@@ -20,6 +18,18 @@ const client = new BleklineClient({
   metadata: { clientSurface: "sdk" },
 });
 
+const { run } = await client.createCellRun({
+  workflowId: "wf_your_workflow_id",
+  executionTier: "act",
+  toolCall: true,
+});
+
+const listed = await client.listCellRuns({ limit: 10 });
+```
+
+## Ingress helpers
+
+```ts
 const mask = await client.mask({ text: "Contact alice@corp.com", platform: "SDK" });
 const tool = await client.enforceToolCall({
   toolName: "run_terminal_cmd",
@@ -27,15 +37,8 @@ const tool = await client.enforceToolCall({
 });
 ```
 
-## Methods
-
-- `mask()` → `POST /api/mask`
-- `emitEvent()` → `POST /api/events`
-- `simulatePolicy()` → `POST /api/policy/simulate`
-- `enforceToolCall()` → `POST /api/mcp/enforce-tool-call`
-
 ## Docs
 
-- [TypeScript SDK](https://app.blekline.com/docs/sdk/typescript)
-- [OpenAPI](https://app.blekline.com/docs/api/openapi)
-- [Eval journey](https://app.blekline.com/docs/get-started/eval-journey)
+- [SDK client](https://app.blekline.com/docs/sdk-client)
+- [Workflows and runs](https://app.blekline.com/docs/workflows-and-runs)
+- [API overview](https://app.blekline.com/docs/api/overview)

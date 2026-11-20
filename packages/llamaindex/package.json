@@ -1,0 +1,35 @@
+{
+  "name": "@blekline/llamaindex",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "description": "LlamaIndex TypeScript helpers for Blekline tool-call enforcement",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Blekline/blekline-oss.git",
+    "directory": "packages/llamaindex"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@blekline/client": "workspace:*",
+    "@blekline/langchain": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5.7.3"
+  }
+}

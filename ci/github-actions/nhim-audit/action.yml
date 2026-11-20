@@ -1,5 +1,5 @@
-name: NHIM Audit
-description: Static Kubernetes agent-hop audit (merge-blocking)
+name: NHIM Audit (deprecated)
+description: Deprecated — use ci/github-actions/cluster-posture. Forwards to @blekline/cluster-posture.
 inputs:
   kubeconfig:
     description: Kubeconfig contents (store in secrets.KUBECONFIG — never echo or commit)
@@ -39,7 +39,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Run nhim-audit
+    - name: Run cluster-posture (nhim-audit action alias)
       shell: bash
       env:
         KUBECONFIG_FILE: ${{ runner.temp }}/kubeconfig-nhim-audit
@@ -69,4 +69,5 @@ runs:
           export BLEKLINE_EVAL_ONLINE=1
           ARGS+=(--probe --probe-allow-namespaces ${{ inputs.probe-allow-namespaces }})
         fi
-        npx --yes @blekline/nhim-audit@0.2.2 "${ARGS[@]}"
+        echo "::warning::NHIM Audit action is deprecated — pin Blekline/blekline-oss/ci/github-actions/cluster-posture@main" >&2
+        npx --yes @blekline/cluster-posture@0.3.0 "${ARGS[@]}"

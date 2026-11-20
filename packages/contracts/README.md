@@ -1,6 +1,6 @@
 # @blekline/contracts
 
-Shared types, Zod schemas, secret patterns, and local MCP tool enforcement for the Blekline ingress platform.
+Shared types, Zod schemas, secret patterns, local MCP tool enforcement, and execution routing helpers for Blekline clients.
 
 ## Exports
 
@@ -24,4 +24,5 @@ pnpm --filter @blekline/contracts build
 
 - [OpenAPI](https://app.blekline.com/docs/api/openapi)
 - [Architecture](https://app.blekline.com/docs/introduction/architecture)
-- [Eval journey](https://app.blekline.com/docs/get-started/eval-journey)
+- [Workflows and runs](https://app.blekline.com/docs/workflows-and-runs)
+- [SDK client](https://app.blekline.com/docs/sdk-client)

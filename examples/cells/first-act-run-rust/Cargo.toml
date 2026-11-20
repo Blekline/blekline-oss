@@ -1,0 +1,9 @@
+[package]
+name = "blekline-first-act-run-rust"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "first-act-run"
+path = "main.rs"

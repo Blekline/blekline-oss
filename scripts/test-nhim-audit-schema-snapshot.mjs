@@ -5,7 +5,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PKG = join(ROOT, "packages/nhim-audit");
+const PKG = join(ROOT, "packages/cluster-posture");
 const EXPECTED_DIR = join(PKG, "fixtures/expected");
 const EXPECTED = join(EXPECTED_DIR, "report-generic-fixed-0.2.0.json");
 
