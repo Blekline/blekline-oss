@@ -8,7 +8,7 @@ body:
       value: |
         Share ideas for Blekline's open-source ingress layer (MCP server, proxy, SDK, Helm sidecar).
 
-        Docs: [Eval journey](https://app.blekline.com/docs/get-started/eval-journey) · [AI Enablement Stack](https://app.blekline.com/docs/introduction/ai-enablement-stack)
+        Docs: [SDK client](https://app.blekline.com/docs/sdk-client) · [Integrations](https://app.blekline.com/docs/integrations/agent-clients)
 
   - type: textarea
     id: problem

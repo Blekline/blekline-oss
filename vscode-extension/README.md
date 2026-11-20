@@ -19,14 +19,14 @@ Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/item
 1. Install **Blekline** and **GitHub Copilot Chat**.
 2. Command Palette → **Blekline: Setup**.
 3. Sign in at [app.blekline.com](https://app.blekline.com/auth/extension-link) (same handoff as the browser extension).
-4. Paste a workspace token (`blw_…`) from **Admin → API keys**. It is stored in VS Code Secret Storage — never in settings.json.
+4. Paste a workspace token (`blw_…`) from ****API keys****. It is stored in VS Code Secret Storage — never in settings.json.
 5. Command Palette → **Blekline: Verify**.
 
 Optional: set `BLEKLINE_API_URL` if you use a private control plane (default `https://app.blekline.com`).
 
 ## Plans
 
-**Local** covers laptop hooks and stdio MCP. **`@blekline`** in Copilot Chat calls the hosted mask API and requires **Mark** or higher — upgrade in [Billing](https://app.blekline.com/admin/settings/billing) if Verify reports a plan limit.
+**Local** covers laptop hooks and stdio MCP. **`@blekline`** in Copilot Chat calls the hosted mask API and requires **Mark** or higher — upgrade in [Billing](https://app.blekline.com/workspace/billing) if Verify reports a plan limit.
 
 ## Use `@blekline`
 
@@ -38,7 +38,7 @@ In Copilot Chat:
 
 You should see “Redacting before send…”, then a model reply on the masked prompt. Repeat mentions stick (`isSticky`) so follow-ups stay on `@blekline`.
 
-**Blekline: Open Activity** opens [workspace activity](https://app.blekline.com/operations/activity) (metadata; no raw prompts by default).
+**Blekline: Open Activity** opens [workspace activity](https://app.blekline.com/audit-log) (metadata; no raw prompts by default).
 
 ## Privacy
 

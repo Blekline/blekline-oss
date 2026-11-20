@@ -1,6 +1,6 @@
 # Blekline — agent onboarding
 
-Production agent interaction governance — mask, enforce, and audit at the MCP, SDK, and ingress proxy boundary.
+Production execution platform — clients, contracts, and agent ingress; connect agents, publish policy, start act runs. Cells run on the hosted control plane.
 
 ## Start (headless)
 
@@ -35,10 +35,15 @@ Live configs (gitignored): `pnpm generate:mcp-configs:local`
 - `tasks.json` — build, verify, smoke
 - Optional: [Dev Container](.devcontainer/devcontainer.json)
 
+## Examples (OSS)
+
+Category index: [`examples/README.md`](examples/README.md). First act run: `examples/cells/first-act-run/`. Manifest examples: `integrations/manifest.json` (`tier: example`).
+
 ## Verify
 
 ```bash
 pnpm verify:integrations
+pnpm example:smoke
 ```
 
 ## Docs
@@ -49,8 +54,10 @@ https://app.blekline.com/docs
 
 - `@blekline/mcp-server` — MCP tools (AGPL)
 - `@blekline/mcp-proxy` — downstream MCP governance (AGPL)
-- `@blekline/nhim-audit` — static K8s NHIM audit CLI (AGPL)
+- `@blekline/cluster-posture` — static K8s agent posture CLI before connected compute (AGPL)
 - `@blekline/client` — TypeScript SDK (Apache-2.0)
+- `@blekline/langchain` — LangChain.js mask and tool guards (Apache-2.0)
+- `@blekline/llamaindex` — LlamaIndex TS helpers (Apache-2.0)
 - `@blekline/contracts` — schemas + local enforce (Apache-2.0)
 - `@blekline/init` — one-shot client wiring (`npx @blekline/init`)
 - `@blekline/cursor-hooks` / `@blekline/codex-hooks` — IDE hook packages (AGPL-3.0)

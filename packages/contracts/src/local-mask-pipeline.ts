@@ -12,6 +12,8 @@ export type LocalMaskPipelineInput = {
   validateIbanChecksum?: boolean;
   validateFinanceRegional?: boolean;
   blockOnHighRiskMiss?: boolean;
+  /** When set, only these discovery detector rule ids run. Empty array runs none. */
+  enabledDetectorRuleIds?: string[];
 };
 
 export type LocalMaskPipelineResult = {
@@ -51,7 +53,9 @@ export function runLocalMaskPipeline(input: LocalMaskPipelineInput): LocalMaskPi
   entitiesMasked += baselineDeterministic.entitiesMasked;
   mergeTokenMaps(tokenMap, baselineDeterministic.tokenMap);
 
-  const discoveryMask = applyDiscoveryRegexMasks(working);
+  const discoveryMask = applyDiscoveryRegexMasks(working, {
+    enabledRuleIds: input.enabledDetectorRuleIds,
+  });
   working = discoveryMask.maskedText;
   entitiesMasked += discoveryMask.entitiesMasked;
   mergeTokenMaps(tokenMap, discoveryMask.tokenMap);

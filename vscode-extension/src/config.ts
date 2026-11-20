@@ -25,7 +25,7 @@ export function getApiUrl(): string {
 }
 
 export function activityUrl(): string {
-  return `${getApiUrl()}/operations/activity`;
+  return `${getApiUrl()}/audit-log`;
 }
 
 export function shieldLabel(state: ShieldState): string {

@@ -46,7 +46,16 @@ for (const rel of TRACKED_LIVE_CONFIGS) {
   }
 }
 
+const LEGACY_DOC_SLUGS = [
+  "get-started/eval-journey",
+  "get-started/nhim-audit-quickstart",
+  "tools/nhim-audit",
+];
+
 for (const entry of manifest.entries) {
+  if (entry.docSlug && LEGACY_DOC_SLUGS.some((s) => entry.docSlug.includes(s))) {
+    errors.push(`LEGACY docSlug on ${entry.id}: ${entry.docSlug}`);
+  }
   if (!entry.repoPath || entry.repoPath.endsWith("/")) continue;
   const full = join(ROOT, entry.repoPath);
   if (!existsSync(full)) {

@@ -12,6 +12,7 @@ const FILTERS = [
   "@blekline/mcp-proxy",
   "@blekline/cursor-hooks",
   "@blekline/init",
+  "@blekline/cluster-posture",
   "@blekline/nhim-audit",
 ];
 

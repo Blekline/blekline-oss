@@ -41,8 +41,8 @@ const NHIM_ONLY = {
   code: "NHIM_IMAGE_REQUIRED",
 };
 
-/** @type {{ revision: string | null; mcpToolPolicy: import('@blekline/contracts').McpToolPolicy | null }} */
-const policyCache = { revision: null, mcpToolPolicy: null };
+/** @type {{ revision: string | null; mcpToolPolicy: import('@blekline/contracts').McpToolPolicy | null; executionPolicy: object | null }} */
+const policyCache = { revision: null, mcpToolPolicy: null, executionPolicy: null };
 
 const routeMap = {
   "/v1/chat/completions": "/api/ingress/v1/chat/completions",
@@ -270,6 +270,9 @@ async function connectPolicyStream() {
             if (payload.mcpToolPolicy) {
               policyCache.mcpToolPolicy = normalizeMcpToolPolicy(payload.mcpToolPolicy);
               policyCache.revision = payload.revision ?? policyCache.revision;
+            }
+            if (payload.executionPolicy) {
+              policyCache.executionPolicy = payload.executionPolicy;
             }
           } catch {
             /* ignore */

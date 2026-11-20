@@ -104,6 +104,33 @@ class BleklineClient:
             },
         )
 
+    def create_cell_run(
+        self,
+        *,
+        workflow_id: str,
+        display_name: str | None = None,
+        execution_tier: str = "act",
+        tool_call: bool = True,
+        cell_profile_id: str | None = None,
+        cluster_id: str | None = None,
+        region: str | None = None,
+    ) -> dict[str, Any]:
+        """Start a governed act run (workspace token needs runs:write)."""
+        payload: dict[str, Any] = {
+            "workflowId": workflow_id,
+            "executionTier": execution_tier,
+            "toolCall": tool_call,
+        }
+        if display_name:
+            payload["displayName"] = display_name
+        if cell_profile_id:
+            payload["cellProfileId"] = cell_profile_id
+        if cluster_id:
+            payload["clusterId"] = cluster_id
+        if region:
+            payload["region"] = region
+        return self._request("POST", "/api/workspace/cell-runs", payload)
+
     def simulate_policy(
         self,
         *,

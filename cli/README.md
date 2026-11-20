@@ -2,6 +2,17 @@
 
 Run Blekline without an IDE — smoke tests, SDK agents, and CI gates.
 
+## First act on Blekline (hosted cells)
+
+```bash
+export BLEKLINE_WORKSPACE_TOKEN="blw_..."
+export BLEKLINE_API_URL="https://app.blekline.com"
+npx @blekline/init
+node examples/cells/first-act-run/index.mjs
+```
+
+Docs: [Workflows and runs](https://app.blekline.com/docs/workflows-and-runs) · [Runtime policy](https://app.blekline.com/docs/runtime-policy)
+
 ## Quick smoke
 
 ```bash
@@ -29,7 +40,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -e packages/client-python
 export BLEKLINE_WORKSPACE_TOKEN="blw_..."
 export BLEKLINE_API_URL="https://app.blekline.com"
-python examples/python-sdk-agent/main.py
+python examples/ingress/python-sdk-agent/main.py
 ```
 
 Unit tests (no token): `pip install -e "packages/client-python[dev]" && pytest packages/client-python/tests -q`
@@ -46,14 +57,14 @@ Unit tests (no token): `pip install -e "packages/client-python[dev]" && pytest p
 pnpm verify:integrations
 ```
 
-## NHIM Audit (K8s)
+## Optional: cluster posture (K8s)
 
-Static agent-hop audit — no workspace token:
+Static scan before connected compute. No workspace token:
 
 ```bash
-npx @blekline/nhim-audit audit --plain --json -o nhim-audit.json
+npx @blekline/cluster-posture audit --profile generic --plain --json -o cluster-posture.json
 ```
 
-Docs: [NHIM Audit CLI](https://app.blekline.com/docs/tools/nhim-audit)
+Docs: [Cluster security and posture](https://app.blekline.com/docs/operate/security)
 
 ## SDK packages

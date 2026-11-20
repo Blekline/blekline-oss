@@ -6,6 +6,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `@blekline/cluster-posture@0.3.0` — Cells-era static K8s posture scan (`POSTURE-*` rule IDs, schema `blekline.cluster_posture.v1`)
+- `examples/` library (cells, ingress, model-providers, frameworks, agents, ci) with index README
+- `examples/cells/first-act-run` — minimal `createCellRun` sample (legacy path README redirects)
+- Integration manifest: `executionDepth`, `tier: example`, `example:smoke`
+- GitHub Action `ci/github-actions/cluster-posture`
+
+### Changed
+
+- **Contracts semver:** OpenAPI and `@blekline/contracts` use additive minor releases; breaking changes require major bump (see [sdk-client](https://app.blekline.com/docs/sdk-client)).
+- OSS README and integration index: Cells-first (`npx @blekline/init`), docs v3 slugs
+- `@blekline/init` Platform path next-steps (signup, runtime policy, workflows/runs)
+
+### Deprecated
+
+- `@blekline/nhim-audit` — use `@blekline/cluster-posture`; legacy `ci/github-actions/nhim-audit` forwards to cluster-posture
+
 ## [0.4.3] - 2026-09-03
 
 ### Added

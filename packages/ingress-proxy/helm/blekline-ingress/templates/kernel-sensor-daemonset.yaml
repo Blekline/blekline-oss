@@ -1,0 +1,38 @@
+{{- if .Values.kernelPlane.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "blekline-ingress.fullname" . }}-kernel-sensor
+  labels:
+    app.kubernetes.io/name: blekline-kernel-sensor
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: blekline-kernel-sensor
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: blekline-kernel-sensor
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "blekline-ingress.serviceAccountName" . }}
+      hostPID: true
+      containers:
+        - name: kernel-sensor
+          image: "{{ .Values.kernelPlane.image.repository }}:{{ .Values.kernelPlane.image.tag }}"
+          imagePullPolicy: {{ .Values.kernelPlane.image.pullPolicy }}
+          env:
+            - name: BLEKLINE_SIDECAR_URL
+              value: "http://{{ include "blekline-ingress.fullname" . }}:{{ .Values.service.port }}"
+            - name: BLEKLINE_SIDECAR_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret | default (printf "%s-sidecar" (include "blekline-ingress.fullname" .)) }}
+                  key: sidecarAuth
+                  optional: true
+          securityContext:
+            privileged: true
+            runAsUser: 0
+{{- end }}

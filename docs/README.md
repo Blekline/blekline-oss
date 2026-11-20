@@ -4,19 +4,15 @@ All Blekline documentation lives at **[app.blekline.com/docs](https://app.blekli
 
 | Topic | Link |
 |-------|------|
-| **Choose your path** | [app.blekline.com/docs/get-started/paths](https://app.blekline.com/docs/get-started/paths) |
-| Quick start | [app.blekline.com/docs](https://app.blekline.com/docs) |
-| Eval journey | [app.blekline.com/docs/get-started/eval-journey](https://app.blekline.com/docs/get-started/eval-journey) |
-| NHIM audit quickstart | [app.blekline.com/docs/get-started/nhim-audit-quickstart](https://app.blekline.com/docs/get-started/nhim-audit-quickstart) |
-| NHIM audit tool reference | [app.blekline.com/docs/tools/nhim-audit](https://app.blekline.com/docs/tools/nhim-audit) |
-| Glossary (A–Z) | [app.blekline.com/docs/definitions](https://app.blekline.com/docs/definitions) |
-| K8s fleet (Track 01) | [app.blekline.com/docs/deploy/k8s-fleet](https://app.blekline.com/docs/deploy/k8s-fleet) |
-| Docker sidecar (Track 02) | [app.blekline.com/docs/deploy/docker-sidecar](https://app.blekline.com/docs/deploy/docker-sidecar) |
-| CI NHIM gate | [app.blekline.com/docs/deploy/ci-nhim-gate](https://app.blekline.com/docs/deploy/ci-nhim-gate) |
-| NHIM overview | [app.blekline.com/docs/introduction/nhim](https://app.blekline.com/docs/introduction/nhim) |
-| Runtime enforcement | [app.blekline.com/docs/introduction/interaction-governance](https://app.blekline.com/docs/introduction/interaction-governance) |
-| Benchmarks methodology | [app.blekline.com/docs/reference/benchmarks](https://app.blekline.com/docs/reference/benchmarks) |
-| Trust boundaries | [app.blekline.com/docs/security/trust-boundaries](https://app.blekline.com/docs/security/trust-boundaries) |
-| MCP proxy | [app.blekline.com/docs/mcp/proxy](https://app.blekline.com/docs/mcp/proxy) |
+| Overview | [app.blekline.com/docs](https://app.blekline.com/docs) |
+| Run first workflow | [app.blekline.com/docs/workflows-and-runs](https://app.blekline.com/docs/workflows-and-runs) |
+| Runtime policy | [app.blekline.com/docs/runtime-policy](https://app.blekline.com/docs/runtime-policy) |
+| Spin up cells | [app.blekline.com/docs/spin-up-cells](https://app.blekline.com/docs/spin-up-cells) |
+| Connect agents | [app.blekline.com/docs/connect-clients](https://app.blekline.com/docs/connect-clients) |
+| API keys | [app.blekline.com/docs/api-keys](https://app.blekline.com/docs/api-keys) |
+| SDK client | [app.blekline.com/docs/sdk-client](https://app.blekline.com/docs/sdk-client) |
+| Cluster security / posture | [app.blekline.com/docs/operate/security](https://app.blekline.com/docs/operate/security) |
+| API overview | [app.blekline.com/docs/api/overview](https://app.blekline.com/docs/api/overview) |
+| Glossary | [app.blekline.com/docs/definitions](https://app.blekline.com/docs/definitions) |
 
 This repository contains **source code and packages** only. Edit docs in the private `blekline` monorepo under `webapp/content/docs/` and glossary under `webapp/content/definitions/`.

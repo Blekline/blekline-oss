@@ -58,11 +58,17 @@ const FORBIDDEN_PATTERNS = [
   { id: "soa-template-leak", pattern: /SOA_TEMPLATE\.md/i },
   { id: "false-aiuc-cert", pattern: /AIUC-1 certified/i },
   { id: "false-owasp-cert", pattern: /OWASP certified/i },
-  { id: "nhim-deploy-k8s-ref", pattern: /deploy\/k8s/i, scope: "packages/nhim-audit" },
-  { id: "nhim-enterprise-private-ref", pattern: /enterprise-private|outreach-private/i, scope: "packages/nhim-audit" },
-  { id: "nhim-runtime-engine-import", pattern: /@blekline\/runtime-engine|packages\/runtime-engine/i, scope: "packages/nhim-audit" },
-  { id: "nhim-k8s-admission-import", pattern: /@blekline\/k8s-admission|packages\/k8s-admission/i, scope: "packages/nhim-audit" },
-  { id: "nhim-private-repo-url", pattern: /github\.com\/Blekline\/blekline(?!-oss)/i, scope: "packages/nhim-audit" },
+  { id: "nhim-deploy-k8s-ref", pattern: /deploy\/k8s/i, scope: "packages/cluster-posture" },
+  { id: "nhim-enterprise-private-ref", pattern: /enterprise-private|outreach-private/i, scope: "packages/cluster-posture" },
+  { id: "nhim-runtime-engine-import", pattern: /@blekline\/runtime-engine|packages\/runtime-engine/i, scope: "packages/cluster-posture" },
+  { id: "nhim-k8s-admission-import", pattern: /@blekline\/k8s-admission|packages\/k8s-admission/i, scope: "packages/cluster-posture" },
+  { id: "nhim-private-repo-url", pattern: /github\.com\/Blekline\/blekline(?!-oss)/i, scope: "packages/cluster-posture" },
+  { id: "oss-copy-cookbook", pattern: /\bcookbook\b/i, scope: "examples" },
+  { id: "oss-copy-recipe-gallery", pattern: /\brecipe gallery\b/i, scope: "examples" },
+  { id: "integrations-copy-cookbook", pattern: /\bcookbook\b/i, scope: "integrations" },
+  { id: "legacy-doc-eval-journey", pattern: /docs\/get-started\/eval-journey/i },
+  { id: "legacy-doc-nhim-quickstart", pattern: /docs\/get-started\/nhim-audit-quickstart/i },
+  { id: "legacy-doc-tools-nhim", pattern: /docs\/tools\/nhim-audit/i },
 ];
 
 const ALLOWED_FAKE_EXAMPLES = [
@@ -111,6 +117,19 @@ function matchesForbiddenPattern(text, { id, pattern }) {
 }
 
 function skipPatternScan(rel, id) {
+  if (
+    (id === "legacy-doc-eval-journey" ||
+      id === "legacy-doc-nhim-quickstart" ||
+      id === "legacy-doc-tools-nhim") &&
+    (rel.startsWith("scripts/verify-integration") ||
+      rel === "webapp/lib/docs-slug-redirects.ts" ||
+      rel.startsWith("webapp/content/docs/") ||
+      rel.startsWith("docs/containment/") ||
+      rel.startsWith("docs/enterprise-private/") ||
+      rel.startsWith("docs/OSS_"))
+  ) {
+    return true;
+  }
   if (id === "workspace-token-hex" && skipWorkspaceTokenHexScan(rel)) return true;
   if (id === "workspace-root-absolute" && rel.endsWith(".example")) return true;
   if ((id === "home-path" || id === "workspace-root-absolute") && LOCAL_ONLY_CONFIG.has(rel)) return true;
@@ -268,6 +287,14 @@ if (IS_OSS_CLONE) {
   }
   for (const file of walk(OSS_MIRROR)) {
     auditScannedFile(OSS_MIRROR, file, "oss", errors);
+  }
+}
+
+const OSS_README = join(TEMPLATES, "README.md");
+if (existsSync(OSS_README)) {
+  const hero = readFileSync(OSS_README, "utf8").split("\n").slice(0, 80).join("\n");
+  if (/\bNHIM\b/.test(hero)) {
+    errors.push("OSS README HERO: templates/oss/README.md must not mention NHIM in the first 80 lines (Cells-first lead)");
   }
 }
 

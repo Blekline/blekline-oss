@@ -63,7 +63,7 @@ export async function maskPrompt(text: string, workspaceToken: string): Promise<
     }
     if (res.status === 403) {
       const upgradeUrl =
-        typeof body.upgradeUrl === "string" ? body.upgradeUrl : `${getApiUrl()}/admin/settings/billing`;
+        typeof body.upgradeUrl === "string" ? body.upgradeUrl : `${getApiUrl()}/workspace/billing`;
       const message = typeof body.message === "string" ? body.message : typeof body.error === "string" ? body.error : BILLING;
       return {
         ok: false,

@@ -2,7 +2,7 @@
   "name": "blekline-oss",
   "private": true,
   "license": "AGPL-3.0-or-later",
-  "description": "Blekline production agent interaction governance — MCP, SDK, open core",
+  "description": "Blekline execution platform clients — contracts, SDK, MCP ingress; cells run on app.blekline.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/Blekline/blekline-oss.git"
@@ -13,12 +13,14 @@
   "homepage": "https://github.com/Blekline/blekline-oss#readme",
   "scripts": {
     "build": "pnpm -r --filter './packages/*' build",
-    "build:packages": "pnpm --filter @blekline/contracts build && pnpm --filter @blekline/client build && pnpm --filter @blekline/claude-sdk build && pnpm --filter @blekline/client-hooks build && pnpm --filter @blekline/mcp-server build && pnpm --filter @blekline/mcp-proxy build && pnpm --filter @blekline/cursor-hooks build && pnpm --filter @blekline/codex-hooks build && pnpm --filter @blekline/init build && pnpm --filter @blekline/nhim-audit build",
+    "build:packages": "pnpm --filter @blekline/contracts build && pnpm --filter @blekline/client build && pnpm --filter @blekline/claude-sdk build && pnpm --filter @blekline/client-hooks build && pnpm --filter @blekline/mcp-server build && pnpm --filter @blekline/mcp-proxy build && pnpm --filter @blekline/cursor-hooks build && pnpm --filter @blekline/codex-hooks build && pnpm --filter @blekline/init build && pnpm --filter @blekline/cluster-posture build",
     "demo:cursor-hook-smoke": "node scripts/cursor-hook-smoke.mjs",
     "demo:codex-hook-smoke": "node scripts/codex-hook-smoke.mjs",
     "demo:vscode-extension-smoke": "node vscode-extension/scripts/smoke.mjs",
     "generate:mcp-configs": "node scripts/generate-mcp-configs.mjs --oss",
-    "verify:integrations": "node scripts/verify-client-surfaces.mjs && node scripts/verify-integration-configs.mjs",
+    "verify:integrations": "node scripts/verify-client-surfaces.mjs && node scripts/verify-integration-configs.mjs && node scripts/verify-integration-examples.mjs",
+    "example:smoke": "node scripts/example-smoke.mjs",
+    "publish:oss-pypi": "node scripts/publish-oss-pypi.mjs",
     "test:python": "python3 -m pip install --upgrade pip -q && python3 -m pip install -e \"packages/client-python[dev]\" -q && python3 -m pytest packages/client-python/tests -q",
     "demo:mcp-smoke": "node scripts/mcp-smoke.mjs",
     "demo:sdk": "node scripts/demo-sdk.mjs",
@@ -29,7 +31,7 @@
     "demo:daytona-smoke": "SANDBOX_PROVIDER=daytona tsx demo/sandbox-smoke/index.ts",
     "demo:sandbox-smoke": "tsx demo/sandbox-smoke/index.ts",
     "docker:ingress": "docker build -t blekline-ingress -f packages/ingress-proxy/Dockerfile .",
-    "test:nhim-audit:e2e": "node scripts/test-nhim-audit-e2e.mjs"
+    "test:cluster-posture:e2e": "node scripts/test-cluster-posture-e2e.mjs"
   },
   "dependencies": {
     "@blekline/client": "workspace:*"

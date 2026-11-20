@@ -1,159 +1,173 @@
-<!-- GitHub repo About field: Non-Human Identity & Runtime Enforcement for AI agents — open-core MCP/SDK to mask, enforce, and audit agent calls. -->
+<!-- GitHub repo About field: Execution platform clients — connect agents, publish policy, start act runs; cells run on Blekline. -->
 <!-- Social preview / Open Graph: assets/images/blekline-oss-og.png — also upload in GitHub Settings → General → Social preview -->
 <div align="center">
-<a href="https://app.blekline.com"><img src="assets/images/blekline-oss-og.png" alt="Blekline — Mask, enforce, and audit AI agents at the MCP boundary" width="100%"/></a>
+<a href="https://app.blekline.com"><img src="assets/images/blekline-oss-og.png" alt="Blekline — clients, contracts, and agent ingress for execution in cells" width="100%"/></a>
 <picture>
 <source media="(prefers-color-scheme: light)" srcset="assets/images/blekline-logo-light.svg"/>
 <img alt="Blekline" src="assets/images/blekline-logo-dark.svg" width="320"/>
 </picture>
 </div>
 <p align="center">
-  <a href="https://app.blekline.com/docs/get-started/paths">Choose your path</a> ·
-  <a href="https://app.blekline.com/docs">Quick start</a> ·
   <a href="https://app.blekline.com/docs">Docs</a> ·
-  <a href="https://app.blekline.com">Cloud</a>
+  <a href="https://app.blekline.com/docs/workflows-and-runs">First workflow run</a> ·
+  <a href="https://app.blekline.com/auth/signup">Cloud</a>
 </p>
 
 <p align="center">
   <a href="https://github.com/Blekline/blekline-oss/actions/workflows/oss-ci.yml"><img src="https://github.com/Blekline/blekline-oss/actions/workflows/oss-ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://www.npmjs.com/package/@blekline/init"><img src="https://img.shields.io/npm/v/@blekline/init?label=init" alt="npm init" /></a>
+  <a href="https://www.npmjs.com/package/@blekline/client"><img src="https://img.shields.io/npm/v/@blekline/client?label=client" alt="npm client" /></a>
+  <a href="https://www.npmjs.com/package/@blekline/mcp-server"><img src="https://img.shields.io/npm/v/@blekline/mcp-server?label=mcp-server" alt="npm mcp-server" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/Proxy%20%26%20server-AGPL%20v3-blue.svg" alt="AGPL v3" /></a>
   <a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/SDK%20%26%20contracts-Apache%202.0-green.svg" alt="Apache-2.0" /></a>
-  <a href="https://www.npmjs.com/package/@blekline/mcp-server"><img src="https://img.shields.io/npm/v/@blekline/mcp-server?label=mcp-server" alt="npm" /></a>
-  <a href="https://www.npmjs.com/package/@blekline/mcp-proxy"><img src="https://img.shields.io/npm/v/@blekline/mcp-proxy?label=mcp-proxy" alt="npm proxy" /></a>
-  <a href="https://www.npmjs.com/package/@blekline/nhim-audit"><img src="https://img.shields.io/npm/v/@blekline/nhim-audit?label=nhim-audit" alt="npm nhim-audit" /></a>
 </p>
 
 ---
 
-**Blekline** governs agent traffic — MCP tool calls, prompt ingress, and sidecar hops — before models or sandboxes act.
+**Blekline** is execution infrastructure for AI actions: workflows, published runtime policy, and **act runs** in cells. This repository ships **official clients, contracts, and agent ingress**. **Cells run on [app.blekline.com](https://app.blekline.com)** (hosted or connected compute), not from this repo.
 
-This is Blekline’s **open-core repository**: npm packages, client integrations, and the NHIM audit CLI. Hosted docs and the control plane live on **[app.blekline.com](https://app.blekline.com)**. Start on **Free** — [choose your path](https://app.blekline.com/docs/get-started/paths) (Individual / Team / Enterprise / API), then Claude Code, Desktop, or Cursor. You do not need to clone this repo first.
+**Not a sandbox SDK:** `@blekline/client` governs policy, mask, and runs against the control plane. It does not execute arbitrary code in a remote sandbox. See [examples/](examples/README.md) for integration patterns.
 
-## Quick start (60 seconds)
+## Quick start — first act run (60 seconds)
 
-No clone. Create a [Free workspace](https://app.blekline.com/auth/signup), copy a token from **Admin → API keys**, then:
+No clone. [Create a workspace](https://app.blekline.com/auth/signup), create an API key with **runs:write** ([API keys](https://app.blekline.com/api-keys) · [docs](https://app.blekline.com/docs/build/endpoints-and-keys)), publish [runtime policy](https://app.blekline.com/docs/runtime-policy), then:
 
 ```bash
 npx -y @blekline/init
 export BLEKLINE_WORKSPACE_TOKEN="blw_..."
 export BLEKLINE_API_URL="https://app.blekline.com"
-export BLEKLINE_CLIENT_SURFACE="sdk"
-npx -y @blekline/mcp-server
+export BLEKLINE_WORKFLOW_ID="wf_your_workflow_id"
+node examples/cells/first-act-run/index.mjs
 ```
 
-Connect a client: [Claude Code](https://app.blekline.com/docs/mcp/claude-code) · [Claude connector (OAuth)](https://app.blekline.com/docs/mcp/claude-connector) · [Cursor](https://app.blekline.com/docs/mcp/cursor) · [Codex](https://app.blekline.com/docs/mcp/codex)
+Guide: [Run first workflow](https://app.blekline.com/docs/workflows-and-runs) · SDK: [@blekline/client](https://app.blekline.com/docs/sdk-client)
 
-CLI: [cli/README.md](cli/README.md) · CI: [ci/](ci/) · 3-minute product path: [Quick Start](https://app.blekline.com/docs)
+```ts
+import { BleklineClient } from "@blekline/client";
 
-## Packages
+const client = new BleklineClient({
+  workspaceToken: process.env.BLEKLINE_WORKSPACE_TOKEN!,
+  metadata: { clientSurface: "sdk" },
+});
 
-| Package | Install | License |
-| ------- | ------- | ------- |
-| `@blekline/mcp-server` | `npx -y @blekline/mcp-server` | AGPL-3.0 |
-| `@blekline/mcp-proxy` | `npm i @blekline/mcp-proxy` | AGPL-3.0 |
-| `@blekline/client` | `npm i @blekline/client` | Apache-2.0 |
-| `@blekline/contracts` | workspace / embed | Apache-2.0 |
-| `@blekline/init` | `npx @blekline/init` | Apache-2.0 |
-| `@blekline/claude-sdk` | `npm i @blekline/claude-sdk` | Apache-2.0 |
-| `@blekline/cursor-hooks` | `npm i @blekline/cursor-hooks` | AGPL-3.0 |
-| `@blekline/codex-hooks` | `npm i @blekline/codex-hooks` | AGPL-3.0 |
-| `@blekline/client-hooks` | workspace / hooks | Apache-2.0 |
-| `@blekline/nhim-audit` | `npx @blekline/nhim-audit audit` | AGPL-3.0 |
-
-MCP tools: `blekline_mask_prompt` · `blekline_evaluate_tool_call` · `blekline_simulate_policy` · `blekline_log_governance_event` — [MCP server docs](https://app.blekline.com/docs/mcp/server)
-
-OpenAPI: [packages/contracts/openapi.yaml](packages/contracts/openapi.yaml)
-
-## Connect a client
-
-| Surface | Path | `BLEKLINE_CLIENT_SURFACE` |
-| ------- | ---- | ------------------------- |
-| CLI / SDK | [cli/](cli/) | `sdk` |
-| CI | [ci/](ci/) | `sdk` |
-| Cursor | [.cursor/mcp.json.example](.cursor/mcp.json.example) | `cursor` |
-| Claude Code | [.claude/settings.json.example](.claude/settings.json.example) | `claude-code` |
-| Claude Desktop | [config/claude_desktop_config.json.example](config/claude_desktop_config.json.example) | `claude-desktop` |
-| Codex | [.codex/config.toml.example](.codex/config.toml.example) | `codex` |
-| VS Code / Copilot / Continue | [.vscode/](.vscode/) | `github-copilot` / `continue` |
-
-Full matrix: [integrations/README.md](integrations/README.md) · `pnpm generate:mcp-configs` · `pnpm verify:integrations`
-
-**Depth:** Cursor and Codex ship hooks + plugins in this repo. Claude Code ships MCP + `@blekline/claude-sdk`. VS Code Copilot is MCP-only here — the `@blekline` extension is cloud/Marketplace (see [integrations/README.md](integrations/README.md)).
-
-## NHIM audit (cluster scan)
-
-No Blekline account required. Use this when you are evaluating Kubernetes posture — not as step 1 for IDE governance.
-
-```bash
-kubectl apply -f https://raw.githubusercontent.com/Blekline/blekline-oss/main/packages/nhim-audit/deploy/rbac/nhim-audit-reader-namespaced.yaml -n nhim-eval
-kubectl apply -f https://raw.githubusercontent.com/Blekline/blekline-oss/main/packages/nhim-audit/deploy/rbac/nhim-audit-reader-cluster.yaml
-npx @blekline/nhim-audit audit --profile generic --namespace nhim-eval --plain --json -o nhim-audit.json
+const { run } = await client.createCellRun({
+  workflowId: "wf_your_workflow_id",
+  executionTier: "act",
+  toolCall: true,
+});
+console.log(run.id, run.compileHash, run.status);
 ```
-
-[NHIM audit quickstart](https://app.blekline.com/docs/get-started/nhim-audit-quickstart) · [CI NHIM gate](https://app.blekline.com/docs/deploy/ci-nhim-gate) · [Eval journey](https://app.blekline.com/docs/get-started/eval-journey) (K8s / Docker / MCP tracks)
-
-**Track 01 / 02 deploy the NHIM sidecar image** (`ghcr.io/blekline/sidecar`) — Trust Vault, Lineage Firewall, admission — documented under [Docker sidecar](https://app.blekline.com/docs/deploy/docker-sidecar) and [K8s fleet](https://app.blekline.com/docs/deploy/k8s-fleet). That image is not built from this repository.
-
-### Why `packages/ingress-proxy` is still open source
-
-This folder is a **reference sidecar** — source you can audit, fork, and run locally:
-
-- **Tool-call enforcement** and model ingress using `@blekline/contracts` (same policy primitives as MCP)
-- **Helm chart** as a starting layout for sidecar injection (values default vault/lineage off)
-- **For contributors and self-hosters** who want contracts-level enforcement without pulling the NHIM image
-
-It is **not** a stand-in for the production sidecar on eval tracks. If you only need MCP, use `npx @blekline/mcp-server`. If you need Trust Vault or Lineage, use the NHIM image from the deploy guides — not a DIY build of this package alone.
-
-Details: [packages/ingress-proxy/README.md](packages/ingress-proxy/README.md) · [Ingress proxy API](https://app.blekline.com/docs/api/ingress-proxy)
-
-## What lives here vs on blekline.com
-
-| Open source (this repo) | Hosted product ([app.blekline.com](https://app.blekline.com)) |
-| ----------------------- | ------------------------------------------------------------- |
-| `@blekline/mcp-server`, `mcp-proxy`, `contracts`, `client`, `cursor-hooks`, `codex-hooks`, `init`, `claude-sdk`, `client-hooks` | Workspace policy, fleet SSE, Azure-backed PII masking |
-| `@blekline/nhim-audit` — static K8s scan, no account | Deployment hub, posture upload, compliance export |
-| Client config examples | [app.blekline.com/docs](https://app.blekline.com/docs) |
-
-## Deploy tracks
-
-| Track | Surface | Link |
-| ----- | ------- | ---- |
-| 0 | NHIM audit + CI gate | [quickstart](https://app.blekline.com/docs/get-started/nhim-audit-quickstart) · [ci-nhim-gate](https://app.blekline.com/docs/deploy/ci-nhim-gate) |
-| 01 | Kubernetes fleet (NHIM **image** + Helm) | [k8s-fleet](https://app.blekline.com/docs/deploy/k8s-fleet) |
-| 02 | Docker sidecar (NHIM **image**) | [docker-sidecar](https://app.blekline.com/docs/deploy/docker-sidecar) |
-| 03 | MCP (Cursor, Claude, Codex) | [mcp/cursor](https://app.blekline.com/docs/mcp/cursor) · `npx -y @blekline/mcp-server` |
-
-Integration guides (L1 sandboxes, model providers, LangSmith, etc.): [app.blekline.com/docs/integrations](https://app.blekline.com/docs/integrations)
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  Agents[L5 Agents] --> L4[Blekline L4]
-  L4 --> MCP[MCP / tools]
-  L4 --> Models[Model APIs]
-  L4 --> Vault[Trust Vault — NHIM image]
+  Agents[Agents_and_IDEs] --> SDK[Client_SDK_MCP]
+  SDK --> PolicyAPI[Policy_and_enforce_API]
+  PolicyAPI --> Runs[Act_runs]
+  Runs --> Cells[Cells_on_Blekline]
 ```
 
-Layer 4 ingress between agents and tools/models. [Architecture](https://app.blekline.com/docs/introduction/architecture) · [Trust boundaries](https://app.blekline.com/docs/security/trust-boundaries) · [Runtime simulator](https://app.blekline.com/docs/playground/runtime-enforcement)
+## Packages
+
+### Start here (Apache-2.0)
+
+| Package | Install | Role |
+| ------- | ------- | ---- |
+| `@blekline/init` | `npx @blekline/init` | Detect clients, write `.blekline/policy.json`, print Platform path |
+| `@blekline/client` | `npm i @blekline/client` | Control plane: policy, runs, mask, enforce |
+| `blekline-client` (PyPI) | `pip install blekline-client` | Python SDK (same API shapes) |
+
+### Contracts (Apache-2.0)
+
+| Package | Role |
+| ------- | ---- |
+| `@blekline/contracts` | Policy schemas, OpenAPI types, local enforce helpers |
+
+OpenAPI: [packages/contracts/openapi.yaml](packages/contracts/openapi.yaml). **Semver:** additive changes only in minor releases; breaking API changes require a major bump and CHANGELOG entry.
+
+### Framework helpers (Apache-2.0)
+
+| Package | Role |
+| ------- | ---- |
+| `@blekline/langchain` / `@blekline/llamaindex` | Tool-boundary guards |
+| `@blekline/claude-sdk` | Claude ingress helpers |
+
+### Ingress (AGPL-3.0)
+
+| Package | Install | Role |
+| ------- | ------- | ---- |
+| `@blekline/mcp-server` | `npx -y @blekline/mcp-server` | Stdio MCP governance tools |
+| `@blekline/mcp-proxy` | `npm i @blekline/mcp-proxy` | Downstream MCP policy proxy |
+| `@blekline/cursor-hooks` / `@blekline/codex-hooks` | npm | IDE ingress |
+| `@blekline/client-hooks` | workspace | Shared hook utilities |
+
+MCP tools: `blekline_mask_prompt` · `blekline_evaluate_tool_call` · `blekline_simulate_policy` · [MCP server docs](https://app.blekline.com/docs/reference/mcp)
+
+### Optional posture (AGPL-3.0)
+
+| Package | Role |
+| ------- | ---- |
+| `@blekline/cluster-posture` | Static K8s scan before [spin up cells](https://app.blekline.com/docs/spin-up-cells) |
+
+## Examples
+
+Category index: [examples/README.md](examples/README.md) (cells, ingress, model providers, frameworks, agents, CI). Mistral and Fireworks samples are required integration examples.
+
+`npx @blekline/init --example mistral` prints the path from [integrations/manifest.json](integrations/manifest.json).
+
+## Connect agents (door 2)
+
+[Connect agents and clients](https://app.blekline.com/docs/connect-clients) — Cursor, Claude Code, Codex, Copilot, and CI.
+
+| Surface | Path | `BLEKLINE_CLIENT_SURFACE` |
+| ------- | ---- | ------------------------- |
+| Init | `npx @blekline/init` | per client |
+| CLI / SDK | [cli/](cli/) | `sdk` |
+| CI | [ci/](ci/) | `sdk` |
+| Cursor | [.cursor/mcp.json.example](.cursor/mcp.json.example) | `cursor` |
+| Claude Code | [.claude/settings.json.example](.claude/settings.json.example) | `claude-code` |
+
+Full matrix: [integrations/README.md](integrations/README.md) · `pnpm verify:integrations`
+
+## Open source vs hosted
+
+| This repository | [app.blekline.com](https://app.blekline.com) |
+| --------------- | -------------------------------------------- |
+| Clients, contracts, MCP/hooks, reference ingress-proxy | Workflows, runs UI, audit store, billing |
+| Local policy dev and CI simulation | **Publish** runtime policy, `compileHash` at run birth |
+| Optional cluster posture scan (no account) | Compute, cell profiles, connected clusters |
+
+Production sidecar images and runtime enforcement engines are **not** built from this repository. Reference only: [ingress-proxy/README.md](packages/ingress-proxy/README.md).
+
+## Optional — cluster posture (Kubernetes)
+
+Static scan for agent workloads and enforcement hops **before** you [spin up cells](https://app.blekline.com/docs/spin-up-cells) on connected compute. No Blekline account required.
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/Blekline/blekline-oss/main/packages/cluster-posture/deploy/rbac/cluster-posture-reader-namespaced.yaml -n posture-eval
+kubectl apply -f https://raw.githubusercontent.com/Blekline/blekline-oss/main/packages/cluster-posture/deploy/rbac/cluster-posture-reader-cluster.yaml
+npx @blekline/cluster-posture audit --profile generic --namespace posture-eval --plain --json -o cluster-posture.json
+```
+
+[Operate: security](https://app.blekline.com/docs/operate/security) · [CI gate example](ci/github-actions/cluster-posture/)
 
 ## Documentation
 
 | Topic | Link |
 | ----- | ---- |
-| Choose your path | [get-started/paths](https://app.blekline.com/docs/get-started/paths) |
-| Quick start | [/docs](https://app.blekline.com/docs) |
-| Eval journey | [get-started/eval-journey](https://app.blekline.com/docs/get-started/eval-journey) |
-| NHIM audit | [tools/nhim-audit](https://app.blekline.com/docs/tools/nhim-audit) |
+| Overview | [app.blekline.com/docs](https://app.blekline.com/docs) |
+| Workflows and runs | [workflows-and-runs](https://app.blekline.com/docs/workflows-and-runs) |
+| Runtime policy | [runtime-policy](https://app.blekline.com/docs/runtime-policy) |
+| Spin up cells | [spin-up-cells](https://app.blekline.com/docs/spin-up-cells) |
+| SDK client | [sdk-client](https://app.blekline.com/docs/sdk-client) |
 | Glossary | [definitions](https://app.blekline.com/docs/definitions) |
-| MCP proxy | [mcp/proxy](https://app.blekline.com/docs/mcp/proxy) |
-| Ingress proxy API | [api/ingress-proxy](https://app.blekline.com/docs/api/ingress-proxy) |
 
 ## Community
 
 - **Questions** — [GitHub Discussions](https://github.com/Blekline/blekline-oss/discussions)
-- **Design partners / platform eval** — [design partner issue](https://github.com/Blekline/blekline-oss/issues/new?template=design_partner.yml) (Track 01/02/03)
-- **Security** — [SECURITY.md](SECURITY.md) (no public issues for vulns)
+- **Design partners** — [design partner issue](https://github.com/Blekline/blekline-oss/issues/new?template=design_partner.yml)
+- **Security** — [SECURITY.md](SECURITY.md)
 
 [CONTRIBUTING.md](CONTRIBUTING.md) · [CHANGELOG.md](CHANGELOG.md)
 
@@ -163,7 +177,7 @@ Private team: develop in the `blekline` monorepo → `pnpm audit:oss-public && p
 
 | Component | License |
 | --------- | ------- |
-| `mcp-server`, `mcp-proxy`, `ingress-proxy`, `nhim-audit`, `cursor-hooks`, `codex-hooks` | [AGPL-3.0](LICENSE) |
-| `contracts`, `client`, `client-python`, `client-hooks`, `claude-sdk`, `init` | [Apache-2.0](LICENSE-APACHE) |
+| `mcp-server`, `mcp-proxy`, `ingress-proxy`, `cluster-posture`, `cursor-hooks`, `codex-hooks` | [AGPL-3.0](LICENSE) |
+| `contracts`, `client`, `client-python`, `client-hooks`, `claude-sdk`, `init`, `langchain`, `llamaindex` | [Apache-2.0](LICENSE-APACHE) |
 
-Managed SaaS and the NHIM sidecar image are offered separately at [app.blekline.com](https://app.blekline.com) — not under the licenses in this repository.
+Managed SaaS and production runtime images are offered at [app.blekline.com](https://app.blekline.com) under separate terms.

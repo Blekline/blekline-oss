@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for helping improve Blekline. For **security vulnerabilities**, see [SECURITY.md](../../SECURITY.md) — do not use this form.
 
-        Docs: [app.blekline.com/docs](https://app.blekline.com/docs) · [Eval journey](https://app.blekline.com/docs/get-started/eval-journey)
+        Docs: [Workflows and runs](https://app.blekline.com/docs/workflows-and-runs) · [Connect clients](https://app.blekline.com/docs/connect-clients)
 
   - type: textarea
     id: describe

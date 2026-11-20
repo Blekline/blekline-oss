@@ -1,5 +1,5 @@
 name: Design partner inquiry
-description: Platform eval — NHIM audit + Track 01/02/03 deploy
+description: Platform eval — init + workflows/runs + optional cluster posture
 labels: ["design-partner"]
 body:
   - type: input
@@ -60,7 +60,7 @@ body:
     id: usecase
     attributes:
       label: What do you need from platform eval?
-      placeholder: e.g. NHIM audit on staging, mandatory-hop verification, MCP mask/enforce, compliance export
+      placeholder: e.g. npx @blekline/init, first cell run on staging, MCP mask/enforce, optional cluster-posture in CI
     validations:
       required: true
 
